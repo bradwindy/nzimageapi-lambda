@@ -22,10 +22,6 @@ final class NZImageApiLambda: SimpleLambdaHandler {
     // MARK: Internal
 
     func handle(_ event: APIGatewayV2Request, context: LambdaContext) async throws -> APIGatewayV2Response {
-        guard checkSecret(event: event, context: context) else {
-            return APIGatewayV2Response(statusCode: .badRequest)
-        }
-
         switch (event.context.http.path, event.context.http.method) {
         case ("/image", .GET):
             guard let image = await image(context: context) else {
@@ -77,22 +73,6 @@ final class NZImageApiLambda: SimpleLambdaHandler {
     private let jsonEncoder = JSONEncoder()
 
     private let digitalNZAPIDataSource: DigitalNZAPIDataSource
-
-    private func checkSecret(event: APIGatewayV2Request, context: LambdaContext) -> Bool {
-        guard let secret = ProcessInfo.processInfo.environment["SECRET"] else {
-            context.logger.debug("Couldn't find SECRET environment variable")
-            return false
-        }
-
-        guard let requestSecret = event.headers["secret"] else {
-            context.logger.debug("Couldn't find secret header")
-            return false
-        }
-
-        context.logger.debug("Checking if secrets match: \(secret) == \(requestSecret)")
-
-        return secret == requestSecret
-    }
 
     private func image(context: LambdaContext) async -> NZRecordsResult? {
         do {
