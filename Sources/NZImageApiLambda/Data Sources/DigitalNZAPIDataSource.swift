@@ -30,7 +30,7 @@ class DigitalNZAPIDataSource {
         var data: [String: String]
     }
 
-    func newResult() async throws -> NZRecordsResult {
+    func newResult(logger: (String) -> ()) async throws -> NZRecordsResult {
         let collection = collectionWeights.weightedRandomPick()
         let secondRequestResultsPerPage = 100
         let endpoint = "https://api.digitalnz.org/records.json"
@@ -40,10 +40,14 @@ class DigitalNZAPIDataSource {
                                                        "per_page": 0,
                                                        "and[category][]": "Images",
                                                        "and[primary_collection][]": collection]
+        
+        logger("Making initial request for collection: \(collection)")
 
         let initialResponse: NZRecordsResponse = try await requestManager.makeRequest(endpoint: endpoint,
                                                                                       apiKey: apiKey,
                                                                                       parameters: initialRequestParameters)
+        
+        logger("Got initial response: \(initialResponse.customDescription())")
 
         let validatedResultCount = try initialResponse
             .checkNonNull()
@@ -61,10 +65,14 @@ class DigitalNZAPIDataSource {
                                                          "per_page": secondRequestResultsPerPage,
                                                          "and[category][]": "Images",
                                                          "and[primary_collection][]": collection]
+        
+        logger("Making second request. pageNumber: \(pageNumber), resultsPerPage: \(secondRequestResultsPerPage), collection: \(collection)")
 
         let secondaryResponse: NZRecordsResponse = try await requestManager.makeRequest(endpoint: endpoint,
                                                                                         apiKey: apiKey,
                                                                                         parameters: secondaryRequestParameters)
+        
+        logger("Got second response, result count \(String(describing: secondaryResponse.search?.resultCount))")
 
         let validatedSearch = try secondaryResponse.checkNonNull().search!.checkNonNull()
 

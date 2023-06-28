@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import RichError
 
 struct NZRecordsSearch: NonNullableResult {
     // MARK: Lifecycle
@@ -19,12 +20,13 @@ struct NZRecordsSearch: NonNullableResult {
 
     typealias ErrorType = NZRecordsSearchError
 
-    struct NZRecordsSearchError: NonNullableError {
-        enum NZRecordsSearchErrorKind {
+    struct NZRecordsSearchError: RichError {
+        typealias ErrorKind = NZRecordsSearchErrorKind
+        enum NZRecordsSearchErrorKind: String {
             case nullSearchContent
         }
 
-        let result: any NonNullableResult
+        var data: [String: String]
         let kind: NZRecordsSearchErrorKind
     }
 
@@ -48,7 +50,7 @@ struct NZRecordsSearch: NonNullableResult {
             return self
         }
         else {
-            throw NZRecordsSearchError(result: self, kind: .nullSearchContent)
+            throw NZRecordsSearchError(data: ["self_description": self.customDescription()], kind: .nullSearchContent)
         }
     }
 }

@@ -5,6 +5,8 @@
 //  Created by Bradley Windybank on 22/03/23.
 //
 
+import RichError
+
 struct NZRecordsResponse: NonNullableResult {
     // MARK: Lifecycle
 
@@ -16,12 +18,14 @@ struct NZRecordsResponse: NonNullableResult {
 
     typealias ErrorType = NZRecordsResponseError
 
-    struct NZRecordsResponseError: NonNullableError {
-        enum NZRecordsResponseErrorKind {
+    struct NZRecordsResponseError: RichError {
+        typealias ErrorKind = NZRecordsResponseErrorKind
+        
+        enum NZRecordsResponseErrorKind: String {
             case nullResponseContent
         }
 
-        let result: any NonNullableResult
+        var data: [String : String]
         let kind: NZRecordsResponseErrorKind
     }
 
@@ -40,7 +44,7 @@ struct NZRecordsResponse: NonNullableResult {
             return self
         }
         else {
-            throw NZRecordsResponseError(result: self, kind: .nullResponseContent)
+            throw NZRecordsResponseError(data: ["self_description": self.customDescription()], kind: .nullResponseContent)
         }
     }
 }
