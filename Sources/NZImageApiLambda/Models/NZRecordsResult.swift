@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import RichError
 
 struct NZRecordsResult: NonNullableResult, Codable {
     // MARK: Lifecycle
@@ -23,15 +24,15 @@ struct NZRecordsResult: NonNullableResult, Codable {
 
     typealias ErrorType = NZRecordsResultError
 
-    struct NZRecordsResultError: NonNullableError {
-        enum NZRecordsResultErrorKind {
+    struct NZRecordsResultError: RichError {
+        typealias ErrorKind = NZRecordsResultErrorKind
+
+        enum NZRecordsResultErrorKind: String {
             case nullResultContent
             case nullImageOrTitle
         }
 
-        typealias ErrorKind = NZRecordsResultErrorKind
-
-        var result: any NonNullableResult
+        var data: [String: String]
         var kind: NZRecordsResultErrorKind
     }
 
@@ -67,7 +68,7 @@ struct NZRecordsResult: NonNullableResult, Codable {
             return self
         }
         else {
-            throw NZRecordsResultError(result: self, kind: .nullResultContent)
+            throw NZRecordsResultError(data: ["self_description": self.customDescription()], kind: .nullResultContent)
         }
     }
 
@@ -76,7 +77,7 @@ struct NZRecordsResult: NonNullableResult, Codable {
             return self
         }
         else {
-            throw NZRecordsResultError(result: self, kind: .nullImageOrTitle)
+            throw NZRecordsResultError(data: ["self_description": self.customDescription()], kind: .nullImageOrTitle)
         }
     }
 }

@@ -9,6 +9,7 @@ import AWSLambdaEvents
 import AWSLambdaRuntime
 import Foundation
 import OrderedCollections
+import RichError
 
 @main
 final class NZImageApiLambda: SimpleLambdaHandler {
@@ -76,11 +77,21 @@ final class NZImageApiLambda: SimpleLambdaHandler {
 
     private func image(context: LambdaContext) async -> NZRecordsResult? {
         do {
-            let result = try await digitalNZAPIDataSource.newResult()
+            let result = try await digitalNZAPIDataSource.newResult(logger: { log in
+                context.logger.log(level: .trace, "\(log)")
+            })
             return result
         }
         catch {
-            context.logger.error("An unexpected error occurred: \(error.localizedDescription)")
+            if let richError = error as? (any RichError) {
+                // Get the raw value from the enum that defines the kind of error. Messy due to RichError being a protocol and the nested associated types.
+                let kind = (richError.kind as any RawRepresentable).rawValue as? String ?? "unknownKind"
+                
+                context.logger.error("A rich error occurred. Kind: \(kind), Data: \(richError.data)")
+            }
+            else {
+                context.logger.error("An unexpected error occurred: \(error.localizedDescription)")
+            }
         }
 
         return nil
