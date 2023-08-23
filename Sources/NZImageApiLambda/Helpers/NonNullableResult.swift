@@ -8,7 +8,7 @@
 import RichError
 
 /// A result that can be checked to see if its properties are not null, and throws an error if they are. Useful for standardising the way network API responses are handled.
-protocol NonNullableResult: Decodable {
+protocol NonNullableResult: Codable {
     /// Result must provide error type
     associatedtype ErrorType: RichError
 
