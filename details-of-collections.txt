@@ -1,0 +1,257 @@
+Filtered to collections with images, that have more than 100 items
+
+"iNaturalist NZ — Mātaki Taiao": 1620223,
+- Status: ❌
+- Amateur plant photos form the public, not good for this use
+
+"Papers Past": 188244,
+- Status: ❌
+- Old news clippings/cartoons, again not what I'm looking for
+
+"Auckland Libraries Heritage Images Collection": 169897,
+- Status: ✅
+- Image URLs do not currently work, could enquire with council
+- BUT, I can append URL as a URL encoded query item to the url, lmao: https://thumbnailer.digitalnz.org/?format=jpeg&src=
+- Thumbnail URL to use: Large
+
+"Auckland Museum Collections": 151203,
+- Status: ✅
+- Needs end of url removed
+- Thumbnail URL to use: Large
+
+"Te Papa Collections Online": 111246,
+- Status: ✅
+- /preview swapped to /full
+- Thumbnail URL to use: Large
+
+"Kura Heritage Collections Online": 108147,
+- Status: ✅
+- URL looks like: https://kura.aucklandlibraries.govt.nz/digital/api/singleitem/image/photos/<AKL_LIB_ID>/default.jpg
+- But we need to take <AKL_LIB_ID> and pass it to: https://kura.aucklandlibraries.govt.nz/iiif/2/photos:<AKL_LIB_ID>/full/2048,/0/default.jpg
+- Thumbnail URL to use: Large
+
+"Anthropology Photographic Archive": 45865,
+- Status: ❌
+- Blocked by CORS on all URLs, also cannot find a full res URL from what data we get either way
+- Thumbnailer doesn't even work
+
+"Canterbury Museum": 44687,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Change large to xlarge in URL
+
+"Antarctica NZ Digital Asset Manager": 44465,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Recollect. Get ID from http://antarctica.recollect.co.nz/assets/display/86651-600 and put into URL as such: http://antarctica.recollect.co.nz/assets/downloadwiz/<ID>
+
+"Figure.NZ": 39169,
+- Status: ❌
+- Lmao, it's just graphs, not useful for this project.
+
+"Christchurch City Libraries Flickr": 35223,
+- Status: ❌
+- Just boring photos of in and around ChCh library, not an archive.
+
+"Air Force Museum of New Zealand Photograph Collection": 33828,
+- Status: ❌/⚠️
+- Some URLs work, some are broken, but work with the thumbnailer.
+- ℹ️ A possible solution to this, as images are CC, could be to crawl and auto click download (which provides full res if available), then host myself? (Side project)
+
+"National Publicity Studios black and white file prints": 33796,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Low res, best I can get, but will be included as the images are interesting.
+- ℹ️ Full images could be scraped easily
+
+"Europeana": 32028,
+- Status: ❌
+- Not photos, but archive images, such as pressed plants, documents. Not what I'm looking for.
+
+
+"Lincoln University Living Heritage: Tikaka Tuku Iho": 30991,
+- Status: ❌
+- Random photos of lincoln uni.
+
+"Tauranga City Libraries Other Collection": 29164,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Recollect. Get ID from https://paekoroki.tauranga.govt.nz/assets/display/<ID>-600 and put into URL as such: https://paekoroki.tauranga.govt.nz/assets/downloadwiz/<ID>
+
+"New Zealand Electronic Text Collection": 28547,
+- Status: ❌
+- Low quality newspaper image scans
+
+"Hawke's Bay Knowledge Bank": 26758,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Remove image size from end of URL
+
+"Upper Hutt City Library Heritage Collections": 25007,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
+
+"Picture Wairarapa": 24904,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Just use large thumbnail URL, images aren't very large, but are interesting enough to include
+
+"Kete Horowhenua": 22492,
+- Status: ⚠️
+- Thumbnail URL to use: Large
+- Not possible to get full res image from the info from result, large thumb isn't too bad
+
+"History of the University of Auckland": 22320,
+- Status: ❌
+- F**king digitool again
+
+"QuakeStudies Repository": 21348,
+- Status: ❌
+- Too many repetitve quake photos
+
+"South Canterbury Museum": 21216,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Just use large thumbnail URL
+
+"Manawatū Heritage": 14462,
+- Status: ⚠️
+- Thumbnail URL to use: Large
+- Not possible to get full res image from the info from result, large thumb isn't too bad
+
+"Howick Historical Village NZMuseums": 13231,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Just use large thumbnail URL, images aren't very large, but are interesting enough to include
+
+"Presbyterian Research Centre": 12831,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
+
+"Becker Fraser Earthquake Photographs": 12563,
+- Status: ❌
+- Too many repetitve quake photos
+
+"National Army Museum": 11918,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
+
+"TAPUHI": 9983,
+- Status: ⚠️
+- Thumbnail URL to use: Large
+- Not possible to get full res image from the info from result, large thumb is meh
+- ℹ️ Full images could be scraped easily
+
+"Auckland Art Gallery Toi o Tāmaki": 9115,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Swap medium with xlarge in URL
+
+"Waimate Museum and Archives PastPerfect": 8556,
+- Status: ✅
+- Thumbnail URL to use: Large
+
+"NZFUNGI": 8315,
+- Status: ❌
+- Links don't work
+
+"Te Toi Uku, Crown Lynn and Clayworks Museum": 7813,
+- Status: ✅
+- Thumbnail URL to use: Large
+
+"Culture Waitaki": 7551,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Swap large with xlarge in URL
+
+"Archives New Zealand Te Rua Mahara o te Kāwanatanga Flickr": 5512,
+- Status: ❌
+- Links don't work
+
+"Wellington City Recollect": 5429,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
+
+"Trove": 4979,
+- Status: ❌
+- Images too low res
+
+"Te Hikoi Museum": 4918,
+- Status: ✅
+- Thumbnail URL to use: Large
+
+"V.C. Browne & Son NZ Aerial Photograph Collection": 4590,
+- Status: ✅
+- Thumbnail URL to use: Large
+
+"Tāmiro": 4567,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
+
+"Alexander Turnbull Library Flickr": 4307,
+- Status: ⚠️⚠️⚠️
+- NEED TO ADD NEW URL TO RESPONSE, object_url returns full res image
+
+"Flickr": 4237,
+- Status: ❌
+- Quake images
+
+"He Purapura Marara Scattered Seeds": 3978,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
+
+"Canterbury Stories": 3759,
+- Status: ✅
+- Thumbnail URL to use: Large
+
+"Digital Public Library of America": 3651,
+- Status: ❌
+
+"Feilding Library": 3478,
+
+
+"Wyndham & Districts Historical Museum": 3270,
+"MOTAT": 2945,
+"The British Library Flickr": 2819,
+"Ministry for Culture and Heritage Te Ara Flickr": 2818,
+"Sarjeant Gallery Te Whare o Rehua Whanganui": 2725,
+"Aotearoa People's Network Kaharoa Flickr": 2522,
+"Ministry for Culture and Heritage Manatū Taonga Flickr": 2332,
+"FigShare": 2060,
+"Te Ara - The Encyclopedia of New Zealand": 1978,
+"Museums Victoria": 1797,
+"Dunedin City Council Archives Flickr": 1768,
+"War Art Online": 1477,
+"Flora of New Zealand": 1470,
+"Te Ūaka The Lyttelton Museum": 1466,
+"Tasman Heritage": 1380,
+"New Zealand Fashion Museum": 1344,
+"Western Bay Community Archives": 1321,
+"LIANZA": 1236,
+"State Library of Victoria": 773,
+"Tauranga City Libraries Map Collection": 694,
+"Historical Photos of the Waikato and New Zealand": 618,
+"Far North District Libraries Rediscovery": 584,
+"Deutsche Digitale Bibliothek": 309,
+"Lower Hutt MyRecollect": 267,
+"The Hutt City Libraries Online Heritage Collection": 260,
+"Nga Manu Nature Reserve Flickr": 258,
+"John Kinder Theological Library": 251,
+"Nursing Education and Research Foundation - Nursing Oral Histories in NZ": 249,
+"Historical Maps of the Waikato Region": 242,
+"Central and Western Murihiku Southland Archive": 237,
+"Waimate Museum and Archives NZMuseums": 180,
+"State Library of New South Wales Flickr": 166,
+"WRD Laurie World War One Photographs": 162,
+"Māori Postcards ca. 1890-1940": 157,
+"Waikato Region Postcards": 157,
+"Australian National Maritime Museum Flickr": 126,
+"Illumination & Commemoration": 123,
+"The National Archives UK Flickr": 100,
+"Waikato University Campus Photos": 100,

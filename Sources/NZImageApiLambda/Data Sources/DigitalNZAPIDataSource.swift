@@ -12,9 +12,12 @@ import RichError
 class DigitalNZAPIDataSource {
     // MARK: Lifecycle
 
-    init(requestManager: ValidatedRequestManager, collectionWeights: OrderedDictionary<String, Double>) {
+    init(requestManager: ValidatedRequestManager,
+         collectionWeights: OrderedDictionary<String, Double>,
+         urlProcessor: URLProcessor) {
         self.requestManager = requestManager
         self.collectionWeights = collectionWeights
+        self.urlProcessor = urlProcessor
     }
 
     // MARK: Internal
@@ -78,14 +81,17 @@ class DigitalNZAPIDataSource {
 
         let chosenResultPosition = Int.random(in: 0 ..< secondRequestResultsPerPage)
 
-        return try validatedSearch
+        let chosenResult = try validatedSearch
             .results!
             .throwingAccess(chosenResultPosition)
             .checkHasTitleAndLargeImage()
+        
+        return try self.urlProcessor.getLargerImage(for: chosenResult)
     }
 
     // MARK: Private
 
     private let requestManager: ValidatedRequestManager
     private let collectionWeights: OrderedDictionary<String, Double>
+    private let urlProcessor: URLProcessor
 }
