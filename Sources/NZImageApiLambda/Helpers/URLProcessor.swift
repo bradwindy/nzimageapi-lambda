@@ -9,6 +9,8 @@ import Foundation
 import RichError
 
 class URLProcessor {
+    // MARK: Internal
+
     struct URLProcessorError: RichError {
         typealias ErrorKind = URLProcessorErrorKind
 
@@ -53,11 +55,50 @@ class URLProcessor {
                 return urlString
             })
             
+        case "Te Papa Collections Online":
+            return try handleUrl(result: result, urlModifier: { url in
+                // Not processing these URLs yet. Need to look into this more.
+                url.absoluteString
+            })
+            
+        case "Kura Heritage Collections Online":
+            return try handleUrl(result: result, urlModifier: { url in
+                let startString = "/image/photos/"
+                let endString = "/default.jpg"
+                
+                if let id = url.absoluteString.slice(from: startString, to: endString) {
+                    return "https://kura.aucklandlibraries.govt.nz/iiif/2/photos:\(id)/full/2048,/0/default.jpg"
+                }
+                
+                return url.absoluteString
+            })
+        
+        case "Canterbury Museum":
+            return try handleUrl(result: result, urlModifier: { url in
+                return url.absoluteString.replacingOccurrences(of: "large", with: "xlarge")
+            })
+            
+        
+        case "Antarctica NZ Digital Asset Manager":
+            //Get ID from https://antarctica.recollect.co.nz/assets/display/<ID>-600 and put into URL as such: https://antarctica.recollect.co.nz/assets/downloadwiz/<ID>
+            return try handleUrl(result: result, urlModifier: { url in
+                let startString = "display/"
+                let endString = "-600"
+                
+                if let id = url.absoluteString.slice(from: startString, to: endString) {
+                    return "https://antarctica.recollect.co.nz/assets/downloadwiz/\(id)"
+                }
+                
+                return url.absoluteString
+            })
+            
         default:
             throw URLProcessorError(kind: .unknownCollectionName, data: ["result": result.customDescription()])
         }
     }
-    
+
+    // MARK: Private
+
     private func handleUrl(result: NZRecordsResult, urlModifier: (URL) throws -> String) throws -> NZRecordsResult {
         guard let url = result.largeThumbnailUrl else {
             throw URLProcessorError(kind: .nilUrl, data: ["result": result.customDescription()])
@@ -75,13 +116,4 @@ class URLProcessor {
         
         return modifiableResult
     }
-    
-    /*
-     guard let escapedUrlString = url.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else {
-         throw URLProcessorError(kind: .unableToEscapeUrl, data: ["result": result.customDescription()])
-     }
-     
-     let baseUrlString = "https://thumbnailer.digitalnz.org/?format=jpeg&src="
-     let finalUrlString = baseUrlString + escapedUrlString
-     */
 }
