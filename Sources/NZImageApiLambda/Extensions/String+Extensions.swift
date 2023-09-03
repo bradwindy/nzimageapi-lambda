@@ -15,4 +15,8 @@ extension String {
             }
         }
     }
+
+    func numberOfOccurrences(of substring: String) -> Int {
+        return self.components(separatedBy: substring).count - 1
+    }
 }

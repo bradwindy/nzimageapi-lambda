@@ -48,7 +48,7 @@ final class NZImageApiLambda: SimpleLambdaHandler {
     // MARK: Private
 
     // Collection weights are not yet final
-    private static let collectionWeights: OrderedDictionary = ["Antarctica NZ Digital Asset Manager": 1.0]
+    private static let collectionWeights: OrderedDictionary = ["Hawke's Bay Knowledge Bank": 1.0]
 
     private let jsonEncoder = JSONEncoder()
 
