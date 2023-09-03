@@ -20,6 +20,7 @@ class URLProcessor {
             case nilUrl
             case unableToEscapeUrl
             case unableToCreateFinalUrl
+            case unableToFindRecollectDomain
         }
 
         var kind: URLProcessorErrorKind
@@ -63,33 +64,41 @@ class URLProcessor {
             
         case "Kura Heritage Collections Online":
             return try handleUrl(result: result, urlModifier: { url in
-                let startString = "/image/photos/"
-                let endString = "/default.jpg"
-                
-                if let id = url.absoluteString.slice(from: startString, to: endString) {
-                    return "https://kura.aucklandlibraries.govt.nz/iiif/2/photos:\(id)/full/2048,/0/default.jpg"
-                }
-                
-                return url.absoluteString
+                ripId(from: url,
+                      to: { "https://kura.aucklandlibraries.govt.nz/iiif/2/photos:\($0)/full/2048,/0/default.jpg" },
+                      startString: "/image/photos/",
+                      endString: "/default.jpg")
             })
         
         case "Canterbury Museum":
             return try handleUrl(result: result, urlModifier: { url in
-                return url.absoluteString.replacingOccurrences(of: "large", with: "xlarge")
+                url.absoluteString.replacingOccurrences(of: "large", with: "xlarge")
             })
             
-        
-        case "Antarctica NZ Digital Asset Manager":
-            //Get ID from https://antarctica.recollect.co.nz/assets/display/<ID>-600 and put into URL as such: https://antarctica.recollect.co.nz/assets/downloadwiz/<ID>
+        case "Antarctica NZ Digital Asset Manager",
+             "Tauranga City Libraries Other Collection":
+            
             return try handleUrl(result: result, urlModifier: { url in
-                let startString = "display/"
-                let endString = "-600"
+                try recollectDownloadUrlString(from: url, collection: collection)
+            })
+            
+        case "National Publicity Studios black and white file prints":
+            return try handleUrl(result: result, urlModifier: { url in
+                url.absoluteString
+            })
+            
+        case "Hawke's Bay Knowledge Bank":
+            return try handleUrl(result: result, urlModifier: { url in
+                var urlString = url.absoluteString
                 
-                if let id = url.absoluteString.slice(from: startString, to: endString) {
-                    return "https://antarctica.recollect.co.nz/assets/downloadwiz/\(id)"
+                if urlString.numberOfOccurrences(of: "-") > 1 {
+                    let dashPosition = urlString.count - 12
+                    let startIndex = urlString.index(urlString.startIndex, offsetBy: dashPosition)
+                    let endIndex = urlString.index(urlString.startIndex, offsetBy: dashPosition + 7)
+                    urlString.removeSubrange(startIndex ... endIndex)
                 }
                 
-                return url.absoluteString
+                return urlString
             })
             
         default:
@@ -98,6 +107,31 @@ class URLProcessor {
     }
 
     // MARK: Private
+
+    private let recollectDomainMap = ["Antarctica NZ Digital Asset Manager": "antarctica.recollect.co.nz",
+                                      "Tauranga City Libraries Other Collection": "paekoroki.tauranga.govt.nz"]
+
+    private func recollectDownloadUrlString(from url: URL, collection: String) throws -> String {
+        let domain = try recollectDomain(for: collection)
+        
+        return ripId(from: url,
+                     to: { "https://\(domain)/assets/downloadwiz/\($0)" },
+                     startString: "display/",
+                     endString: "-600")
+    }
+    
+    private func recollectDomain(for collection: String) throws -> String {
+        guard let domain = recollectDomainMap[collection] else {
+            throw URLProcessorError(kind: .unableToFindRecollectDomain, data: ["collection": collection])
+        }
+        
+        return domain
+    }
+    
+    private func ripId(from url: URL, to: (String) -> String, startString: String, endString: String) -> String {
+        guard let id = url.absoluteString.slice(from: startString, to: endString) else { return url.absoluteString }
+        return to(id)
+    }
 
     private func handleUrl(result: NZRecordsResult, urlModifier: (URL) throws -> String) throws -> NZRecordsResult {
         guard let url = result.largeThumbnailUrl else {
