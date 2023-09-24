@@ -70,7 +70,8 @@ class URLProcessor {
                       endString: "/default.jpg")
             })
         
-        case "Canterbury Museum":
+        case "Canterbury Museum",
+             "Culture Waitaki":
             return try handleUrl(result: result, urlModifier: { url in
                 url.absoluteString.replacingOccurrences(of: "large", with: "xlarge")
             })
@@ -79,7 +80,9 @@ class URLProcessor {
              "Tauranga City Libraries Other Collection",
              "Upper Hutt City Library Heritage Collections",
              "Presbyterian Research Centre",
-             "National Army Museum":
+             "National Army Museum",
+             "Wellington City Recollect",
+             "Tāmiro":
             
             return try handleUrl(result: result, urlModifier: { url in
                 try recollectDownloadUrlString(from: url, collection: collection)
@@ -88,7 +91,11 @@ class URLProcessor {
         case "National Publicity Studios black and white file prints",
              "Picture Wairarapa",
              "South Canterbury Museum",
-             "Howick Historical Village NZMuseums":
+             "Howick Historical Village NZMuseums",
+             "Waimate Museum and Archives PastPerfect",
+             "Te Toi Uku, Crown Lynn and Clayworks Museum",
+             "Te Hikoi Museum",
+             "V.C. Browne & Son NZ Aerial Photograph Collection":
             return try handleUrl(result: result, urlModifier: { url in
                 url.absoluteString
             })
@@ -123,7 +130,9 @@ class URLProcessor {
                                       "Tauranga City Libraries Other Collection": "paekoroki.tauranga.govt.nz",
                                       "Upper Hutt City Library Heritage Collections": "uhcl.recollect.co.nz",
                                       "Presbyterian Research Centre": "prc.recollect.co.nz",
-                                      "National Army Museum": "nam.recollect.co.nz"]
+                                      "National Army Museum": "nam.recollect.co.nz",
+                                      "Wellington City Recollect": "wellington.recollect.co.nz",
+                                      "Tāmiro": "massey.recollect.co.nz"]
 
     private func recollectDownloadUrlString(from url: URL, collection: String) throws -> String {
         let domain = try recollectDomain(for: collection)
