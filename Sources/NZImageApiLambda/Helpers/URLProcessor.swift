@@ -76,13 +76,19 @@ class URLProcessor {
             })
             
         case "Antarctica NZ Digital Asset Manager",
-             "Tauranga City Libraries Other Collection":
+             "Tauranga City Libraries Other Collection",
+             "Upper Hutt City Library Heritage Collections",
+             "Presbyterian Research Centre",
+             "National Army Museum":
             
             return try handleUrl(result: result, urlModifier: { url in
                 try recollectDownloadUrlString(from: url, collection: collection)
             })
             
-        case "National Publicity Studios black and white file prints":
+        case "National Publicity Studios black and white file prints",
+             "Picture Wairarapa",
+             "South Canterbury Museum",
+             "Howick Historical Village NZMuseums":
             return try handleUrl(result: result, urlModifier: { url in
                 url.absoluteString
             })
@@ -101,6 +107,11 @@ class URLProcessor {
                 return urlString
             })
             
+        case "Auckland Art Gallery Toi o Tāmaki":
+            return try handleUrl(result: result, urlModifier: { url in
+                url.absoluteString.replacingOccurrences(of: "medium", with: "xlarge")
+            })
+            
         default:
             throw URLProcessorError(kind: .unknownCollectionName, data: ["result": result.customDescription()])
         }
@@ -109,7 +120,10 @@ class URLProcessor {
     // MARK: Private
 
     private let recollectDomainMap = ["Antarctica NZ Digital Asset Manager": "antarctica.recollect.co.nz",
-                                      "Tauranga City Libraries Other Collection": "paekoroki.tauranga.govt.nz"]
+                                      "Tauranga City Libraries Other Collection": "paekoroki.tauranga.govt.nz",
+                                      "Upper Hutt City Library Heritage Collections": "uhcl.recollect.co.nz",
+                                      "Presbyterian Research Centre": "prc.recollect.co.nz",
+                                      "National Army Museum": "nam.recollect.co.nz"]
 
     private func recollectDownloadUrlString(from url: URL, collection: String) throws -> String {
         let domain = try recollectDomain(for: collection)
