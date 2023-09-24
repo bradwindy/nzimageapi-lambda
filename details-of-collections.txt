@@ -193,6 +193,7 @@ Filtered to collections with images, that have more than 100 items
 - Thumbnail URL to use: Large
 - Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
 
+🔵🔵🔵 NEXT >> 🔵🔵🔵
 "Alexander Turnbull Library Flickr": 4307,
 - Status: ⚠️⚠️⚠️
 - NEED TO ADD NEW URL TO RESPONSE, object_url returns full res image

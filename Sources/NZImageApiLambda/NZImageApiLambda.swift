@@ -18,7 +18,7 @@ final class NZImageApiLambda: SimpleLambdaHandler {
     init() {
         let requestManager = NetworkRequestManager()
         let urlProcessor = URLProcessor()
-        
+
         self.digitalNZAPIDataSource = DigitalNZAPIDataSource(requestManager: requestManager,
                                                              collectionWeights: NZImageApiLambda.collectionWeights,
                                                              urlProcessor: urlProcessor)
@@ -32,7 +32,7 @@ final class NZImageApiLambda: SimpleLambdaHandler {
             guard let image = await image(context: context) else {
                 return APIGatewayV2Response(statusCode: .badRequest)
             }
-            
+
             let jsonEncoder = JSONEncoder()
             jsonEncoder.outputFormatting = .withoutEscapingSlashes
             let jsonData = try jsonEncoder.encode(image)
@@ -48,7 +48,7 @@ final class NZImageApiLambda: SimpleLambdaHandler {
     // MARK: Private
 
     // Collection weights are not yet final
-    private static let collectionWeights: OrderedDictionary = ["Auckland Art Gallery Toi o Tāmaki": 1.0]
+    private static let collectionWeights: OrderedDictionary = ["Tāmiro": 1.0]
 
     private let jsonEncoder = JSONEncoder()
 
@@ -65,7 +65,7 @@ final class NZImageApiLambda: SimpleLambdaHandler {
             if let richError = error as? (any RichError) {
                 // Get the raw value from the enum that defines the kind of error. Messy due to RichError being a protocol and the nested associated types.
                 let kind = (richError.kind as any RawRepresentable).rawValue as? String ?? "unknownKind"
-                
+
                 context.logger.error("A rich error occurred. Kind: \(kind), Data: \(richError.data)")
             }
             else {
