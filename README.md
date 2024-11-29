@@ -24,7 +24,9 @@ LOCAL_LAMBDA_SERVER_ENABLED=true
 The secret must match what is sent in the request. Change to something more secure than this example for production.
 
 ```
-curl --header "Content-Type: application/json" \
+curl \
+   -vvv \
+   --header "Content-Type: application/json" \
    --request POST \
    --data '{
          "routeKey":"GET /image",
@@ -32,30 +34,30 @@ curl --header "Content-Type: application/json" \
          "rawPath":"/image",
          "stageVariables":{},
          "requestContext":{
-             "timeEpoch":1587750461466,
-             "domainPrefix":"hello",
-             "accountId":"0123456789",
-             "stage":"$default",
-             "domainName":"hello.test.com",
-             "apiId":"pb5dg6g3rg",
-             "requestId":"LgLpnibOFiAEPCA=",
-             "http":{
-                 "path":"/image",
-                 "userAgent":"Paw/3.1.10 (Macintosh; OS X/10.15.4) GCDHTTPRequest",
-                 "method":"GET",
-                 "protocol":"HTTP/1.1",
-                 "sourceIp":"91.64.117.86"
-             },
-             "time":"24/Apr/2020:17:47:41 +0000"
+         "timeEpoch":1587750461466,
+         "domainPrefix":"image",
+         "accountId":"0123456789",
+         "stage":"$default",
+         "domainName":"image.test.com",
+         "apiId":"pb5dg6g3rg",
+         "requestId":"LgLpnibOFiAEPCA=",
+         "http":{
+            "path":"/image",
+            "userAgent":"Paw/3.1.10 (Macintosh; OS X/10.15.4) GCDHTTPRequest",
+            "method":"GET",
+            "protocol":"HTTP/1.1",
+            "sourceIp":"91.64.117.86"
+         },
+         "time":"24/Apr/2020:17:47:41 +0000"
          },
          "isBase64Encoded":false,
          "rawQueryString":"",
          "headers":{
             "secret": "super_secret_secret",
-             "host":"hello.test.com",
-             "user-agent":"Paw/3.1.10 (Macintosh; OS X/10.15.4) GCDHTTPRequest",
-             "content-length":"0"
+            "host":"image.test.com",
+            "user-agent":"Paw/3.1.10 (Macintosh; OS X/10.15.4) GCDHTTPRequest",
+            "content-length":"0"
          }
      }' \
-   http://localhost:7000/invoke
+   http://127.0.0.1:7000/invoke
 ```
