@@ -62,7 +62,6 @@ Filtered to collections with images, that have more than 100 items
 - Status: ✅
 - Thumbnail URL to use: Large
 - Low res, best I can get, but will be included as the images are interesting.
-- ℹ️ Full images could be scraped easily
 
 "Europeana": 32028,
 - Status: ❌
@@ -88,19 +87,20 @@ Filtered to collections with images, that have more than 100 items
 - Remove image size from end of URL
 
 "Upper Hutt City Library Heritage Collections": 25007,
-- Status: ✅
+- Status: ❌
 - Thumbnail URL to use: Large
 - Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
 
 "Picture Wairarapa": 24904,
-- Status: ✅
+- Status: ⚠️/❌
 - Thumbnail URL to use: Large
-- Just use large thumbnail URL, images aren't very large, but are interesting enough to include
+- Website currently down
 
 "Kete Horowhenua": 22492,
-- Status: ⚠️
+- Status: ⚠️/❌
 - Thumbnail URL to use: Large
 - Not possible to get full res image from the info from result, large thumb isn't too bad
+- Website down
 
 "History of the University of Auckland": 22320,
 - Status: ❌
@@ -116,9 +116,10 @@ Filtered to collections with images, that have more than 100 items
 - Just use large thumbnail URL
 
 "Manawatū Heritage": 14462,
-- Status: ⚠️
+- Status: ⚠️/❌
 - Thumbnail URL to use: Large
 - Not possible to get full res image from the info from result, large thumb isn't too bad
+- Website down
 
 "Howick Historical Village NZMuseums": 13231,
 - Status: ✅
@@ -133,6 +134,8 @@ Filtered to collections with images, that have more than 100 items
 "Becker Fraser Earthquake Photographs": 12563,
 - Status: ❌
 - Too many repetitve quake photos
+
+⚡️🔵 >> WORKING ON BELOW << ⚡️🔵
 
 "National Army Museum": 11918,
 - Status: ✅

@@ -64,7 +64,7 @@ class URLProcessor {
                 result: result,
                 urlModifier: { url in
                     var urlString = url.absoluteString
-                    
+
                     if let tailRange = urlString.range(of: "?rendering=standard.jpg") {
                         urlString.removeSubrange(tailRange)
                     }
@@ -104,15 +104,6 @@ class URLProcessor {
                 }
             )
 
-        case "Te Papa Collections Online":
-            return try await handleUrl(
-                result: result,
-                urlModifier: { url in
-                    // Not processing these URLs yet. Need to look into this more.
-                    url.absoluteString
-                }
-            )
-
         case "Kura Heritage Collections Online":
             return try await handleUrl(
                 result: result,
@@ -138,10 +129,7 @@ class URLProcessor {
                 }
             )
 
-        case "Antarctica NZ Digital Asset Manager",
-             "Tauranga City Libraries Other Collection",
-             "Upper Hutt City Library Heritage Collections",
-             "Presbyterian Research Centre",
+        case "Tauranga City Libraries Other Collection",
              "National Army Museum",
              "Wellington City Recollect",
              "Tāmiro",
@@ -157,14 +145,16 @@ class URLProcessor {
                 }
             )
 
-        case "National Publicity Studios black and white file prints",
-             "Picture Wairarapa",
+        case "Antarctica NZ Digital Asset Manager",
+             "Te Papa Collections Online",
+             "National Publicity Studios black and white file prints",
              "South Canterbury Museum",
              "Howick Historical Village NZMuseums",
              "Waimate Museum and Archives PastPerfect",
              "Te Toi Uku, Crown Lynn and Clayworks Museum",
              "Te Hikoi Museum",
-             "V.C. Browne & Son NZ Aerial Photograph Collection":
+             "V.C. Browne & Son NZ Aerial Photograph Collection",
+             "Presbyterian Research Centre":
             return try await handleUrl(
                 result: result,
                 urlModifier: { url in
@@ -223,10 +213,7 @@ class URLProcessor {
     // MARK: Private
 
     private let recollectDomainMap = [
-        "Antarctica NZ Digital Asset Manager": "antarctica.recollect.co.nz",
         "Tauranga City Libraries Other Collection": "paekoroki.tauranga.govt.nz",
-        "Upper Hutt City Library Heritage Collections": "uhcl.recollect.co.nz",
-        "Presbyterian Research Centre": "prc.recollect.co.nz",
         "National Army Museum": "nam.recollect.co.nz",
         "Wellington City Recollect": "wellington.recollect.co.nz",
         "Tāmiro": "massey.recollect.co.nz",
