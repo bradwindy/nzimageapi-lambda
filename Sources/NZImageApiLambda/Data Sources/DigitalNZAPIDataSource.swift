@@ -12,9 +12,11 @@ import RichError
 class DigitalNZAPIDataSource {
     // MARK: Lifecycle
 
-    init(requestManager: ValidatedRequestManager,
-         collectionWeights: OrderedDictionary<String, Double>,
-         urlProcessor: URLProcessor) {
+    init(
+        requestManager: ValidatedRequestManager,
+        collectionWeights: OrderedDictionary<String, Double>,
+        urlProcessor: URLProcessor
+    ) {
         self.requestManager = requestManager
         self.collectionWeights = collectionWeights
         self.urlProcessor = urlProcessor
@@ -33,8 +35,21 @@ class DigitalNZAPIDataSource {
         var data: [String: String]
     }
 
-    func newResult(logger: (String) -> ()) async throws -> NZRecordsResult {
-        let collection = collectionWeights.weightedRandomPick()
+    func newResult(
+        collection: String?,
+        logger: (String) -> Void
+    )
+        async throws -> NZRecordsResult
+    {
+        let chosenCollection: String
+        
+        if let collection {
+            chosenCollection = collection
+        }
+        else {
+            chosenCollection = collectionWeights.weightedRandomPick()
+        }
+        
         let secondRequestResultsPerPage = 100
         let endpoint = "https://api.digitalnz.org/records.json"
         let apiKey: String? = nil
@@ -42,9 +57,9 @@ class DigitalNZAPIDataSource {
         let initialRequestParameters: [String: Any] = ["page": 1,
                                                        "per_page": 0,
                                                        "and[category][]": "Images",
-                                                       "and[primary_collection][]": collection]
+                                                       "and[primary_collection][]": chosenCollection]
         
-        logger("Making initial request for collection: \(collection)")
+        logger("Making initial request for collection: \(chosenCollection)")
 
         let initialResponse: NZRecordsResponse = try await requestManager.makeRequest(endpoint: endpoint,
                                                                                       apiKey: apiKey,
@@ -67,9 +82,9 @@ class DigitalNZAPIDataSource {
         let secondaryRequestParameters: [String: Any] = ["page": pageNumber,
                                                          "per_page": secondRequestResultsPerPage,
                                                          "and[category][]": "Images",
-                                                         "and[primary_collection][]": collection]
+                                                         "and[primary_collection][]": chosenCollection]
         
-        logger("Making second request. pageNumber: \(pageNumber), resultsPerPage: \(secondRequestResultsPerPage), collection: \(collection)")
+        logger("Making second request. pageNumber: \(pageNumber), resultsPerPage: \(secondRequestResultsPerPage), collection: \(chosenCollection)")
 
         let secondaryResponse: NZRecordsResponse = try await requestManager.makeRequest(endpoint: endpoint,
                                                                                         apiKey: apiKey,

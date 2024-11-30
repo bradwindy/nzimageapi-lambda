@@ -29,7 +29,9 @@ final class NZImageApiLambda: SimpleLambdaHandler {
     func handle(_ event: APIGatewayV2Request, context: LambdaContext) async throws -> APIGatewayV2Response {
         switch (event.context.http.path, event.context.http.method) {
         case ("/image", .GET):
-            guard let image = await image(context: context) else {
+            let requestedCollection = event.queryStringParameters?["collection"]
+            
+            guard let image = await image(context: context, collection: requestedCollection) else {
                 return APIGatewayV2Response(statusCode: .badRequest)
             }
 
@@ -48,17 +50,49 @@ final class NZImageApiLambda: SimpleLambdaHandler {
     // MARK: Private
 
     // Collection weights are not yet final
-    private static let collectionWeights: OrderedDictionary = ["Tāmiro": 1.0]
+    private static let collectionWeights: OrderedDictionary = [
+        "Auckland Libraries Heritage Images Collection": 0.182,
+        "Auckland Museum Collections": 0.162,
+        "Te Papa Collections Online": 0.119,
+        "Kura Heritage Collections Online": 0.116,
+        "Canterbury Museum": 0.048,
+        "Antarctica NZ Digital Asset Manager": 0.048,
+        "National Publicity Studios black and white file prints": 0.037,
+        "Tauranga City Libraries Other Collection": 0.032,
+        "Hawke's Bay Knowledge Bank": 0.029,
+        "Upper Hutt City Library Heritage Collections": 0.027,
+        "Picture Wairarapa": 0.027,
+        "Kete Horowhenua": 0.025,
+        "South Canterbury Museum": 0.023,
+        "Manawatū Heritage": 0.016,
+        "Howick Historical Village NZMuseums": 0.015,
+        "Presbyterian Research Centre": 0.014,
+        "National Army Museum": 0.013,
+        "TAPUHI": 0.011,
+        "Auckland Art Gallery Toi o Tāmaki": 0.01,
+        "Waimate Museum and Archives PastPerfect": 0.01,
+        "Te Toi Uku, Crown Lynn and Clayworks Museum": 0.009,
+        "Culture Waitaki": 0.009,
+        "Wellington City Recollect": 0.006,
+        "Te Hikoi Museum": 0.006,
+        "V.C. Browne & Son NZ Aerial Photograph Collection": 0.005,
+        "Tāmiro": 0.005,
+        "Alexander Turnbull Library Flickr": 0.005,
+        "He Purapura Marara Scattered Seeds": 0.005,
+    ]
 
     private let jsonEncoder = JSONEncoder()
 
     private let digitalNZAPIDataSource: DigitalNZAPIDataSource
 
-    private func image(context: LambdaContext) async -> NZRecordsResult? {
+    private func image(context: LambdaContext, collection: String?) async -> NZRecordsResult? {
         do {
-            let result = try await digitalNZAPIDataSource.newResult(logger: { log in
-                context.logger.log(level: .trace, "\(log)")
-            })
+            let result = try await digitalNZAPIDataSource.newResult(
+                collection: collection,
+                logger: { log in
+                    context.logger.log(level: .trace, "\(log)")
+                }
+            )
             return result
         }
         catch {
