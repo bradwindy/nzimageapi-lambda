@@ -18,7 +18,8 @@ struct NZRecordsResult: NonNullableResult, Codable {
         thumbnailUrl: URL?,
         largeThumbnailUrl: URL?,
         objectUrl: URL?,
-        collection: String?
+        collection: String?,
+        landingUrl: URL?
     ) {
         self.id = id
         self.title = title
@@ -27,6 +28,7 @@ struct NZRecordsResult: NonNullableResult, Codable {
         self.largeThumbnailUrl = largeThumbnailUrl
         self.objectUrl = objectUrl
         self.collection = collection
+        self.landingUrl = landingUrl
     }
 
     // MARK: Internal
@@ -53,6 +55,7 @@ struct NZRecordsResult: NonNullableResult, Codable {
         case largeThumbnailUrl = "large_thumbnail_url"
         case objectUrl = "object_url"
         case collection = "display_collection"
+        case landingUrl = "landing_url"
     }
 
     var id: Int?
@@ -62,6 +65,7 @@ struct NZRecordsResult: NonNullableResult, Codable {
     var largeThumbnailUrl: URL?
     var objectUrl: URL?
     var collection: String?
+    var landingUrl: URL?
 
     func customDescription() -> String {
         return """
@@ -70,8 +74,9 @@ struct NZRecordsResult: NonNullableResult, Codable {
         description: \(String(describing: description)),
         thumbnailUrl: \(String(describing: thumbnailUrl)),
         largeThumbnailUrl: \(String(describing: largeThumbnailUrl)),
-        objectUrl: \(String(describing: objectUrl))
-        collection: \(String(describing: collection))
+        objectUrl: \(String(describing: objectUrl)),
+        collection: \(String(describing: collection)),
+        landingUrl: \(String(describing: landingUrl))
         """
     }
 
@@ -82,7 +87,8 @@ struct NZRecordsResult: NonNullableResult, Codable {
            thumbnailUrl != nil,
            largeThumbnailUrl != nil,
            objectUrl != nil,
-           collection != nil
+           collection != nil,
+           landingUrl != nil
         {
             return self
         }
