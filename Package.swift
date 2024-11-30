@@ -14,7 +14,8 @@ let package = Package(
         .package(url: "https://github.com/swift-server/swift-aws-lambda-events.git", branch: "main"),
         .package(url: "https://github.com/Alamofire/Alamofire.git", from: "5.0.0"),
         .package(url: "https://github.com/apple/swift-collections.git", from: "1.0.0"),
-        .package(url: "https://github.com/bradwindy/RichError.git", from: "2.0.0")
+        .package(url: "https://github.com/bradwindy/RichError.git", from: "2.0.0"),
+        .package(url: "https://github.com/scinfu/SwiftSoup.git", .upToNextMajor(from: "2.6.0")),
     ],
     targets: [
         .executableTarget(
@@ -24,7 +25,8 @@ let package = Package(
                 .product(name: "AWSLambdaEvents", package: "swift-aws-lambda-events"),
                 .product(name: "Alamofire", package: "Alamofire"),
                 .product(name: "OrderedCollections", package: "swift-collections"),
-                .product(name: "RichError", package: "RichError")
+                .product(name: "RichError", package: "RichError"),
+                .product(name: "SwiftSoup", package: "SwiftSoup")
             ]
         ),
     ]

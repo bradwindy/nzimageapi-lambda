@@ -7,6 +7,7 @@
 
 import Foundation
 import RichError
+import SwiftSoup
 
 class URLProcessor {
     // MARK: Internal
@@ -130,7 +131,6 @@ class URLProcessor {
             )
 
         case "Tauranga City Libraries Other Collection",
-             "National Army Museum",
              "Wellington City Recollect",
              "Tāmiro",
              "He Purapura Marara Scattered Seeds":
@@ -163,44 +163,89 @@ class URLProcessor {
             )
 
         case "Hawke's Bay Knowledge Bank":
-            return try await handleUrl(result: result, urlModifier: { url in
-                var urlString = url.absoluteString
+            return try await handleUrl(
+                result: result,
+                urlModifier: { url in
+                    var urlString = url.absoluteString
 
-                if urlString.numberOfOccurrences(of: "-") > 1 {
-                    let dashPosition = urlString.count - 12
+                    if urlString.numberOfOccurrences(of: "-") > 1 {
+                        let dashPosition = urlString.count - 12
 
-                    let startIndex = urlString.index(
-                        urlString.startIndex,
-                        offsetBy: dashPosition
-                    )
+                        let startIndex = urlString.index(
+                            urlString.startIndex,
+                            offsetBy: dashPosition
+                        )
 
-                    let endIndex = urlString.index(
-                        urlString.startIndex,
-                        offsetBy: dashPosition + 7
-                    )
+                        let endIndex = urlString.index(
+                            urlString.startIndex,
+                            offsetBy: dashPosition + 7
+                        )
 
-                    urlString.removeSubrange(startIndex ... endIndex)
+                        urlString.removeSubrange(startIndex ... endIndex)
+                    }
+
+                    return urlString
                 }
-
-                return urlString
-            })
+            )
 
         case "Auckland Art Gallery Toi o Tāmaki":
-            return try await handleUrl(result: result, urlModifier: { url in
-                url.absoluteString.replacingOccurrences(
-                    of: "medium",
-                    with: "xlarge"
-                )
-            })
+            return try await handleUrl(
+                result: result,
+                urlModifier: { url in
+                    url.absoluteString.replacingOccurrences(
+                        of: "medium",
+                        with: "xlarge"
+                    )
+                }
+            )
 
         case "Alexander Turnbull Library Flickr":
-            return try await handleUrl(result: result, urlModifier: { url in
-                guard let objectUrl = result.objectUrl?.absoluteString else {
-                    return url.absoluteString
-                }
+            return try await handleUrl(
+                result: result,
+                urlModifier: { url in
+                    guard let objectUrl = result.objectUrl?.absoluteString else {
+                        return url.absoluteString
+                    }
 
-                return objectUrl
-            })
+                    return objectUrl
+                }
+            )
+
+        case "National Army Museum":
+            return try await handleUrl(
+                result: result,
+                urlModifier: { url in
+                    guard let landingUrl = result.landingUrl else { return url.absoluteString }
+
+                    do {
+                        let html = try String(contentsOf: landingUrl)
+                        let document: Document = try SwiftSoup.parse(html)
+
+                        let imageMetaTag = try document
+                            .select("meta")
+                            .first { element in
+                                try element.attr("property") == "og:image"
+                            }
+
+                        guard let contentUrlString = try imageMetaTag?.attr("content"),
+                              let contentUrl = URL(string: contentUrlString),
+                              let contentUrlHost = contentUrl.host
+                        else {
+                            return url.absoluteString
+                        }
+
+                        return ripId(
+                            from: contentUrl,
+                            to: { "https://\(contentUrlHost)/assets/downloadwiz/\($0)" },
+                            startString: "display/",
+                            endString: "-max"
+                        )
+                    }
+                    catch {
+                        return url.absoluteString
+                    }
+                }
+            )
 
         default:
             throw URLProcessorError(
