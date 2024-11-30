@@ -144,7 +144,7 @@ Filtered to collections with images, that have more than 100 items
 - Status: ⚠️
 - Thumbnail URL to use: Large
 - Not possible to get full res image from the info from result, large thumb is meh
-- ℹ️ Full images could be scraped easily
+- ℹ️ Full images could be scraped easily, 🔵🔵 HOW??? 🔵🔵
 
 "Auckland Art Gallery Toi o Tāmaki": 9115,
 - Status: ✅
@@ -158,6 +158,8 @@ Filtered to collections with images, that have more than 100 items
 "NZFUNGI": 8315,
 - Status: ❌
 - Links don't work
+
+🔵🔵 CURRENTLY HERE 🔵🔵
 
 "Te Toi Uku, Crown Lynn and Clayworks Museum": 7813,
 - Status: ✅
