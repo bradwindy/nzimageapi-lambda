@@ -11,12 +11,19 @@ import RichError
 struct NZRecordsResult: NonNullableResult, Codable {
     // MARK: Lifecycle
 
-    init(id: Int?, title: String?, description: String?, thumbnailUrl: URL?, largeThumbnailUrl: URL?, collection: String?) {
+    init(id: Int?,
+         title: String?,
+         description: String?,
+         thumbnailUrl: URL?,
+         largeThumbnailUrl: URL?,
+         objectUrl: URL?,
+         collection: String?) {
         self.id = id
         self.title = title
         self.description = description
         self.thumbnailUrl = thumbnailUrl
         self.largeThumbnailUrl = largeThumbnailUrl
+        self.objectUrl = objectUrl
         self.collection = collection
     }
 
@@ -42,6 +49,7 @@ struct NZRecordsResult: NonNullableResult, Codable {
         case description
         case thumbnailUrl = "thumbnail_url"
         case largeThumbnailUrl = "large_thumbnail_url"
+        case objectUrl = "object_url"
         case collection = "display_collection"
     }
 
@@ -50,6 +58,7 @@ struct NZRecordsResult: NonNullableResult, Codable {
     var description: String?
     var thumbnailUrl: URL?
     var largeThumbnailUrl: URL?
+    var objectUrl: URL?
     var collection: String?
 
     func customDescription() -> String {
@@ -59,16 +68,23 @@ struct NZRecordsResult: NonNullableResult, Codable {
         description: \(String(describing: description)),
         thumbnailUrl: \(String(describing: thumbnailUrl)),
         largeThumbnailUrl: \(String(describing: largeThumbnailUrl)),
+        objectUrl: \(String(describing: objectUrl))
         collection: \(String(describing: collection))
         """
     }
 
     func checkNonNull() throws -> NZRecordsResult {
-        if id != nil, title != nil, description != nil, thumbnailUrl != nil, largeThumbnailUrl != nil {
+        if id != nil,
+           title != nil,
+           description != nil,
+           thumbnailUrl != nil,
+           largeThumbnailUrl != nil,
+           objectUrl != nil,
+           collection != nil {
             return self
         }
         else {
-            throw NZRecordsResultError(data: ["self_description": self.customDescription()], kind: .nullResultContent)
+            throw NZRecordsResultError(data: ["self_description": customDescription()], kind: .nullResultContent)
         }
     }
 
@@ -77,7 +93,7 @@ struct NZRecordsResult: NonNullableResult, Codable {
             return self
         }
         else {
-            throw NZRecordsResultError(data: ["self_description": self.customDescription()], kind: .nullImageOrTitle)
+            throw NZRecordsResultError(data: ["self_description": customDescription()], kind: .nullImageOrTitle)
         }
     }
 }
