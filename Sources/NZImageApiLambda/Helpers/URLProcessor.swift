@@ -53,6 +53,21 @@ class URLProcessor {
                     urlString.removeSubrange(tailRange)
                 }
                 
+                // Add landing_url to result object
+                // Get number at end of landing_url
+                // Make a request to this API: https://collection-publicapi.aucklandmuseum.com/api/v3/opacobjects/XXXXXX , replacing X's with number
+                // Drill down
+                // "opacObjectFieldSets" > "identifier": "object_av_link" > "opacObjectFields" > "value"
+                // Value looks like the following:
+                // "DocumentaryHeritage\\Photographs\\2010\\PH-2010-4-S3-F3b-11.jpg|20||All Rights Reserved"
+                // Get the substring from the start to the first pipe, replace \\ with /
+                // Punch that into the following url
+                // https://ajrctguoxo.cloudimg.io/v7/_collectionsecure_/<SUBSTRING_HERE>?c=11?ci_url_encoded=1&force_format=jpeg&height=1000
+                // Final url like so:
+                // https://ajrctguoxo.cloudimg.io/v7/_collectionsecure_/DocumentaryHeritage/Photographs/2010/PH-2010-4-S3-F3b-11.jpg?c=11?ci_url_encoded=1&force_format=jpeg&height=1000
+                // FULL RES IMAGE
+                
+                
                 return urlString
             })
             
