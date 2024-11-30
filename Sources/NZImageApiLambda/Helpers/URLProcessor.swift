@@ -27,7 +27,7 @@ class URLProcessor {
         var data: [String: String]
     }
 
-    func getLargerImage(for result: NZRecordsResult) throws -> NZRecordsResult {
+    func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
         guard let collection = result.collection else {
             throw URLProcessorError(
                 kind: .nilCollection,
@@ -37,7 +37,7 @@ class URLProcessor {
 
         switch collection {
         case "Auckland Libraries Heritage Images Collection":
-            return try handleUrl(
+            return try await handleUrl(
                 result: result,
                 urlModifier: { url in
                     guard let escapedUrlString = url
@@ -60,7 +60,7 @@ class URLProcessor {
             )
 
         case "Auckland Museum Collections":
-            return try handleUrl(
+            return try await handleUrl(
                 result: result,
                 urlModifier: { url in
                     var urlString = url.absoluteString
@@ -91,7 +91,7 @@ class URLProcessor {
             )
 
         case "Te Papa Collections Online":
-            return try handleUrl(
+            return try await handleUrl(
                 result: result,
                 urlModifier: { url in
                     // Not processing these URLs yet. Need to look into this more.
@@ -100,7 +100,7 @@ class URLProcessor {
             )
 
         case "Kura Heritage Collections Online":
-            return try handleUrl(
+            return try await handleUrl(
                 result: result,
                 urlModifier: { url in
                     ripId(
@@ -114,7 +114,7 @@ class URLProcessor {
 
         case "Canterbury Museum",
              "Culture Waitaki":
-            return try handleUrl(
+            return try await handleUrl(
                 result: result,
                 urlModifier: { url in
                     url.absoluteString.replacingOccurrences(
@@ -133,7 +133,7 @@ class URLProcessor {
              "Tāmiro",
              "He Purapura Marara Scattered Seeds":
 
-            return try handleUrl(
+            return try await handleUrl(
                 result: result,
                 urlModifier: { url in
                     try recollectDownloadUrlString(
@@ -151,7 +151,7 @@ class URLProcessor {
              "Te Toi Uku, Crown Lynn and Clayworks Museum",
              "Te Hikoi Museum",
              "V.C. Browne & Son NZ Aerial Photograph Collection":
-            return try handleUrl(
+            return try await handleUrl(
                 result: result,
                 urlModifier: { url in
                     url.absoluteString
@@ -159,7 +159,7 @@ class URLProcessor {
             )
 
         case "Hawke's Bay Knowledge Bank":
-            return try handleUrl(result: result, urlModifier: { url in
+            return try await handleUrl(result: result, urlModifier: { url in
                 var urlString = url.absoluteString
 
                 if urlString.numberOfOccurrences(of: "-") > 1 {
@@ -182,7 +182,7 @@ class URLProcessor {
             })
 
         case "Auckland Art Gallery Toi o Tāmaki":
-            return try handleUrl(result: result, urlModifier: { url in
+            return try await handleUrl(result: result, urlModifier: { url in
                 url.absoluteString.replacingOccurrences(
                     of: "medium",
                     with: "xlarge"
@@ -190,7 +190,7 @@ class URLProcessor {
             })
 
         case "Alexander Turnbull Library Flickr":
-            return try handleUrl(result: result, urlModifier: { url in
+            return try await handleUrl(result: result, urlModifier: { url in
                 guard let objectUrl = result.objectUrl?.absoluteString else {
                     return url.absoluteString
                 }
@@ -267,9 +267,9 @@ class URLProcessor {
 
     private func handleUrl(
         result: NZRecordsResult,
-        urlModifier: (URL) throws -> String
+        urlModifier: (URL) async throws -> String
     )
-        throws -> NZRecordsResult
+        async throws -> NZRecordsResult
     {
         guard let url = result.largeThumbnailUrl else {
             throw URLProcessorError(
@@ -278,7 +278,7 @@ class URLProcessor {
             )
         }
 
-        let finalUrlString = try urlModifier(url)
+        let finalUrlString = try await urlModifier(url)
 
         guard let finalUrl = URL(string: finalUrlString) else {
             throw URLProcessorError(
