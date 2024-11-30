@@ -10,7 +10,7 @@ let package = Package(
       .executable(name: "NZImageApiLambda", targets: ["NZImageApiLambda"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime.git", .upToNextMajor(from: "1.0.0-alpha")),
+        .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime.git", .upToNextMajor(from: "1.0.0-alpha.3")),
         .package(url: "https://github.com/swift-server/swift-aws-lambda-events.git", branch: "main"),
         .package(url: "https://github.com/Alamofire/Alamofire.git", from: "5.0.0"),
         .package(url: "https://github.com/apple/swift-collections.git", from: "1.0.0"),
