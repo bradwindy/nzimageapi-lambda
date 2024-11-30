@@ -82,7 +82,8 @@ class URLProcessor {
              "Presbyterian Research Centre",
              "National Army Museum",
              "Wellington City Recollect",
-             "Tāmiro":
+             "Tāmiro",
+             "He Purapura Marara Scattered Seeds":
             
             return try handleUrl(result: result, urlModifier: { url in
                 try recollectDownloadUrlString(from: url, collection: collection)
@@ -119,6 +120,15 @@ class URLProcessor {
                 url.absoluteString.replacingOccurrences(of: "medium", with: "xlarge")
             })
             
+        case "Alexander Turnbull Library Flickr":
+            return try handleUrl(result: result, urlModifier: { url in
+                guard let objectUrl = result.objectUrl?.absoluteString else {
+                    return url.absoluteString
+                }
+                
+                return objectUrl
+            })
+            
         default:
             throw URLProcessorError(kind: .unknownCollectionName, data: ["result": result.customDescription()])
         }
@@ -132,7 +142,8 @@ class URLProcessor {
                                       "Presbyterian Research Centre": "prc.recollect.co.nz",
                                       "National Army Museum": "nam.recollect.co.nz",
                                       "Wellington City Recollect": "wellington.recollect.co.nz",
-                                      "Tāmiro": "massey.recollect.co.nz"]
+                                      "Tāmiro": "massey.recollect.co.nz",
+                                      "He Purapura Marara Scattered Seeds": "dunedin.recollect.co.nz"]
 
     private func recollectDownloadUrlString(from url: URL, collection: String) throws -> String {
         let domain = try recollectDomain(for: collection)
