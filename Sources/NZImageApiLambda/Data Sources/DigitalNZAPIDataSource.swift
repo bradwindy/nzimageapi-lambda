@@ -42,29 +42,33 @@ class DigitalNZAPIDataSource {
         async throws -> NZRecordsResult
     {
         let chosenCollection: String
-        
+
         if let collection {
             chosenCollection = collection
         }
         else {
             chosenCollection = collectionWeights.weightedRandomPick()
         }
-        
+
         let secondRequestResultsPerPage = 100
         let endpoint = "https://api.digitalnz.org/records.json"
         let apiKey: String? = nil
 
-        let initialRequestParameters: [String: Any] = ["page": 1,
-                                                       "per_page": 0,
-                                                       "and[category][]": "Images",
-                                                       "and[primary_collection][]": chosenCollection]
-        
+        let initialRequestParameters: [String: Any] = [
+            "page": 1,
+            "per_page": 0,
+            "and[category][]": "Images",
+            "and[primary_collection][]": chosenCollection,
+        ]
+
         logger("Making initial request for collection: \(chosenCollection)")
 
-        let initialResponse: NZRecordsResponse = try await requestManager.makeRequest(endpoint: endpoint,
-                                                                                      apiKey: apiKey,
-                                                                                      parameters: initialRequestParameters)
-        
+        let initialResponse: NZRecordsResponse = try await requestManager.makeRequest(
+            endpoint: endpoint,
+            apiKey: apiKey,
+            parameters: initialRequestParameters
+        )
+
         logger("Got initial response: \(initialResponse.customDescription())")
 
         let validatedResultCount = try initialResponse
@@ -75,21 +79,30 @@ class DigitalNZAPIDataSource {
 
         let pageCount = validatedResultCount / secondRequestResultsPerPage
 
-        guard pageCount > 0 else { throw DigitalNZAPIDataSourceError(kind: .noResults, data: ["initial response": initialResponse.customDescription()]) }
+        guard pageCount > 0 else { throw DigitalNZAPIDataSourceError(
+            kind: .noResults,
+            data: ["initial response": initialResponse.customDescription()]
+        ) }
 
         let pageNumber = Int.random(in: 1 ... pageCount)
 
-        let secondaryRequestParameters: [String: Any] = ["page": pageNumber,
-                                                         "per_page": secondRequestResultsPerPage,
-                                                         "and[category][]": "Images",
-                                                         "and[primary_collection][]": chosenCollection]
-        
-        logger("Making second request. pageNumber: \(pageNumber), resultsPerPage: \(secondRequestResultsPerPage), collection: \(chosenCollection)")
+        let secondaryRequestParameters: [String: Any] = [
+            "page": pageNumber,
+            "per_page": secondRequestResultsPerPage,
+            "and[category][]": "Images",
+            "and[primary_collection][]": chosenCollection,
+        ]
 
-        let secondaryResponse: NZRecordsResponse = try await requestManager.makeRequest(endpoint: endpoint,
-                                                                                        apiKey: apiKey,
-                                                                                        parameters: secondaryRequestParameters)
-        
+        logger(
+            "Making second request. pageNumber: \(pageNumber), resultsPerPage: \(secondRequestResultsPerPage), collection: \(chosenCollection)"
+        )
+
+        let secondaryResponse: NZRecordsResponse = try await requestManager.makeRequest(
+            endpoint: endpoint,
+            apiKey: apiKey,
+            parameters: secondaryRequestParameters
+        )
+
         logger("Got second response, result count \(String(describing: secondaryResponse.search?.resultCount))")
 
         let validatedSearch = try secondaryResponse.checkNonNull().search!.checkNonNull()
@@ -100,7 +113,7 @@ class DigitalNZAPIDataSource {
             .results!
             .throwingAccess(chosenResultPosition)
             .checkHasTitleAndLargeImage()
-        
+
         return try self.urlProcessor.getLargerImage(for: chosenResult)
     }
 

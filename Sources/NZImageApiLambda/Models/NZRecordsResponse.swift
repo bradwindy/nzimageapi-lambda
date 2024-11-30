@@ -20,12 +20,12 @@ struct NZRecordsResponse: NonNullableResult {
 
     struct NZRecordsResponseError: RichError {
         typealias ErrorKind = NZRecordsResponseErrorKind
-        
+
         enum NZRecordsResponseErrorKind: String {
             case nullResponseContent
         }
 
-        var data: [String : String]
+        var data: [String: String]
         let kind: NZRecordsResponseErrorKind
     }
 

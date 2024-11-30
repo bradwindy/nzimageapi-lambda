@@ -11,13 +11,15 @@ import RichError
 struct NZRecordsResult: NonNullableResult, Codable {
     // MARK: Lifecycle
 
-    init(id: Int?,
-         title: String?,
-         description: String?,
-         thumbnailUrl: URL?,
-         largeThumbnailUrl: URL?,
-         objectUrl: URL?,
-         collection: String?) {
+    init(
+        id: Int?,
+        title: String?,
+        description: String?,
+        thumbnailUrl: URL?,
+        largeThumbnailUrl: URL?,
+        objectUrl: URL?,
+        collection: String?
+    ) {
         self.id = id
         self.title = title
         self.description = description
@@ -80,7 +82,8 @@ struct NZRecordsResult: NonNullableResult, Codable {
            thumbnailUrl != nil,
            largeThumbnailUrl != nil,
            objectUrl != nil,
-           collection != nil {
+           collection != nil
+        {
             return self
         }
         else {

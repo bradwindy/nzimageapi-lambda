@@ -28,69 +28,102 @@ class URLProcessor {
     }
 
     func getLargerImage(for result: NZRecordsResult) throws -> NZRecordsResult {
-        guard let collection = result.collection else { throw URLProcessorError(kind: .nilCollection, data: ["result": result.customDescription()]) }
-        
+        guard let collection = result.collection else {
+            throw URLProcessorError(
+                kind: .nilCollection,
+                data: ["result": result.customDescription()]
+            )
+        }
+
         switch collection {
         case "Auckland Libraries Heritage Images Collection":
-            return try handleUrl(result: result, urlModifier: { url in
-                guard let escapedUrlString = url.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else {
-                    throw URLProcessorError(kind: .unableToEscapeUrl, data: ["result": result.customDescription()])
+            return try handleUrl(
+                result: result,
+                urlModifier: { url in
+                    guard let escapedUrlString = url
+                        .absoluteString
+                        .addingPercentEncoding(
+                            withAllowedCharacters: .urlHostAllowed
+                        )
+                    else {
+                        throw URLProcessorError(
+                            kind: .unableToEscapeUrl,
+                            data: ["result": result.customDescription()]
+                        )
+                    }
+
+                    let baseUrlString = "https://thumbnailer.digitalnz.org/?format=jpeg&src="
+                    let finalUrlString = baseUrlString + escapedUrlString
+
+                    return finalUrlString
                 }
-                
-                let baseUrlString = "https://thumbnailer.digitalnz.org/?format=jpeg&src="
-                let finalUrlString = baseUrlString + escapedUrlString
-                
-                return finalUrlString
-            })
-            
+            )
+
         case "Auckland Museum Collections":
-            return try handleUrl(result: result, urlModifier: { url in
-                var urlString = url.absoluteString
-                
-                let unneededTail = "?rendering=standard.jpg"
-                
-                if let tailRange = urlString.range(of: unneededTail) {
-                    urlString.removeSubrange(tailRange)
+            return try handleUrl(
+                result: result,
+                urlModifier: { url in
+                    var urlString = url.absoluteString
+
+                    let unneededTail = "?rendering=standard.jpg"
+
+                    if let tailRange = urlString.range(of: unneededTail) {
+                        urlString.removeSubrange(tailRange)
+                    }
+
+                    // Add landing_url to result object
+                    // Get number at end of landing_url
+                    // Make a request to this API: https://collection-publicapi.aucklandmuseum.com/api/v3/opacobjects/XXXXXX , replacing X's
+                    // with number
+                    // Drill down
+                    // "opacObjectFieldSets" > "identifier": "object_av_link" > "opacObjectFields" > "value"
+                    // Value looks like the following:
+                    // "DocumentaryHeritage\\Photographs\\2010\\PH-2010-4-S3-F3b-11.jpg|20||All Rights Reserved"
+                    // Get the substring from the start to the first pipe, replace \\ with /
+                    // Punch that into the following url
+                    // https://ajrctguoxo.cloudimg.io/v7/_collectionsecure_/<SUBSTRING_HERE>?c=11?ci_url_encoded=1&force_format=jpeg&height=1000
+                    // Final url like so:
+                    // https://ajrctguoxo.cloudimg.io/v7/_collectionsecure_/DocumentaryHeritage/Photographs/2010/PH-2010-4-S3-F3b-11.jpg?c=11?ci_url_encoded=1&force_format=jpeg&height=1000
+                    // FULL RES IMAGE
+
+                    return urlString
                 }
-                
-                // Add landing_url to result object
-                // Get number at end of landing_url
-                // Make a request to this API: https://collection-publicapi.aucklandmuseum.com/api/v3/opacobjects/XXXXXX , replacing X's with number
-                // Drill down
-                // "opacObjectFieldSets" > "identifier": "object_av_link" > "opacObjectFields" > "value"
-                // Value looks like the following:
-                // "DocumentaryHeritage\\Photographs\\2010\\PH-2010-4-S3-F3b-11.jpg|20||All Rights Reserved"
-                // Get the substring from the start to the first pipe, replace \\ with /
-                // Punch that into the following url
-                // https://ajrctguoxo.cloudimg.io/v7/_collectionsecure_/<SUBSTRING_HERE>?c=11?ci_url_encoded=1&force_format=jpeg&height=1000
-                // Final url like so:
-                // https://ajrctguoxo.cloudimg.io/v7/_collectionsecure_/DocumentaryHeritage/Photographs/2010/PH-2010-4-S3-F3b-11.jpg?c=11?ci_url_encoded=1&force_format=jpeg&height=1000
-                // FULL RES IMAGE
-                
-                
-                return urlString
-            })
-            
+            )
+
         case "Te Papa Collections Online":
-            return try handleUrl(result: result, urlModifier: { url in
-                // Not processing these URLs yet. Need to look into this more.
-                url.absoluteString
-            })
-            
+            return try handleUrl(
+                result: result,
+                urlModifier: { url in
+                    // Not processing these URLs yet. Need to look into this more.
+                    url.absoluteString
+                }
+            )
+
         case "Kura Heritage Collections Online":
-            return try handleUrl(result: result, urlModifier: { url in
-                ripId(from: url,
-                      to: { "https://kura.aucklandlibraries.govt.nz/iiif/2/photos:\($0)/full/2048,/0/default.jpg" },
-                      startString: "/image/photos/",
-                      endString: "/default.jpg")
-            })
-        
+            return try handleUrl(
+                result: result,
+                urlModifier: { url in
+                    ripId(
+                        from: url,
+                        to: { "https://kura.aucklandlibraries.govt.nz/iiif/2/photos:\($0)/full/2048,/0/default.jpg" },
+                        startString: "/image/photos/",
+                        endString: "/default.jpg"
+                    )
+                }
+            )
+
         case "Canterbury Museum",
              "Culture Waitaki":
-            return try handleUrl(result: result, urlModifier: { url in
-                url.absoluteString.replacingOccurrences(of: "large", with: "xlarge")
-            })
-            
+            return try handleUrl(
+                result: result,
+                urlModifier: { url in
+                    url.absoluteString.replacingOccurrences(
+                        of: "large",
+                        with: "xlarge"
+                    )
+                }
+            )
+
         case "Antarctica NZ Digital Asset Manager",
              "Tauranga City Libraries Other Collection",
              "Upper Hutt City Library Heritage Collections",
@@ -99,11 +132,17 @@ class URLProcessor {
              "Wellington City Recollect",
              "Tāmiro",
              "He Purapura Marara Scattered Seeds":
-            
-            return try handleUrl(result: result, urlModifier: { url in
-                try recollectDownloadUrlString(from: url, collection: collection)
-            })
-            
+
+            return try handleUrl(
+                result: result,
+                urlModifier: { url in
+                    try recollectDownloadUrlString(
+                        from: url,
+                        collection: collection
+                    )
+                }
+            )
+
         case "National Publicity Studios black and white file prints",
              "Picture Wairarapa",
              "South Canterbury Museum",
@@ -112,91 +151,146 @@ class URLProcessor {
              "Te Toi Uku, Crown Lynn and Clayworks Museum",
              "Te Hikoi Museum",
              "V.C. Browne & Son NZ Aerial Photograph Collection":
-            return try handleUrl(result: result, urlModifier: { url in
-                url.absoluteString
-            })
-            
+            return try handleUrl(
+                result: result,
+                urlModifier: { url in
+                    url.absoluteString
+                }
+            )
+
         case "Hawke's Bay Knowledge Bank":
             return try handleUrl(result: result, urlModifier: { url in
                 var urlString = url.absoluteString
-                
+
                 if urlString.numberOfOccurrences(of: "-") > 1 {
                     let dashPosition = urlString.count - 12
-                    let startIndex = urlString.index(urlString.startIndex, offsetBy: dashPosition)
-                    let endIndex = urlString.index(urlString.startIndex, offsetBy: dashPosition + 7)
+
+                    let startIndex = urlString.index(
+                        urlString.startIndex,
+                        offsetBy: dashPosition
+                    )
+
+                    let endIndex = urlString.index(
+                        urlString.startIndex,
+                        offsetBy: dashPosition + 7
+                    )
+
                     urlString.removeSubrange(startIndex ... endIndex)
                 }
-                
+
                 return urlString
             })
-            
+
         case "Auckland Art Gallery Toi o Tāmaki":
             return try handleUrl(result: result, urlModifier: { url in
-                url.absoluteString.replacingOccurrences(of: "medium", with: "xlarge")
+                url.absoluteString.replacingOccurrences(
+                    of: "medium",
+                    with: "xlarge"
+                )
             })
-            
+
         case "Alexander Turnbull Library Flickr":
             return try handleUrl(result: result, urlModifier: { url in
                 guard let objectUrl = result.objectUrl?.absoluteString else {
                     return url.absoluteString
                 }
-                
+
                 return objectUrl
             })
-            
+
         default:
-            throw URLProcessorError(kind: .unknownCollectionName, data: ["result": result.customDescription()])
+            throw URLProcessorError(
+                kind: .unknownCollectionName,
+                data: ["result": result.customDescription()]
+            )
         }
     }
 
     // MARK: Private
 
-    private let recollectDomainMap = ["Antarctica NZ Digital Asset Manager": "antarctica.recollect.co.nz",
-                                      "Tauranga City Libraries Other Collection": "paekoroki.tauranga.govt.nz",
-                                      "Upper Hutt City Library Heritage Collections": "uhcl.recollect.co.nz",
-                                      "Presbyterian Research Centre": "prc.recollect.co.nz",
-                                      "National Army Museum": "nam.recollect.co.nz",
-                                      "Wellington City Recollect": "wellington.recollect.co.nz",
-                                      "Tāmiro": "massey.recollect.co.nz",
-                                      "He Purapura Marara Scattered Seeds": "dunedin.recollect.co.nz"]
+    private let recollectDomainMap = [
+        "Antarctica NZ Digital Asset Manager": "antarctica.recollect.co.nz",
+        "Tauranga City Libraries Other Collection": "paekoroki.tauranga.govt.nz",
+        "Upper Hutt City Library Heritage Collections": "uhcl.recollect.co.nz",
+        "Presbyterian Research Centre": "prc.recollect.co.nz",
+        "National Army Museum": "nam.recollect.co.nz",
+        "Wellington City Recollect": "wellington.recollect.co.nz",
+        "Tāmiro": "massey.recollect.co.nz",
+        "He Purapura Marara Scattered Seeds": "dunedin.recollect.co.nz",
+    ]
 
-    private func recollectDownloadUrlString(from url: URL, collection: String) throws -> String {
+    private func recollectDownloadUrlString(
+        from url: URL,
+        collection: String
+    )
+        throws -> String
+    {
         let domain = try recollectDomain(for: collection)
-        
-        return ripId(from: url,
-                     to: { "https://\(domain)/assets/downloadwiz/\($0)" },
-                     startString: "display/",
-                     endString: "-600")
+
+        return ripId(
+            from: url,
+            to: { "https://\(domain)/assets/downloadwiz/\($0)" },
+            startString: "display/",
+            endString: "-600"
+        )
     }
-    
+
     private func recollectDomain(for collection: String) throws -> String {
         guard let domain = recollectDomainMap[collection] else {
-            throw URLProcessorError(kind: .unableToFindRecollectDomain, data: ["collection": collection])
+            throw URLProcessorError(
+                kind: .unableToFindRecollectDomain,
+                data: ["collection": collection]
+            )
         }
-        
+
         return domain
     }
-    
-    private func ripId(from url: URL, to: (String) -> String, startString: String, endString: String) -> String {
-        guard let id = url.absoluteString.slice(from: startString, to: endString) else { return url.absoluteString }
+
+    private func ripId(
+        from url: URL,
+        to: (String) -> String,
+        startString: String,
+        endString: String
+    )
+        -> String
+    {
+        guard let id = url.absoluteString.slice(
+            from: startString,
+            to: endString
+        )
+        else {
+            return url.absoluteString
+        }
+
         return to(id)
     }
 
-    private func handleUrl(result: NZRecordsResult, urlModifier: (URL) throws -> String) throws -> NZRecordsResult {
+    private func handleUrl(
+        result: NZRecordsResult,
+        urlModifier: (URL) throws -> String
+    )
+        throws -> NZRecordsResult
+    {
         guard let url = result.largeThumbnailUrl else {
-            throw URLProcessorError(kind: .nilUrl, data: ["result": result.customDescription()])
+            throw URLProcessorError(
+                kind: .nilUrl,
+                data: ["result": result.customDescription()]
+            )
         }
-        
+
         let finalUrlString = try urlModifier(url)
-        
+
         guard let finalUrl = URL(string: finalUrlString) else {
-            throw URLProcessorError(kind: .unableToCreateFinalUrl, data: ["result": result.customDescription()])
+            throw URLProcessorError(
+                kind: .unableToCreateFinalUrl,
+                data: ["result": result.customDescription()]
+            )
         }
-        
+
         var modifiableResult = result
-        
+
         modifiableResult.largeThumbnailUrl = finalUrl
-        
+
         return modifiableResult
     }
 }
