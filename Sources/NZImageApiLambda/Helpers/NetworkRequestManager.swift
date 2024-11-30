@@ -9,7 +9,7 @@ import Alamofire
 import Foundation
 import RichError
 #if canImport(FoundationNetworking)
-import FoundationNetworking
+    import FoundationNetworking
 #endif
 
 class NetworkRequestManager: ValidatedRequestManager {
@@ -28,9 +28,11 @@ class NetworkRequestManager: ValidatedRequestManager {
     var validation: (URLRequest?, HTTPURLResponse, Data?) -> Result<Void, Error> = { request, response, data in
         let acceptableStatusCodes = 200 ..< 300
 
-        let errorData: [String: String] = ["request": request?.description ?? "nil request",
-                                           "response": response.description,
-                                           "data": data?.description ?? "nil data"]
+        let errorData: [String: String] = [
+            "request": request?.description ?? "nil request",
+            "response": response.description,
+            "data": data?.description ?? "nil data",
+        ]
 
         guard acceptableStatusCodes.contains(response.statusCode) else {
             return .failure(NetworkRequestManagerError(kind: .non200StatusCode, data: errorData))
@@ -43,9 +45,13 @@ class NetworkRequestManager: ValidatedRequestManager {
         return .success(())
     }
 
-    func makeRequest<ResponseType: NonNullableResult>(endpoint: String,
-                                                      apiKey: String? = nil,
-                                                      parameters: [String: Any]? = nil) async throws -> ResponseType {
+    func makeRequest<ResponseType: NonNullableResult>(
+        endpoint: String,
+        apiKey: String? = nil,
+        parameters: [String: Any]? = nil
+    )
+        async throws -> ResponseType
+    {
         var headers: HTTPHeaders? = nil
 
         if let apiKey {
@@ -60,10 +66,10 @@ class NetworkRequestManager: ValidatedRequestManager {
             .result
 
         switch result {
-        case .success(let value):
+        case let .success(value):
             return value
 
-        case .failure(let error):
+        case let .failure(error):
             throw error
         }
     }

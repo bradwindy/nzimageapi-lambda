@@ -11,17 +11,18 @@ import Foundation
 import OrderedCollections
 import RichError
 
-@main
-final class NZImageApiLambda: SimpleLambdaHandler {
+@main final class NZImageApiLambda: SimpleLambdaHandler {
     // MARK: Lifecycle
 
     init() {
         let requestManager = NetworkRequestManager()
         let urlProcessor = URLProcessor()
 
-        self.digitalNZAPIDataSource = DigitalNZAPIDataSource(requestManager: requestManager,
-                                                             collectionWeights: NZImageApiLambda.collectionWeights,
-                                                             urlProcessor: urlProcessor)
+        self.digitalNZAPIDataSource = DigitalNZAPIDataSource(
+            requestManager: requestManager,
+            collectionWeights: NZImageApiLambda.collectionWeights,
+            urlProcessor: urlProcessor
+        )
     }
 
     // MARK: Internal
@@ -30,7 +31,7 @@ final class NZImageApiLambda: SimpleLambdaHandler {
         switch (event.context.http.path, event.context.http.method) {
         case ("/image", .GET):
             let requestedCollection = event.queryStringParameters?["collection"]
-            
+
             guard let image = await image(context: context, collection: requestedCollection) else {
                 return APIGatewayV2Response(statusCode: .badRequest)
             }
@@ -97,7 +98,8 @@ final class NZImageApiLambda: SimpleLambdaHandler {
         }
         catch {
             if let richError = error as? (any RichError) {
-                // Get the raw value from the enum that defines the kind of error. Messy due to RichError being a protocol and the nested associated types.
+                // Get the raw value from the enum that defines the kind of error. Messy due to RichError being a protocol and the nested
+                // associated types.
                 let kind = (richError.kind as any RawRepresentable).rawValue as? String ?? "unknownKind"
 
                 context.logger.error("A rich error occurred. Kind: \(kind), Data: \(richError.data)")
