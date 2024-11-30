@@ -135,8 +135,6 @@ Filtered to collections with images, that have more than 100 items
 - Status: ❌
 - Too many repetitve quake photos
 
-⚡️🔵 >> WORKING ON BELOW << ⚡️🔵
-
 "National Army Museum": 11918,
 - Status: ✅
 - Thumbnail URL to use: Large
