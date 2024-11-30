@@ -114,7 +114,7 @@ class DigitalNZAPIDataSource {
             .throwingAccess(chosenResultPosition)
             .checkHasTitleAndLargeImage()
 
-        return try self.urlProcessor.getLargerImage(for: chosenResult)
+        return try await self.urlProcessor.getLargerImage(for: chosenResult)
     }
 
     // MARK: Private
