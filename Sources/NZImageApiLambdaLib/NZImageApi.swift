@@ -38,7 +38,6 @@ public struct NZImageApi: Sendable {
         "Tauranga City Libraries Other Collection": 0.032,
         "Hawke's Bay Knowledge Bank": 0.029,
         "South Canterbury Museum": 0.023,
-        "Manawatū Heritage": 0.016,
         "Howick Historical Village NZMuseums": 0.015,
         "Presbyterian Research Centre": 0.014,
         "National Army Museum": 0.013,

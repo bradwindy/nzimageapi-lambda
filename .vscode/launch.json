@@ -1,24 +1,44 @@
 {
-    "configurations": [
-        {
-            "type": "swift",
-            "request": "launch",
-            "args": [],
-            "cwd": "${workspaceFolder:nzimageapi-lambda}",
-            "name": "Debug NZImageApiLambda",
-            "target": "NZImageApiLambda",
-            "configuration": "debug",
-            "preLaunchTask": "swift: Build Debug NZImageApiLambda"
-        },
-        {
-            "type": "swift",
-            "request": "launch",
-            "args": [],
-            "cwd": "${workspaceFolder:nzimageapi-lambda}",
-            "name": "Release NZImageApiLambda",
-            "target": "NZImageApiLambda",
-            "configuration": "release",
-            "preLaunchTask": "swift: Build Release NZImageApiLambda"
-        }
-    ]
+  "configurations": [
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:nzimageapi-lambda}",
+      "name": "Debug NZImageApiLambda",
+      "target": "NZImageApiLambda",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug NZImageApiLambda"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:nzimageapi-lambda}",
+      "name": "Release NZImageApiLambda",
+      "target": "NZImageApiLambda",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release NZImageApiLambda"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:nzimageapi-lambda}",
+      "name": "Debug CollectionTester",
+      "target": "CollectionTester",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug CollectionTester"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:nzimageapi-lambda}",
+      "name": "Release CollectionTester",
+      "target": "CollectionTester",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release CollectionTester"
+    }
+  ]
 }

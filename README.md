@@ -34,12 +34,11 @@ curl "https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/image"
 # 1. Set your API key
 export DIGITALNZ_API_KEY=your_api_key
 
-# 2. Build and run
-swift build
-DIGITALNZ_API_KEY=$DIGITALNZ_API_KEY SECRET=super_secret_secret LOCAL_LAMBDA_SERVER_ENABLED=true ./.build/debug/NZImageApiLambda
+# 2. Test a collection (builds and runs automatically)
+./Sources/Testing/CollectionTester/test-collection.sh "Wellington City Recollect"
 
-# 3. Test (in another terminal)
-DIGITALNZ_API_KEY=$DIGITALNZ_API_KEY ./test-local.sh
+# Or test a random collection
+./Sources/Testing/CollectionTester/test-collection.sh
 ```
 
 ## API Reference
@@ -138,17 +137,30 @@ See `Sources/NZImageApiLambda/NZImageApiLambda.swift:55-81` for the complete wei
 
 ### Testing Locally
 
-**Using the test script (recommended):**
+**Using CollectionTester (recommended):**
 ```bash
-# Random collection
-./test-local.sh
+# Set your API key first
+export DIGITALNZ_API_KEY=your_api_key
 
-# Specific collection
-./test-local.sh "Auckland Libraries Heritage Images Collection"
+# Test random collection
+./Sources/Testing/CollectionTester/test-collection.sh
 
-# Custom settings
-DIGITALNZ_API_KEY=your_key SECRET=my_secret PORT=8000 ./test-local.sh
+# Test specific collection
+./Sources/Testing/CollectionTester/test-collection.sh "Wellington City Recollect"
+
+# Use custom port
+./Sources/Testing/CollectionTester/test-collection.sh --port 8000 "Canterbury Museum"
+
+# Show help
+./Sources/Testing/CollectionTester/test-collection.sh --help
 ```
+
+The `test-collection.sh` script automatically:
+- Builds the CollectionTester and Lambda
+- Starts a local Lambda server
+- Makes a test request
+- Validates the image URL
+- Shuts down the server
 
 **Using curl directly:**
 ```bash
@@ -235,9 +247,10 @@ aws lambda create-function \
 
 Test your deployed function:
 ```bash
+# Test with a simple payload
 aws lambda invoke \
   --function-name YOUR_FUNCTION_NAME \
-  --payload file://test-payload.json \
+  --payload '{"routeKey":"GET /image","version":"2.0","rawPath":"/image","requestContext":{"http":{"path":"/image","method":"GET"}}}' \
   --cli-binary-format raw-in-base64-out \
   response.json
 

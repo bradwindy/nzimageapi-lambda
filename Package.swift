@@ -9,7 +9,6 @@ let package = Package(
     products: [
       .executable(name: "NZImageApiLambda", targets: ["NZImageApiLambda"]),
       .executable(name: "CollectionTester", targets: ["CollectionTester"]),
-      .executable(name: "CollectionFetcher", targets: ["CollectionFetcher"]),
       .library(name: "NZImageApiLambdaLib", targets: ["NZImageApiLambdaLib"]),
     ],
     dependencies: [
@@ -41,13 +40,8 @@ let package = Package(
         ),
         .executableTarget(
             name: "CollectionTester",
-            dependencies: [
-                "NZImageApiLambdaLib"
-            ]
-        ),
-        .executableTarget(
-            name: "CollectionFetcher",
-            dependencies: []
+            dependencies: [],
+            path: "Sources/Testing/CollectionTester"
         ),
     ]
 )
