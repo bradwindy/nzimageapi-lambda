@@ -9,7 +9,6 @@ let package = Package(
     products: [
       .executable(name: "NZImageApiLambda", targets: ["NZImageApiLambda"]),
       .executable(name: "CollectionTester", targets: ["CollectionTester"]),
-      .library(name: "NZImageApiLambdaLib", targets: ["NZImageApiLambdaLib"]),
     ],
     dependencies: [
         .package(url: "https://github.com/awslabs/swift-aws-lambda-runtime.git", from: "2.3.1"),
@@ -20,22 +19,15 @@ let package = Package(
         .package(url: "https://github.com/scinfu/SwiftSoup.git", from: "2.7.0"),
     ],
     targets: [
-        .target(
-            name: "NZImageApiLambdaLib",
+        .executableTarget(
+            name: "NZImageApiLambda",
             dependencies: [
+                .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
+                .product(name: "AWSLambdaEvents", package: "swift-aws-lambda-events"),
                 .product(name: "Alamofire", package: "Alamofire"),
                 .product(name: "OrderedCollections", package: "swift-collections"),
                 .product(name: "RichError", package: "RichError"),
                 .product(name: "SwiftSoup", package: "SwiftSoup")
-            ],
-            path: "Sources/NZImageApiLambdaLib"
-        ),
-        .executableTarget(
-            name: "NZImageApiLambda",
-            dependencies: [
-                "NZImageApiLambdaLib",
-                .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
-                .product(name: "AWSLambdaEvents", package: "swift-aws-lambda-events"),
             ]
         ),
         .executableTarget(
