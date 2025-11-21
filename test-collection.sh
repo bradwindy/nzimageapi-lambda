@@ -60,6 +60,15 @@ if [ -z "$DIGITALNZ_API_KEY" ]; then
     exit 1
 fi
 
+# Build the lambda
+echo -e "${GREEN}🔨 Building lambda...${NC}"
+if ! swift build 2>&1 | grep -q "Build complete"; then
+    echo -e "${RED}❌ Build failed${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ Build complete${NC}"
+echo ""
+
 # Check if port is available
 if lsof -Pi :$PORT -sTCP:LISTEN -t >/dev/null 2>&1; then
     echo -e "${YELLOW}Warning: Port $PORT is already in use${NC}"
@@ -192,6 +201,33 @@ if command -v jq &> /dev/null; then
         echo ""
         BODY=$(echo "$RESPONSE" | jq -r '.body')
         echo "$BODY" | jq '.'
+
+        # Verify the large_thumbnail_url returns a valid image
+        echo ""
+        echo "🔍 Verifying image URL..."
+        IMAGE_URL=$(echo "$BODY" | jq -r '.large_thumbnail_url')
+
+        if [ "$IMAGE_URL" != "null" ] && [ -n "$IMAGE_URL" ]; then
+            echo "📸 Image URL: $IMAGE_URL"
+
+            # Check if the URL returns a valid response
+            HTTP_STATUS=$(curl -s -A "Mozilla/5.0" -o /dev/null -w "%{http_code}" "$IMAGE_URL")
+
+            if [ "$HTTP_STATUS" = "200" ]; then
+                # Verify it's actually an image
+                CONTENT_TYPE=$(curl -s -I -A "Mozilla/5.0" "$IMAGE_URL" | grep -i "content-type" | cut -d':' -f2 | tr -d ' \r')
+                FILE_TYPE=$(curl -s -A "Mozilla/5.0" "$IMAGE_URL" 2>/dev/null | head -c 20 | file - 2>/dev/null)
+
+                echo -e "${GREEN}✅ Image URL is valid (HTTP $HTTP_STATUS)${NC}"
+                echo "   Content-Type: $CONTENT_TYPE"
+                echo "   File Type: $FILE_TYPE"
+            else
+                echo -e "${RED}❌ Image URL returned HTTP $HTTP_STATUS${NC}"
+                exit 1
+            fi
+        else
+            echo -e "${YELLOW}⚠️  No large_thumbnail_url in response${NC}"
+        fi
     else
         echo -e "${RED}✗ Request failed with status code: $STATUS_CODE${NC}"
         echo ""

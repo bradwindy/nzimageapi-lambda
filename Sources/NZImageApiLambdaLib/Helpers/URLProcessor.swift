@@ -131,7 +131,6 @@ final class URLProcessor: Sendable {
             )
 
         case "Tauranga City Libraries Other Collection",
-             "Wellington City Recollect",
              "Tāmiro",
              "He Purapura Marara Scattered Seeds":
 
@@ -142,6 +141,44 @@ final class URLProcessor: Sendable {
                         from: url,
                         collection: collection
                     )
+                }
+            )
+
+        case "Wellington City Recollect":
+            return try await handleUrl(
+                result: result,
+                urlModifier: { url in
+                    guard let landingUrl = result.landingUrl else { return url.absoluteString }
+
+                    do {
+                        let html = try String(contentsOf: landingUrl, encoding: .utf8)
+                        let document: Document = try SwiftSoup.parse(html)
+
+                        // Find the og:image meta tag which contains the actual asset ID
+                        let imageMetaTag = try document
+                            .select("meta")
+                            .first { element in
+                                try element.attr("property") == "og:image"
+                            }
+
+                        guard let contentUrlString = try imageMetaTag?.attr("content"),
+                              let contentUrl = URL(string: contentUrlString)
+                        else {
+                            return url.absoluteString
+                        }
+
+                        // Extract asset ID from the og:image URL
+                        // Format: https://wellington.recollect.co.nz/assets/display/18277-max?u=...
+                        return ripId(
+                            from: contentUrl,
+                            to: { "https://wellington.recollect.co.nz/assets/downloadwiz/\($0)" },
+                            startString: "display/",
+                            endString: "-max"
+                        )
+                    }
+                    catch {
+                        return url.absoluteString
+                    }
                 }
             )
 
