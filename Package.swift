@@ -9,6 +9,8 @@ let package = Package(
     products: [
       .executable(name: "NZImageApiLambda", targets: ["NZImageApiLambda"]),
       .executable(name: "CollectionTester", targets: ["CollectionTester"]),
+      .executable(name: "ImageResolutionChecker", targets: ["ImageResolutionChecker"]),
+      .executable(name: "CollectionLister", targets: ["CollectionLister"]),
     ],
     dependencies: [
         .package(url: "https://github.com/awslabs/swift-aws-lambda-runtime.git", from: "2.3.1"),
@@ -34,6 +36,23 @@ let package = Package(
             name: "CollectionTester",
             dependencies: [],
             path: "Sources/Testing/CollectionTester"
+        ),
+        .executableTarget(
+            name: "ImageResolutionChecker",
+            dependencies: [
+                .product(name: "Alamofire", package: "Alamofire"),
+                .product(name: "OrderedCollections", package: "swift-collections"),
+                .product(name: "RichError", package: "RichError"),
+                .product(name: "SwiftSoup", package: "SwiftSoup")
+            ],
+            path: "Sources/Testing/ImageResolutionChecker"
+        ),
+        .executableTarget(
+            name: "CollectionLister",
+            dependencies: [
+                .product(name: "Alamofire", package: "Alamofire")
+            ],
+            path: "Sources/Testing/CollectionLister"
         ),
     ]
 )

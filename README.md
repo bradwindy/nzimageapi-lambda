@@ -100,7 +100,7 @@ Images are randomly selected from these NZ archives (weighted by collection size
 - Hawke's Bay Knowledge Bank
 - And many more...
 
-See `Sources/NZImageApiLambda/NZImageApiLambda.swift:55-81` for the complete weighted list.
+See `Sources/NZImageApiLambda/NZImageApi.swift:30-55` for the complete weighted list.
 
 ## Local Development
 
@@ -176,6 +176,52 @@ curl -X POST http://127.0.0.1:7000/invoke \
     "isBase64Encoded":false
   }'
 ```
+
+## Testing & Development Tools
+
+This project includes several utility tools for testing and analyzing Digital NZ collections.
+
+### CollectionLister
+
+Lists all image collections available from the Digital NZ API with their current image counts.
+
+**Quick Start:**
+```bash
+export DIGITALNZ_API_KEY=your_api_key
+./Sources/Testing/CollectionLister/list-collections.sh
+```
+
+Outputs machine-parseable JSON with all collections sorted by size. Useful for maintaining `details-of-collections.txt` and discovering new collections.
+
+📖 [Full documentation](Sources/Testing/CollectionLister/README-CollectionLister.md)
+
+### ImageResolutionChecker
+
+Checks actual pixel dimensions of images from a specified collection.
+
+**Quick Start:**
+```bash
+export DIGITALNZ_API_KEY=your_api_key
+./Sources/Testing/ImageResolutionChecker/test-image-resolution.sh "Te Papa Collections Online"
+```
+
+Outputs JSON with resolution data for `large_thumbnail_url` and `object_url` fields. Useful for evaluating collection image quality and comparing URL types.
+
+📖 [Full documentation](Sources/Testing/ImageResolutionChecker/README-ImageResolutionChecker.md)
+
+### CollectionTester
+
+Tests the full Lambda functionality locally with a specific collection.
+
+**Quick Start:**
+```bash
+export DIGITALNZ_API_KEY=your_api_key
+./Sources/Testing/CollectionTester/test-collection.sh "Wellington City Recollect"
+```
+
+Automatically builds, starts a local Lambda server, makes a test request, and validates the response.
+
+📖 [Full documentation](Sources/Testing/CollectionTester/README-CollectionTester.md)
 
 ## Deployment
 

@@ -1,260 +1,789 @@
 Filtered to collections with images, that have more than 100 items
-
-"iNaturalist NZ — Mātaki Taiao": 1620223,
+"iNaturalist NZ — Mātaki Taiao": 3,436,813,
 - Status: ❌
 - Amateur plant photos form the public, not good for this use
 
-"Papers Past": 188244,
-- Status: ❌
-- Old news clippings/cartoons, again not what I'm looking for
 
-"Auckland Libraries Heritage Images Collection": 169897,
-- Status: ✅
-- Image URLs do not currently work, could enquire with council
-- BUT, I can append URL as a URL encoded query item to the url, lmao: https://thumbnailer.digitalnz.org/?format=jpeg&src=
-- Thumbnail URL to use: Large
-
-"Auckland Museum Collections": 151203,
-- Status: ✅
-- Needs end of url removed
-- Thumbnail URL to use: Large
-
-"Te Papa Collections Online": 111246,
-- Status: ✅
-- /preview swapped to /full
-- Thumbnail URL to use: Large
-
-"Kura Heritage Collections Online": 108147,
+"Kura Heritage Collections Online": 367,587,
 - Status: ✅
 - URL looks like: https://kura.aucklandlibraries.govt.nz/digital/api/singleitem/image/photos/<AKL_LIB_ID>/default.jpg
 - But we need to take <AKL_LIB_ID> and pass it to: https://kura.aucklandlibraries.govt.nz/iiif/2/photos:<AKL_LIB_ID>/full/2048,/0/default.jpg
 - Thumbnail URL to use: Large
 
-"Anthropology Photographic Archive": 45865,
-- Status: ❌
-- Blocked by CORS on all URLs, also cannot find a full res URL from what data we get either way
-- Thumbnailer doesn't even work
 
-"Canterbury Museum": 44687,
+"Te Papa Collections Online": 365,674,
 - Status: ✅
+- /preview swapped to /full
 - Thumbnail URL to use: Large
-- Change large to xlarge in URL
-
-"Antarctica NZ Digital Asset Manager": 44465,
-- Status: ✅
-- Thumbnail URL to use: Large
-- Recollect. Get ID from http://antarctica.recollect.co.nz/assets/display/86651-600 and put into URL as such: http://antarctica.recollect.co.nz/assets/downloadwiz/<ID>
-
-"Figure.NZ": 39169,
-- Status: ❌
-- Lmao, it's just graphs, not useful for this project.
-
-"Christchurch City Libraries Flickr": 35223,
-- Status: ❌
-- Just boring photos of in and around ChCh library, not an archive.
-
-"Air Force Museum of New Zealand Photograph Collection": 33828,
-- Status: ❌/⚠️
-- Some URLs work, some are broken, but work with the thumbnailer.
-- ℹ️ A possible solution to this, as images are CC, could be to crawl and auto click download (which provides full res if available), then host myself? (Side project)
-
-"National Publicity Studios black and white file prints": 33796,
-- Status: ✅
-- Thumbnail URL to use: Large
-- Low res, best I can get, but will be included as the images are interesting.
-
-"Europeana": 32028,
-- Status: ❌
-- Not photos, but archive images, such as pressed plants, documents. Not what I'm looking for.
 
 
-"Lincoln University Living Heritage: Tikaka Tuku Iho": 30991,
-- Status: ❌
-- Random photos of lincoln uni.
-
-"Tauranga City Libraries Other Collection": 29164,
-- Status: ✅
-- Thumbnail URL to use: Large
-- Recollect. Get ID from https://paekoroki.tauranga.govt.nz/assets/display/<ID>-600 and put into URL as such: https://paekoroki.tauranga.govt.nz/assets/downloadwiz/<ID>
-
-"New Zealand Electronic Text Collection": 28547,
-- Status: ❌
-- Low quality newspaper image scans
-
-"Hawke's Bay Knowledge Bank": 26758,
-- Status: ✅
-- Thumbnail URL to use: Large
-- Remove image size from end of URL
-
-"Upper Hutt City Library Heritage Collections": 25007,
-- Status: ❌
-- Thumbnail URL to use: Large
-- Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
-
-"Picture Wairarapa": 24904,
-- Status: ⚠️/❌
-- Thumbnail URL to use: Large
-- Website currently down
-
-"Kete Horowhenua": 22492,
-- Status: ⚠️/❌
-- Thumbnail URL to use: Large
-- Not possible to get full res image from the info from result, large thumb isn't too bad
-- Website down
-
-"History of the University of Auckland": 22320,
-- Status: ❌
-- F**king digitool again
-
-"QuakeStudies Repository": 21348,
-- Status: ❌
-- Too many repetitve quake photos
-
-"South Canterbury Museum": 21216,
-- Status: ✅
-- Thumbnail URL to use: Large
-- Just use large thumbnail URL
-
-"Manawatū Heritage": 14462,
-- Status: ⚠️/❌
-- Thumbnail URL to use: Large
-- Not possible to get full res image from the info from result, large thumb isn't too bad
-- Website down
-
-"Howick Historical Village NZMuseums": 13231,
-- Status: ✅
-- Thumbnail URL to use: Large
-- Just use large thumbnail URL, images aren't very large, but are interesting enough to include
-
-"Presbyterian Research Centre": 12831,
-- Status: ✅
-- Thumbnail URL to use: Large
-- Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
-
-"Becker Fraser Earthquake Photographs": 12563,
-- Status: ❌
-- Too many repetitve quake photos
-
-"National Army Museum": 11918,
-- Status: ✅
-- Thumbnail URL to use: Large
-- Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
-
-"TAPUHI": 9983,
+"TAPUHI": 300,748,
 - Status: ⚠️
 - Thumbnail URL to use: Large
 - Not possible to get full res image from the info from result, large thumb is meh
 - ℹ️ Full images could be scraped easily, 🔵🔵 HOW??? 🔵🔵
 
-"Auckland Art Gallery Toi o Tāmaki": 9115,
+
+"Auckland Museum Collections": 257,891,
+- Status: ✅
+- Needs end of url removed
+- Thumbnail URL to use: Large
+
+
+"Canterbury Museum": 229,481,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Change large to xlarge in URL
+
+
+"Papers Past": 207,223,
+- Status: ❌
+- Old news clippings/cartoons, again not what I'm looking for
+
+
+"Nelson Provincial Museum": 198,196,
+- Status: ❓
+- New collection, needs evaluation
+
+"Puke Ariki": 134,849,
+- Status: ❓
+- New collection, needs evaluation
+
+"Canterbury Stories": 86,246,
+- Status: ❌ 
+- Thumbnail URL to use: Large
+
+
+"Tauranga City Libraries Other Collection": 65,226,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Recollect. Get ID from https://paekoroki.tauranga.govt.nz/assets/display/<ID>-600 and put into URL as such: https://paekoroki.tauranga.govt.nz/assets/downloadwiz/<ID>
+
+
+"Antarctica NZ Digital Asset Manager": 59,347,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Recollect. Get ID from http://antarctica.recollect.co.nz/assets/display/86651-600 and put into URL as such: http://antarctica.recollect.co.nz/assets/downloadwiz/<ID>
+
+
+"Hocken Digital Collections": 54,311,
+- Status: ❓
+- New collection, needs evaluation
+
+"Anthropology Photographic Archive": 51,483,
+- Status: ❌
+- Blocked by CORS on all URLs, also cannot find a full res URL from what data we get either way
+- Thumbnailer doesn't even work
+
+
+"Air Force Museum of New Zealand Photograph Collection": 49,120,
+- Status: ❌/⚠️
+- Some URLs work, some are broken, but work with the thumbnailer.
+- ℹ️ A possible solution to this, as images are CC, could be to crawl and auto click download (which provides full res if available), then host myself? (Side project)
+
+
+"Lincoln University Living Heritage: Tikaka Tuku Iho": 48,580,
+- Status: ❓
+- New collection, needs evaluation
+
+"Figure.NZ": 44,144,
+- Status: ❌
+- Lmao, it's just graphs, not useful for this project.
+
+
+"Christchurch City Libraries Flickr": 42,757,
+- Status: ❌
+- Just boring photos of in and around ChCh library, not an archive.
+
+
+"New Zealand Electronic Text Collection": 42,009,
+- Status: ❌
+- Low quality newspaper image scans
+
+
+"Wellington City Council Archives": 41,508,
+- Status: ❓
+- New collection, needs evaluation
+
+"QuakeStudies Repository": 38,703,
+- Status: ❌
+- Too many repetitve quake photos
+
+
+"Auckland Libraries Heritage Images Collection": 36,228,
+- Status: ✅
+- Image URLs do not currently work, could enquire with council
+- BUT, I can append URL as a URL encoded query item to the url, lmao: https://thumbnailer.digitalnz.org/?format=jpeg&src=
+- Thumbnail URL to use: Large
+
+
+"MOTAT": 34,187,
+
+"New Zealand Maritime Museum": 33,803,
+- Status: ❓
+- New collection, needs evaluation
+
+"National Publicity Studios black and white file prints": 33,796,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Low res, best I can get, but will be included as the images are interesting.
+
+
+"V.C. Browne & Son NZ Aerial Photograph Collection": 31,506,
+- Status: ✅
+- Thumbnail URL to use: Large
+
+
+"Mahara Upper Hutt Community Archive": 29,706,
+- Status: ❓
+- New collection, needs evaluation
+
+"Hawke's Bay Knowledge Bank": 29,060,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Remove image size from end of URL
+
+
+"Trove": 28,435,
+- Status: ❌
+- Images too low res
+
+
+"Picture Wairarapa": 25,949,
+- Status: ⚠️/❌
+- Thumbnail URL to use: Large
+- Website currently down
+
+
+"University of Auckland Photographs": 25,752,
+- Status: ❓
+- New collection, needs evaluation
+
+"Te Ara - The Encyclopedia of New Zealand": 25,634,
+
+"Kete Horowhenua": 24,104,
+- Status: ⚠️/❌
+- Thumbnail URL to use: Large
+- Not possible to get full res image from the info from result, large thumb isn't too bad
+- Website down
+
+
+"Fletcher Trust Archives": 23,358,
+- Status: ❓
+- New collection, needs evaluation
+
+"Manawatū Heritage": 22,365,
+- Status: ⚠️/❌
+- Thumbnail URL to use: Large
+- Not possible to get full res image from the info from result, large thumb isn't too bad
+- Website down
+
+
+"South Canterbury Museum": 22,269,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Just use large thumbnail URL
+
+
+"Te Ūaka The Lyttelton Museum": 18,588,
+
+"Auckland Art Gallery Toi o Tāmaki": 18,192,
 - Status: ✅
 - Thumbnail URL to use: Large
 - Swap medium with xlarge in URL
 
-"Waimate Museum and Archives PastPerfect": 8556,
+
+"MTG Hawke's Bay": 17,116,
+- Status: ❓
+- New collection, needs evaluation
+
+"Tauranga City Libraries Photograph Collection": 16,654,
+- Status: ❓
+- New collection, needs evaluation
+
+"Presbyterian Research Centre": 16,122,
 - Status: ✅
 - Thumbnail URL to use: Large
+- Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
 
-"NZFUNGI": 8315,
+
+"Ministry for Culture and Heritage Te Ara Flickr": 15,738,
+
+"National Army Museum": 14,035,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
+
+
+"Howick Historical Village NZMuseums": 13,426,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Just use large thumbnail URL, images aren't very large, but are interesting enough to include
+
+
+"Tairāwhiti Museum Te Whare Taonga o Tairāwhiti": 12,625,
+- Status: ❓
+- New collection, needs evaluation
+
+"Becker Fraser Earthquake Photographs": 12,564,
+- Status: ❌
+- Too many repetitve quake photos
+
+
+"Hamilton Heritage Collections": 12,508,
+- Status: ❓
+- New collection, needs evaluation
+
+"Te Awamutu Museum": 12,325,
+- Status: ❓
+- New collection, needs evaluation
+
+"He Purapura Marara Scattered Seeds": 10,686,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
+
+
+"Digital Public Library of America": 10,663,
+- Status: ❌
+
+
+"Waikato Museum Te Whare Taonga o Waikato": 9,787,
+- Status: ❓
+- New collection, needs evaluation
+
+"Thames Museum": 9,631,
+- Status: ❓
+- New collection, needs evaluation
+
+"The Arts House Trust": 9,236,
+- Status: ❓
+- New collection, needs evaluation
+
+"NZFUNGI": 8,674,
 - Status: ❌
 - Links don't work
 
-🔵🔵 CURRENTLY HERE 🔵🔵
 
-"Te Toi Uku, Crown Lynn and Clayworks Museum": 7813,
+"Waimate Museum and Archives PastPerfect": 8,667,
 - Status: ✅
 - Thumbnail URL to use: Large
 
-"Culture Waitaki": 7551,
+
+"Te Hikoi Museum": 8,589,
+- Status: ✅
+- Thumbnail URL to use: Large
+
+
+"Wellington City Recollect": 8,320,
+- Status: ✅
+- Thumbnail URL to use: Large
+- Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
+
+
+"Culture Waitaki": 8,309,
 - Status: ✅
 - Thumbnail URL to use: Large
 - Swap large with xlarge in URL
 
-"Archives New Zealand Te Rua Mahara o te Kāwanatanga Flickr": 5512,
-- Status: ❌
-- Links don't work
 
-"Wellington City Recollect": 5429,
-- Status: ✅
-- Thumbnail URL to use: Large
-- Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
-
-"Trove": 4979,
-- Status: ❌
-- Images too low res
-
-"Te Hikoi Museum": 4918,
+"Te Toi Uku, Crown Lynn and Clayworks Museum": 8,106,
 - Status: ✅
 - Thumbnail URL to use: Large
 
-"V.C. Browne & Son NZ Aerial Photograph Collection": 4590,
-- Status: ✅
-- Thumbnail URL to use: Large
 
-"Tāmiro": 4567,
-- Status: ✅
-- Thumbnail URL to use: Large
-- Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
+"Christchurch Art Gallery Te Puna o Waiwhetū": 7,650,
+- Status: ❓
+- New collection, needs evaluation
 
-"Alexander Turnbull Library Flickr": 4307,
-- Status: ⚠️⚠️⚠️
-- NEED TO ADD NEW URL TO RESPONSE, object_url returns full res image
+"Archives Central": 7,254,
+- Status: ❓
+- New collection, needs evaluation
 
-"Flickr": 4237,
+"Wellington Museum": 7,195,
+- Status: ❓
+- New collection, needs evaluation
+
+"Christchurch City Libraries Heritage Images Collection": 6,668,
+- Status: ❓
+- New collection, needs evaluation
+
+"Flickr": 6,083,
 - Status: ❌
 - Quake images
 
-"He Purapura Marara Scattered Seeds": 3978,
+
+"Dunedin Public Art Gallery": 6,064,
+- Status: ❓
+- New collection, needs evaluation
+
+"Te Whare o Rehua Sarjeant Gallery": 5,833,
+- Status: ❓
+- New collection, needs evaluation
+
+"Archives New Zealand Te Rua Mahara o te Kāwanatanga Flickr": 5,668,
+- Status: ❌
+- Links don't work
+
+
+"NZHistory": 5,614,
+- Status: ❓
+- New collection, needs evaluation
+
+"Tāmiro": 5,586,
 - Status: ✅
 - Thumbnail URL to use: Large
 - Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
 
-"Canterbury Stories": 3759,
-- Status: ❌ 
-- Thumbnail URL to use: Large
 
-"Digital Public Library of America": 3651,
+"Otago University Research Heritage": 5,218,
+- Status: ❓
+- New collection, needs evaluation
+
+"Tapuaka - Heritage and Archive Collections": 4,777,
+- Status: ❓
+- New collection, needs evaluation
+
+"Whangarei Libraries": 4,491,
+- Status: ❓
+- New collection, needs evaluation
+
+"Historic Graffiti at Trentham Ranges": 4,485,
+- Status: ❓
+- New collection, needs evaluation
+
+"Alexander Turnbull Library Flickr": 4,307,
+- Status: ✅
+- NEED TO ADD NEW URL TO RESPONSE, object_url returns full res image
+
+
+"Transactions and Proceedings of the Royal Society of New Zealand 1868-1961": 4,200,
+- Status: ❓
+- New collection, needs evaluation
+
+"Kauri Museum Online Collections": 4,140,
+- Status: ❓
+- New collection, needs evaluation
+
+"Canterbury Photography Museum": 4,080,
+- Status: ❓
+- New collection, needs evaluation
+
+"New Zealand Cricket Museum": 4,010,
+- Status: ❓
+- New collection, needs evaluation
+
+"Wyndham & Districts Historical Museum": 3,937,
+
+"Cromwell Museum": 3,853,
+- Status: ❓
+- New collection, needs evaluation
+
+"28th Māori Battalion Te Ope Taua 28": 3,712,
+- Status: ❓
+- New collection, needs evaluation
+
+"Hastings Recollect": 3,636,
+- Status: ❓
+- New collection, needs evaluation
+
+"Mangawhai Museum": 3,619,
+- Status: ❓
+- New collection, needs evaluation
+
+"Feilding Library": 3,585,
+
+"Mataura Museum NZMuseums": 3,422,
+- Status: ❓
+- New collection, needs evaluation
+
+"Europeana": 3,414,
 - Status: ❌
+- Not photos, but archive images, such as pressed plants, documents. Not what I'm looking for.
 
-"Feilding Library": 3478,
 
 
-"Wyndham & Districts Historical Museum": 3270,
-"MOTAT": 2945,
-"The British Library Flickr": 2819,
-"Ministry for Culture and Heritage Te Ara Flickr": 2818,
-"Sarjeant Gallery Te Whare o Rehua Whanganui": 2725,
-"Aotearoa People's Network Kaharoa Flickr": 2522,
-"Ministry for Culture and Heritage Manatū Taonga Flickr": 2332,
-"FigShare": 2060,
-"Te Ara - The Encyclopedia of New Zealand": 1978,
-"Museums Victoria": 1797,
-"Dunedin City Council Archives Flickr": 1768,
-"War Art Online": 1477,
-"Flora of New Zealand": 1470,
-"Te Ūaka The Lyttelton Museum": 1466,
-"Tasman Heritage": 1380,
-"New Zealand Fashion Museum": 1344,
-"Western Bay Community Archives": 1321,
-"LIANZA": 1236,
-"State Library of Victoria": 773,
-"Tauranga City Libraries Map Collection": 694,
+"LIANZA": 3,198,
+
+"Charlotte Museum": 3,086,
+- Status: ❓
+- New collection, needs evaluation
+
+"The British Library Flickr": 2,819,
+
+"Clutha Heritage": 2,754,
+- Status: ❓
+- New collection, needs evaluation
+
+"John Kinder Theological Library": 2,714,
+
+"Tasman Heritage": 2,668,
+
+"NZEI Heritage": 2,656,
+- Status: ❓
+- New collection, needs evaluation
+
+"Aotearoa People's Network Kaharoa Flickr": 2,640,
+
+"OMSAA Historical Artefacts": 2,517,
+- Status: ❓
+- New collection, needs evaluation
+
+"Western Bay Community Archives": 2,420,
+
+"Museums Victoria": 2,353,
+
+"Ministry for Culture and Heritage Manatū Taonga Flickr": 2,332,
+
+"Dictionary of New Zealand Biography": 2,176,
+- Status: ❓
+- New collection, needs evaluation
+
+"New Zealand Fashion Museum": 2,079,
+
+"FigShare": 2,062,
+
+"Lower Hutt MyRecollect": 1,960,
+
+"Dunedin City Council Archives Flickr": 1,768,
+
+"Digital Collections (Pictures)": 1,762,
+- Status: ❓
+- New collection, needs evaluation
+
+"Matapihi": 1,611,
+- Status: ❓
+- New collection, needs evaluation
+
+"Flora of New Zealand": 1,478,
+
+"War Art Online": 1,477,
+
+"Far North District Libraries Rediscovery": 1,435,
+
+"Katherine Mansfield House and Garden": 1,408,
+- Status: ❓
+- New collection, needs evaluation
+
+"Pakiaka Rotorua Heritage Online": 1,374,
+- Status: ❓
+- New collection, needs evaluation
+
+"New Zealand Outdoor Art": 1,341,
+- Status: ❓
+- New collection, needs evaluation
+
+"Pahiatua Museum": 1,191,
+- Status: ❓
+- New collection, needs evaluation
+
+"Western Bay Museum": 1,148,
+- Status: ❓
+- New collection, needs evaluation
+
+"Tauranga City Libraries Map Collection": 1,120,
+
+"Central Otago Memory Bank": 1,047,
+- Status: ❓
+- New collection, needs evaluation
+
+"Deutsche Digitale Bibliothek": 1,019,
+
+"Teviot District Museum": 931,
+- Status: ❓
+- New collection, needs evaluation
+
+"Brain-Watkins House Museum": 910,
+- Status: ❓
+- New collection, needs evaluation
+
+"Nga Manu Nature Reserve Flickr": 851,
+
+"VietnamWar.govt.nz": 845,
+- Status: ❓
+- New collection, needs evaluation
+
+"State Library of Victoria": 822,
+
+"Aotea Utanganui Museum of South Taranaki": 798,
+- Status: ❓
+- New collection, needs evaluation
+
+"The Dowse Art Museum": 772,
+- Status: ❓
+- New collection, needs evaluation
+
+"Auckland War Memorial Museum Tāmaki Paenga Hira Flickr": 756,
+- Status: ❓
+- New collection, needs evaluation
+
+"SignDNA": 642,
+- Status: ❓
+- New collection, needs evaluation
+
 "Historical Photos of the Waikato and New Zealand": 618,
-"Far North District Libraries Rediscovery": 584,
-"Deutsche Digitale Bibliothek": 309,
-"Lower Hutt MyRecollect": 267,
-"The Hutt City Libraries Online Heritage Collection": 260,
-"Nga Manu Nature Reserve Flickr": 258,
-"John Kinder Theological Library": 251,
+
+"Victoria and Albert Museum": 549,
+- Status: ❓
+- New collection, needs evaluation
+
+"Aoraki Heritage Collection": 547,
+- Status: ❓
+- New collection, needs evaluation
+
+"The University of Waikato Art Collection": 540,
+- Status: ❓
+- New collection, needs evaluation
+
+"Driving Creek Pottery": 520,
+- Status: ❓
+- New collection, needs evaluation
+
+"Te Ahu Museum": 504,
+- Status: ❓
+- New collection, needs evaluation
+
+"Central and Western Murihiku Southland Archive": 501,
+
+"Ngā Puhipuhi o Te Herenga Waka—Victoria University of Wellington Art Collection": 488,
+- Status: ❓
+- New collection, needs evaluation
+
+"Cambridge Museum": 296,
+- Status: ❓
+- New collection, needs evaluation
+
+"Reserve Bank of New Zealand NZMuseums": 289,
+- Status: ❓
+- New collection, needs evaluation
+
+"Whanganui Collegiate School Museum": 288,
+- Status: ❓
+- New collection, needs evaluation
+
+"Rotorua Museum of Art & History Te Whare Taonga o Te Arawa NZMuseums": 286,
+- Status: ❓
+- New collection, needs evaluation
+
+"Navy Museum Medal Collection": 269,
+- Status: ❓
+- New collection, needs evaluation
+
 "Nursing Education and Research Foundation - Nursing Oral Histories in NZ": 249,
+
 "Historical Maps of the Waikato Region": 242,
-"Central and Western Murihiku Southland Archive": 237,
-"Waimate Museum and Archives NZMuseums": 180,
-"State Library of New South Wales Flickr": 166,
-"WRD Laurie World War One Photographs": 162,
+
+"Raglan and District Museum NZMuseums": 209,
+- Status: ❓
+- New collection, needs evaluation
+
+"State Library of New South Wales Flickr": 179,
+
+"Waimate Museum and Archives NZMuseums": 179,
+
+"WRD Laurie World War One Photographs": 163,
+
 "Māori Postcards ca. 1890-1940": 157,
+
 "Waikato Region Postcards": 157,
+
+"Toitū Otago Settlers Museum NZMuseums": 150,
+- Status: ❓
+- New collection, needs evaluation
+
+"florascales.com": 150,
+- Status: ❓
+- New collection, needs evaluation
+
+"New Zealand Portrait Gallery NZMuseums": 136,
+- Status: ❓
+- New collection, needs evaluation
+
 "Australian National Maritime Museum Flickr": 126,
+
 "Illumination & Commemoration": 123,
-"The National Archives UK Flickr": 100,
+
+"National Library of New Zealand Catalogue": 111,
+- Status: ❓
+- New collection, needs evaluation
+
+"Paekakariki Station Museum": 109,
+- Status: ❓
+- New collection, needs evaluation
+
+"Lincoln and Districts Historical Society": 102,
+- Status: ❓
+- New collection, needs evaluation
+
 "Waikato University Campus Photos": 100,
+
+
+"The National Archives UK Flickr": 100,
+
+"James Logie Memorial Collection": 99,
+- Status: ❓
+- New collection, needs evaluation
+
+"Glentunnel Museum": 96,
+- Status: ❓
+- New collection, needs evaluation
+
+"Auckland Fire Brigades Museum and Historical Society": 95,
+- Status: ❓
+- New collection, needs evaluation
+
+"University of Canterbury Heritage Collection": 92,
+- Status: ❓
+- New collection, needs evaluation
+
+"The Edwin Fox Ship and Maritime Centre": 89,
+- Status: ❓
+- New collection, needs evaluation
+
+"Kent Palmer Art": 89,
+- Status: ❓
+- New collection, needs evaluation
+
+"Middlemarch Museum": 88,
+- Status: ❓
+- New collection, needs evaluation
+
+"Te Manawa NZMuseums": 76,
+- Status: ❓
+- New collection, needs evaluation
+
+"Historical Photos of Waikato Rugby": 75,
+- Status: ❓
+- New collection, needs evaluation
+
+"Te Ao Hou": 74,
+- Status: ❓
+- New collection, needs evaluation
+
+"Woodville Museum": 72,
+- Status: ❓
+- New collection, needs evaluation
+
+"Central Hawke's Bay Museum": 70,
+- Status: ❓
+- New collection, needs evaluation
+
+"Our Wāhine": 70,
+- Status: ❓
+- New collection, needs evaluation
+
+"Ngā Taonga Sound & Vision": 58,
+- Status: ❓
+- New collection, needs evaluation
+
+"Otautau Museum": 56,
+- Status: ❓
+- New collection, needs evaluation
+
+"Flax Collection": 54,
+- Status: ❓
+- New collection, needs evaluation
+
+"Te Aroha & Districts Museum NZMuseums": 53,
+- Status: ❓
+- New collection, needs evaluation
+
+"Waiheke Musical Museum": 53,
+- Status: ❓
+- New collection, needs evaluation
+
+"Ministry for Culture and Heritage History Group Flickr": 50,
+- Status: ❓
+- New collection, needs evaluation
+
+"Awarua Communications Museum": 50,
+- Status: ❓
+- New collection, needs evaluation
+
+"Villa Maria College Archive": 48,
+- Status: ❓
+- New collection, needs evaluation
+
+"Special Collection's Incunabula": 38,
+- Status: ❓
+- New collection, needs evaluation
+
+"Warkworth Museum": 35,
+- Status: ❓
+- New collection, needs evaluation
+
+"Aratoi Wairarapa Museum of Art and History": 34,
+- Status: ❓
+- New collection, needs evaluation
+
+"Isel House NZMuseums": 33,
+- Status: ❓
+- New collection, needs evaluation
+
+"Whanganui Regional Museum NZMuseums": 33,
+- Status: ❓
+- New collection, needs evaluation
+
+"Jonesonian Institute": 29,
+- Status: ❓
+- New collection, needs evaluation
+
+"Kowai Archives NZMuseums": 23,
+- Status: ❓
+- New collection, needs evaluation
+
+"Shantytown NZMuseums": 21,
+- Status: ❓
+- New collection, needs evaluation
+
+"Auckland Council Archives Document and Image Gallery": 21,
+- Status: ❓
+- New collection, needs evaluation
+
+"Dunedin Gasworks Museum": 20,
+- Status: ❓
+- New collection, needs evaluation
+
+"Waipu Scottish Migration Museum": 20,
+- Status: ❓
+- New collection, needs evaluation
+
+"Silky Oak Museum NZMuseums": 20,
+- Status: ❓
+- New collection, needs evaluation
+
+"Huntly Museum Te Whare Taonga O Raahui Pookeka": 19,
+- Status: ❓
+- New collection, needs evaluation
+
+"Waitaki Museum & Archive NZMuseums": 17,
+- Status: ❓
+- New collection, needs evaluation
+
+"New Zealand Rugby Museum": 17,
+- Status: ❓
+- New collection, needs evaluation
+
+"Our Health Journeys eHive": 16,
+- Status: ❓
+- New collection, needs evaluation
+
+"Kaipūpū Sanctuary": 10,
+- Status: ❓
+- New collection, needs evaluation
+
+"Eketahuna Museum": 9,
+- Status: ❓
+- New collection, needs evaluation
+
+"Nelson Photo News": 8,
+- Status: ❓
+- New collection, needs evaluation
+
+"Amuri Historical Society NZMuseums": 8,
+- Status: ❓
+- New collection, needs evaluation
+
+"Patterns for Fabric Anatomy Teaching Models": 6,
+- Status: ❓
+- New collection, needs evaluation
