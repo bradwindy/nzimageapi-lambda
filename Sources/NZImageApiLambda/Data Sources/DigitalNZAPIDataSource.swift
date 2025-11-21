@@ -9,7 +9,7 @@ import Foundation
 import OrderedCollections
 import RichError
 
-class DigitalNZAPIDataSource {
+final class DigitalNZAPIDataSource: Sendable {
     // MARK: Lifecycle
 
     init(
@@ -52,9 +52,9 @@ class DigitalNZAPIDataSource {
 
         let secondRequestResultsPerPage = 100
         let endpoint = "https://api.digitalnz.org/records.json"
-        let apiKey: String? = nil
+        let apiKey = ProcessInfo.processInfo.environment["DIGITALNZ_API_KEY"]
 
-        let initialRequestParameters: [String: Any] = [
+        let initialRequestParameters: [String: any Sendable] = [
             "page": 1,
             "per_page": 0,
             "and[category][]": "Images",
@@ -86,7 +86,7 @@ class DigitalNZAPIDataSource {
 
         let pageNumber = Int.random(in: 1 ... pageCount)
 
-        let secondaryRequestParameters: [String: Any] = [
+        let secondaryRequestParameters: [String: any Sendable] = [
             "page": pageNumber,
             "per_page": secondRequestResultsPerPage,
             "and[category][]": "Images",

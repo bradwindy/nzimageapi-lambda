@@ -9,7 +9,7 @@ import Foundation
 import RichError
 import SwiftSoup
 
-class URLProcessor {
+final class URLProcessor: Sendable {
     // MARK: Internal
 
     struct URLProcessorError: RichError {
@@ -219,7 +219,7 @@ class URLProcessor {
                     guard let landingUrl = result.landingUrl else { return url.absoluteString }
 
                     do {
-                        let html = try String(contentsOf: landingUrl)
+                        let html = try String(contentsOf: landingUrl, encoding: .utf8)
                         let document: Document = try SwiftSoup.parse(html)
 
                         let imageMetaTag = try document

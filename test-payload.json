@@ -1,0 +1,30 @@
+{
+  "routeKey":"GET /image",
+  "version":"2.0",
+  "rawPath":"/image",
+  "stageVariables":{},
+  "requestContext":{
+    "timeEpoch":1587750461466,
+    "domainPrefix":"image",
+    "accountId":"0123456789",
+    "stage":"$default",
+    "domainName":"image.test.com",
+    "apiId":"pb5dg6g3rg",
+    "requestId":"test-request-id",
+    "http":{
+      "path":"/image",
+      "userAgent":"test",
+      "method":"GET",
+      "protocol":"HTTP/1.1",
+      "sourceIp":"127.0.0.1"
+    },
+    "time":"24/Apr/2020:17:47:41 +0000"
+  },
+  "isBase64Encoded":false,
+  "rawQueryString":"",
+  "headers":{
+    "secret":"9rXBKaMg4yhA__YX*XJEG*y_y6wjds",
+    "host":"image.test.com",
+    "user-agent":"test"
+  }
+}
