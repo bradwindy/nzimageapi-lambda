@@ -11,7 +11,7 @@ import Foundation
 struct CollectionIndexOutOfBoundsError: Error {
     let index: Int
     let count: Int
-    let collection: any Collection
+    let snapshot: String
 }
 
 extension Collection {
@@ -29,8 +29,22 @@ extension Collection {
             throw CollectionIndexOutOfBoundsError(
                 index: self.distance(from: self.startIndex, to: index),
                 count: self.count,
-                collection: self
+                snapshot: self.snapshot()
             )
         }
+    }
+
+    func snapshot(limit: Int = 5) -> String {
+        let head = self.prefix(limit)
+        let remaining = self.count - head.count
+        
+        var description = "[" + head.map { "\($0)" }.joined(separator: ", ")
+        
+        if remaining > 0 {
+            description += ", ... and \(remaining) more items"
+        }
+        
+        description += "]"
+        return description
     }
 }

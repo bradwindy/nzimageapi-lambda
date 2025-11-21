@@ -10,16 +10,16 @@ import Foundation
     import FoundationNetworking
 #endif
 
-protocol ValidatedRequestManager {
+protocol ValidatedRequestManager: Sendable {
     /// Make an async, throwing request to an `endpoint` with an `apiKey` and `parameters`, returns response of `NonNullableResult`, useful
     /// for safe handling of API responses with nullable properties.
-    func makeRequest<ResponseType: NonNullableResult>(
+    func makeRequest<ResponseType: NonNullableResult & Sendable>(
         endpoint: String,
         apiKey: String?,
-        parameters: [String: Any]?
+        parameters: [String: any Sendable]?
     )
         async throws -> ResponseType
 
     /// A closure used for validating the network response
-    var validation: (URLRequest?, HTTPURLResponse, Data?) -> Result<Void, Error> { get }
+    var validation: @Sendable (URLRequest?, HTTPURLResponse, Data?) -> Result<Void, Error> { get}
 }

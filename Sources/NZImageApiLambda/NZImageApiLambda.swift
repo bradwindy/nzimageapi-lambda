@@ -8,10 +8,11 @@
 import AWSLambdaEvents
 import AWSLambdaRuntime
 import Foundation
+import HTTPTypes
 import OrderedCollections
 import RichError
 
-@main final class NZImageApiLambda: SimpleLambdaHandler {
+struct NZImageApiLambda: Sendable {
     // MARK: Lifecycle
 
     init() {
@@ -29,7 +30,7 @@ import RichError
 
     func handle(_ event: APIGatewayV2Request, context: LambdaContext) async throws -> APIGatewayV2Response {
         switch (event.context.http.path, event.context.http.method) {
-        case ("/image", .GET):
+        case ("/image", .get):
             let requestedCollection = event.queryStringParameters?["collection"]
 
             guard let image = await image(context: context, collection: requestedCollection) else {
@@ -107,5 +108,18 @@ import RichError
         }
 
         return nil
+    }
+}
+
+@main
+struct Main {
+    static func main() async throws {
+        let handler = NZImageApiLambda()
+
+        let runtime = LambdaRuntime { (event: APIGatewayV2Request, context: LambdaContext) in
+            try await handler.handle(event, context: context)
+        }
+
+        try await runtime.run()
     }
 }

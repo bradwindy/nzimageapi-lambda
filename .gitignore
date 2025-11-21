@@ -8,3 +8,9 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
 .swiftpm/
+
+# Environment variables (contains API keys)
+.env
+.env.local
+.env.*.local
+response.json

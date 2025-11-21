@@ -12,7 +12,7 @@ import RichError
     import FoundationNetworking
 #endif
 
-class NetworkRequestManager: ValidatedRequestManager {
+final class NetworkRequestManager: ValidatedRequestManager {
     struct NetworkRequestManagerError: RichError {
         typealias ErrorKind = NetworkRequestManagerErrorKind
 
@@ -25,7 +25,7 @@ class NetworkRequestManager: ValidatedRequestManager {
         var data: [String: String]
     }
 
-    var validation: (URLRequest?, HTTPURLResponse, Data?) -> Result<Void, Error> = { request, response, data in
+    let validation: @Sendable (URLRequest?, HTTPURLResponse, Data?) -> Result<Void, Error> = { request, response, data in
         let acceptableStatusCodes = 200 ..< 300
 
         let errorData: [String: String] = [
@@ -45,10 +45,10 @@ class NetworkRequestManager: ValidatedRequestManager {
         return .success(())
     }
 
-    func makeRequest<ResponseType: NonNullableResult>(
+    func makeRequest<ResponseType: NonNullableResult & Sendable>(
         endpoint: String,
         apiKey: String? = nil,
-        parameters: [String: Any]? = nil
+        parameters: [String: any Sendable]? = nil
     )
         async throws -> ResponseType
     {
