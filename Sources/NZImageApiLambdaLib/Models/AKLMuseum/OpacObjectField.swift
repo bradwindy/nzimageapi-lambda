@@ -8,7 +8,7 @@
 import Foundation
 import RichError
 
-struct OpacObjectField: NonNullableResult {
+struct OpacObjectField: NonNullableResult, Sendable {
     // MARK: Lifecycle
 
     init(value: String?) {

@@ -145,8 +145,19 @@ final class URLProcessor: Sendable {
                 }
             )
 
+        case "Te Papa Collections Online":
+            return try await handleUrl(
+                result: result,
+                urlModifier: { url in
+                    // Use images.weserv.nl proxy to bypass hotlinking protection
+                    guard let escapedUrl = url.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else {
+                        return url.absoluteString
+                    }
+                    return "https://images.weserv.nl/?url=\(escapedUrl)"
+                }
+            )
+
         case "Antarctica NZ Digital Asset Manager",
-             "Te Papa Collections Online",
              "National Publicity Studios black and white file prints",
              "South Canterbury Museum",
              "Howick Historical Village NZMuseums",
@@ -185,7 +196,11 @@ final class URLProcessor: Sendable {
                         urlString.removeSubrange(startIndex ... endIndex)
                     }
 
-                    return urlString
+                    // Use images.weserv.nl proxy to bypass hotlinking protection
+                    guard let escapedUrl = urlString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else {
+                        return urlString
+                    }
+                    return "https://images.weserv.nl/?url=\(escapedUrl)"
                 }
             )
 

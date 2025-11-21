@@ -8,7 +8,7 @@
 import Foundation
 import RichError
 
-struct NZRecordsSearch: NonNullableResult {
+struct NZRecordsSearch: NonNullableResult, Sendable {
     // MARK: Lifecycle
 
     init(resultCount: Int?, results: [NZRecordsResult]?) {

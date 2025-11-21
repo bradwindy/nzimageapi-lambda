@@ -8,7 +8,7 @@
 import Foundation
 import RichError
 
-struct AKLMuseumResponse: NonNullableResult {
+struct AKLMuseumResponse: NonNullableResult, Sendable {
     // MARK: Lifecycle
 
     init(opacObjectFieldSets: [OpacObjectFieldSet]?) {

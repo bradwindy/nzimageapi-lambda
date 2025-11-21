@@ -1,58 +1,33 @@
 //
-//  main.swift
+//  NZImageApi.swift
 //
 //
 //  Created by Bradley Windybank on 17/06/23.
 //
 
-import AWSLambdaEvents
-import AWSLambdaRuntime
 import Foundation
 import HTTPTypes
 import OrderedCollections
 import RichError
 
-struct NZImageApiLambda: Sendable {
+public struct NZImageApi: Sendable {
     // MARK: Lifecycle
 
-    init() {
+    public init() {
         let requestManager = NetworkRequestManager()
         let urlProcessor = URLProcessor()
 
         self.digitalNZAPIDataSource = DigitalNZAPIDataSource(
             requestManager: requestManager,
-            collectionWeights: NZImageApiLambda.collectionWeights,
+            collectionWeights: NZImageApi.collectionWeights,
             urlProcessor: urlProcessor
         )
     }
 
-    // MARK: Internal
-
-    func handle(_ event: APIGatewayV2Request, context: LambdaContext) async throws -> APIGatewayV2Response {
-        switch (event.context.http.path, event.context.http.method) {
-        case ("/image", .get):
-            let requestedCollection = event.queryStringParameters?["collection"]
-
-            guard let image = await image(context: context, collection: requestedCollection) else {
-                return APIGatewayV2Response(statusCode: .badRequest)
-            }
-
-            let jsonEncoder = JSONEncoder()
-            jsonEncoder.outputFormatting = .withoutEscapingSlashes
-            let jsonData = try jsonEncoder.encode(image)
-            let jsonString = String(data: jsonData, encoding: .utf8)
-
-            return APIGatewayV2Response(statusCode: .ok, headers: ["content-type": "application/json"], body: jsonString)
-
-        default:
-            return APIGatewayV2Response(statusCode: .notFound)
-        }
-    }
-
-    // MARK: Private
+    // MARK: Public
 
     // Collection weights are not yet final
-    private static let collectionWeights: OrderedDictionary = [
+    public static let collectionWeights: OrderedDictionary = [
         "Auckland Libraries Heritage Images Collection": 0.182,
         "Auckland Museum Collections": 0.162,
         "Te Papa Collections Online": 0.119,
@@ -80,17 +55,11 @@ struct NZImageApiLambda: Sendable {
         "He Purapura Marara Scattered Seeds": 0.005,
     ]
 
-    private let jsonEncoder = JSONEncoder()
-
-    private let digitalNZAPIDataSource: DigitalNZAPIDataSource
-
-    private func image(context: LambdaContext, collection: String?) async -> NZRecordsResult? {
+    public func image(collection: String?, logger: @Sendable (String) -> Void = { _ in }) async -> NZRecordsResult? {
         do {
             let result = try await digitalNZAPIDataSource.newResult(
                 collection: collection,
-                logger: { log in
-                    context.logger.log(level: .trace, "\(log)")
-                }
+                logger: logger
             )
             return result
         }
@@ -100,26 +69,17 @@ struct NZImageApiLambda: Sendable {
                 // associated types.
                 let kind = (richError.kind as any RawRepresentable).rawValue as? String ?? "unknownKind"
 
-                context.logger.error("A rich error occurred. Kind: \(kind), Data: \(richError.data)")
+                logger("A rich error occurred. Kind: \(kind), Data: \(richError.data)")
             }
             else {
-                context.logger.error("An unexpected error occurred: \(error.localizedDescription)")
+                logger("An unexpected error occurred: \(error.localizedDescription)")
             }
         }
 
         return nil
     }
-}
 
-@main
-struct Main {
-    static func main() async throws {
-        let handler = NZImageApiLambda()
+    // MARK: Private
 
-        let runtime = LambdaRuntime { (event: APIGatewayV2Request, context: LambdaContext) in
-            try await handler.handle(event, context: context)
-        }
-
-        try await runtime.run()
-    }
+    private let digitalNZAPIDataSource: DigitalNZAPIDataSource
 }

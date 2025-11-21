@@ -7,7 +7,7 @@
 
 import RichError
 
-struct NZRecordsResponse: NonNullableResult {
+struct NZRecordsResponse: NonNullableResult, Sendable {
     // MARK: Lifecycle
 
     init(search: NZRecordsSearch?) {

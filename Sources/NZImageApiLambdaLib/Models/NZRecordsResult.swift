@@ -8,10 +8,10 @@
 import Foundation
 import RichError
 
-struct NZRecordsResult: NonNullableResult, Codable {
+public struct NZRecordsResult: NonNullableResult, Codable, Sendable {
     // MARK: Lifecycle
 
-    init(
+    public init(
         id: Int?,
         title: String?,
         description: String?,
@@ -58,14 +58,14 @@ struct NZRecordsResult: NonNullableResult, Codable {
         case landingUrl = "landing_url"
     }
 
-    var id: Int?
-    var title: String?
-    var description: String?
-    var thumbnailUrl: URL?
-    var largeThumbnailUrl: URL?
-    var objectUrl: URL?
-    var collection: String?
-    var landingUrl: URL?
+    public var id: Int?
+    public var title: String?
+    public var description: String?
+    public var thumbnailUrl: URL?
+    public var largeThumbnailUrl: URL?
+    public var objectUrl: URL?
+    public var collection: String?
+    public var landingUrl: URL?
 
     func customDescription() -> String {
         return """

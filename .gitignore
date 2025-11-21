@@ -14,3 +14,4 @@ DerivedData/
 .env.local
 .env.*.local
 response.json
+.claude/settings.local.json
