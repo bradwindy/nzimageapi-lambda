@@ -223,6 +223,20 @@ Automatically builds, starts a local Lambda server, makes a test request, and va
 
 📖 [Full documentation](Sources/Testing/CollectionTester/README-CollectionTester.md)
 
+### CollectionEvaluator
+
+Automatically evaluates collections marked with ❓ status by testing image resolutions and adding notes to `details-of-collections.txt`.
+
+**Quick Start:**
+```bash
+export DIGITALNZ_API_KEY=your_api_key
+./Sources/Testing/CollectionEvaluator/evaluate-collections.sh
+```
+
+Scans for unevaluated collections, tests 3 image samples from each, analyzes quality, and updates the tracking file with findings. Creates timestamped backups.
+
+📖 [Full documentation](Sources/Testing/CollectionEvaluator/README-CollectionEvaluator.md)
+
 ## Deployment
 
 ### Building for AWS Lambda
