@@ -1,14 +1,14 @@
 # CollectionEvaluator
 
-A bash script that automatically evaluates collections marked with ❓ status by testing image resolutions and adding detailed notes to `details-of-collections.txt`.
+A bash script that automatically evaluates collections marked with ❓ status by testing image resolutions and adding detailed notes to `Research/details-of-collections.txt`.
 
 ## What it does
 
-1. Scans `details-of-collections.txt` for collections with `Status: ❓`
+1. Scans `Research/details-of-collections.txt` for collections with `Status: ❓`
 2. For each collection, fetches 3 random image samples using ImageResolutionChecker
 3. Analyzes resolution data (average dimensions, quality assessment)
 4. Generates automated notes about image quality
-5. Updates `details-of-collections.txt` with findings
+5. Updates `Research/details-of-collections.txt` with findings
 6. Creates a timestamped backup of the original file
 
 ## Usage

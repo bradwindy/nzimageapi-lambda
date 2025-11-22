@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 SAMPLES_PER_COLLECTION=3
-DETAILS_FILE="/Users/bwindybank/Developer/nzimageapi-lambda/details-of-collections.txt"
+DETAILS_FILE="/Users/bradley/Developer/nzimageapi-lambda/Research/details-of-collections.txt"
 TEMP_DIR="/tmp/collection-evaluator-$$"
 
 # Check if API key is set

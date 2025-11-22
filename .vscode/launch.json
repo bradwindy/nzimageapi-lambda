@@ -39,6 +39,46 @@
       "target": "CollectionTester",
       "configuration": "release",
       "preLaunchTask": "swift: Build Release CollectionTester"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:nzimageapi-lambda}",
+      "name": "Debug ImageResolutionChecker",
+      "target": "ImageResolutionChecker",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug ImageResolutionChecker"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:nzimageapi-lambda}",
+      "name": "Release ImageResolutionChecker",
+      "target": "ImageResolutionChecker",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release ImageResolutionChecker"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:nzimageapi-lambda}",
+      "name": "Debug CollectionLister",
+      "target": "CollectionLister",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug CollectionLister"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:nzimageapi-lambda}",
+      "name": "Release CollectionLister",
+      "target": "CollectionLister",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release CollectionLister"
     }
   ]
 }

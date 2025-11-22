@@ -10,7 +10,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 SAMPLES_PER_COLLECTION=3
-DETAILS_FILE="/Users/bwindybank/Developer/nzimageapi-lambda/details-of-collections.txt"
+DETAILS_FILE="/Users/bradley/Developer/nzimageapi-lambda/Research/details-of-collections.txt"
 TEMP_DIR="/tmp/collection-evaluator-$$"
 MAX_COLLECTIONS=5  # Limit to 5 for testing
 

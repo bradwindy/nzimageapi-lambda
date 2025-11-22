@@ -54,7 +54,7 @@ Machine-parseable JSON with collections sorted by image count (descending):
 
 ## Use Cases
 
-- **Maintain `details-of-collections.txt`** - Update collection counts in the project's collection tracking file
+- **Maintain `Research/details-of-collections.txt`** - Update collection counts in the project's collection tracking file
 - **Discover new collections** - Identify collections that have been added to Digital NZ since last check
 - **Track collection growth** - Monitor how collection sizes change over time
 - **Generate reports** - Pipe output to other tools for analysis

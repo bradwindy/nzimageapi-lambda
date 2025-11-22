@@ -191,7 +191,7 @@ export DIGITALNZ_API_KEY=your_api_key
 ./Sources/Testing/CollectionLister/list-collections.sh
 ```
 
-Outputs machine-parseable JSON with all collections sorted by size. Useful for maintaining `details-of-collections.txt` and discovering new collections.
+Outputs machine-parseable JSON with all collections sorted by size. Useful for maintaining `Research/details-of-collections.txt` and discovering new collections.
 
 📖 [Full documentation](Sources/Testing/CollectionLister/README-CollectionLister.md)
 
@@ -225,7 +225,7 @@ Automatically builds, starts a local Lambda server, makes a test request, and va
 
 ### CollectionEvaluator
 
-Automatically evaluates collections marked with ❓ status by testing image resolutions and adding notes to `details-of-collections.txt`.
+Automatically evaluates collections marked with ❓ status by testing image resolutions and adding notes to `Research/details-of-collections.txt`.
 
 **Quick Start:**
 ```bash
