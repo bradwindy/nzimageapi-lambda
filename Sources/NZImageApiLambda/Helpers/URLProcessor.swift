@@ -22,6 +22,9 @@ final class URLProcessor: Sendable {
             case unableToEscapeUrl
             case unableToCreateFinalUrl
             case unableToFindRecollectDomain
+            case unableToExtractIEPID
+            case unableToExtractDVS
+            case noFilesFound
         }
 
         var kind: URLProcessorErrorKind
@@ -202,12 +205,19 @@ final class URLProcessor: Sendable {
              "Te Toi Uku, Crown Lynn and Clayworks Museum",
              "Te Hikoi Museum",
              "V.C. Browne & Son NZ Aerial Photograph Collection",
-             "Presbyterian Research Centre",
-             "TAPUHI":
+             "Presbyterian Research Centre":
             return try await handleUrl(
                 result: result,
                 urlModifier: { url in
                     url.absoluteString
+                }
+            )
+
+        case "TAPUHI":
+            return try await handleUrl(
+                result: result,
+                urlModifier: { url in
+                    try await self.fetchTapuhiHighResUrl(from: url)
                 }
             )
 
@@ -391,5 +401,85 @@ final class URLProcessor: Sendable {
         modifiableResult.largeThumbnailUrl = finalUrl
 
         return modifiableResult
+    }
+
+    private func fetchTapuhiHighResUrl(from url: URL) async throws -> String {
+        let urlString = url.absoluteString
+        let baseURL = "https://ndhadeliver.natlib.govt.nz"
+        let requestManager = NetworkRequestManager()
+
+        // Step 1: Extract IE PID from URL
+        let iePID: String
+        if let match = urlString.range(of: #"dps_pid=IE(\d+)"#, options: .regularExpression),
+           let ieMatch = urlString[match].range(of: #"IE\d+"#, options: .regularExpression)
+        {
+            iePID = String(urlString[match][ieMatch])
+        } else if let match = urlString.range(of: #"IE\d+"#, options: .regularExpression) {
+            iePID = String(urlString[match])
+        } else {
+            throw URLProcessorError(
+                kind: .unableToExtractIEPID,
+                data: ["url": urlString]
+            )
+        }
+
+        // Step 2: Get DVS session from delivery manager
+        let deliveryURL = "\(baseURL)/delivery/DeliveryManagerServlet?dps_pid=\(iePID)"
+        let deliveryHTML = try await requestManager.fetchHTML(endpoint: deliveryURL)
+
+        guard let dvsMatch = deliveryHTML.range(of: #"dps_dvs=[\d~]+"#, options: .regularExpression) else {
+            throw URLProcessorError(
+                kind: .unableToExtractDVS,
+                data: ["url": urlString, "iePID": iePID]
+            )
+        }
+        let dvs = String(deliveryHTML[dvsMatch]).replacingOccurrences(of: "dps_dvs=", with: "")
+
+        // Step 3: Get viewer page with FL PIDs
+        let viewerURL = "\(baseURL)/view/action/ieViewer.do?dps_dvs=\(dvs)&dps_pid=\(iePID)"
+        let viewerHTML = try await requestManager.fetchHTML(endpoint: viewerURL)
+
+        // Extract all FL PIDs
+        var flPIDs: [String] = []
+        let flPattern = #"FL\d+"#
+        var searchRange = viewerHTML.startIndex ..< viewerHTML.endIndex
+
+        while let match = viewerHTML.range(of: flPattern, options: .regularExpression, range: searchRange) {
+            let flPID = String(viewerHTML[match])
+            if !flPIDs.contains(flPID) {
+                flPIDs.append(flPID)
+            }
+            searchRange = match.upperBound ..< viewerHTML.endIndex
+        }
+
+        guard !flPIDs.isEmpty else {
+            throw URLProcessorError(
+                kind: .noFilesFound,
+                data: ["url": urlString, "iePID": iePID]
+            )
+        }
+
+        // Step 4: Get metadata for each file and find largest
+        var bestURL = urlString
+        var maxSize: Int64 = 0
+
+        for flPID in flPIDs {
+            let streamURL = "\(baseURL)/delivery/DeliveryManagerServlet?dps_pid=\(flPID)&dps_func=stream"
+            do {
+                let metadata = try await requestManager.headRequest(endpoint: streamURL)
+                if metadata.contentLength > maxSize {
+                    maxSize = metadata.contentLength
+                    bestURL = streamURL
+                }
+            } catch {
+                continue
+            }
+        }
+
+        // Use weserv.nl proxy to convert JP2 to WebP for browser compatibility
+        guard let encoded = bestURL.addingPercentEncoding(withAllowedCharacters: .alphanumerics) else {
+            return bestURL
+        }
+        return "https://images.weserv.nl/?url=\(encoded)&output=webp"
     }
 }

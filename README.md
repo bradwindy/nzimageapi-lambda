@@ -237,6 +237,20 @@ Scans for unevaluated collections, tests 3 image samples from each, analyzes qua
 
 📖 [Full documentation](Sources/Testing/CollectionEvaluator/README-CollectionEvaluator.md)
 
+### CollectionReviewer
+
+Interactive tool for manually reviewing collections with 🔎 status. Presents sample images for human assessment and records your decisions.
+
+**Quick Start:**
+```bash
+export DIGITALNZ_API_KEY=your_api_key
+./Sources/Testing/CollectionReviewer/review-collections.sh
+```
+
+Fetches 3 random images per collection, displays clickable links, prompts for yes/no selection, and updates status to 🛠️ (approved) or ❌ (rejected) with optional notes.
+
+📖 [Full documentation](Sources/Testing/CollectionReviewer/README-CollectionReviewer.md)
+
 ## Deployment
 
 ### Building for AWS Lambda

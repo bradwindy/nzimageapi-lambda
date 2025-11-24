@@ -11,6 +11,7 @@ let package = Package(
       .executable(name: "CollectionTester", targets: ["CollectionTester"]),
       .executable(name: "ImageResolutionChecker", targets: ["ImageResolutionChecker"]),
       .executable(name: "CollectionLister", targets: ["CollectionLister"]),
+      .executable(name: "CollectionReviewer", targets: ["CollectionReviewer"]),
     ],
     dependencies: [
         .package(url: "https://github.com/awslabs/swift-aws-lambda-runtime.git", from: "2.3.1"),
@@ -53,6 +54,13 @@ let package = Package(
                 .product(name: "Alamofire", package: "Alamofire")
             ],
             path: "Sources/Testing/CollectionLister"
+        ),
+        .executableTarget(
+            name: "CollectionReviewer",
+            dependencies: [
+                .product(name: "Alamofire", package: "Alamofire")
+            ],
+            path: "Sources/Testing/CollectionReviewer"
         ),
     ]
 )

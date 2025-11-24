@@ -73,4 +73,43 @@ final class NetworkRequestManager: ValidatedRequestManager {
             throw error
         }
     }
+
+    func fetchHTML(endpoint: String) async throws -> String {
+        let configuration = URLSessionConfiguration.default
+        configuration.httpAdditionalHeaders = [
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+        ]
+
+        let session = Session(configuration: configuration)
+        let response = await session.request(endpoint).serializingString().response
+
+        switch response.result {
+        case let .success(value):
+            return value
+        case let .failure(error):
+            throw error
+        }
+    }
+
+    func headRequest(endpoint: String) async throws -> (contentType: String, contentLength: Int64) {
+        let configuration = URLSessionConfiguration.default
+        configuration.httpAdditionalHeaders = [
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+        ]
+
+        let session = Session(configuration: configuration)
+        let response = await session.request(endpoint, method: .head).serializingData().response
+
+        guard let httpResponse = response.response else {
+            throw NetworkRequestManagerError(
+                kind: .non200StatusCode,
+                data: ["endpoint": endpoint, "error": "No response received"]
+            )
+        }
+
+        let contentType = httpResponse.value(forHTTPHeaderField: "Content-Type") ?? "unknown"
+        let contentLength = Int64(httpResponse.value(forHTTPHeaderField: "Content-Length") ?? "0") ?? 0
+
+        return (contentType, contentLength)
+    }
 }
