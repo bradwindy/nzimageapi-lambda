@@ -1,16 +1,28 @@
 # CollectionReviewer
 
-An interactive Swift CLI tool for manually reviewing collections that have been automatically evaluated (marked with 🔎 status). Presents sample images for human assessment and updates `Research/details-of-collections.txt` with your decisions.
+An interactive Swift CLI tool for manually reviewing collections. Presents sample images for human assessment and updates `Research/details-of-collections.txt` with your decisions.
+
+Uses the shared `LambdaTesting` library to test images through the actual Lambda, ensuring you see the final processed image URLs.
 
 ## What it does
 
-1. Scans `Research/details-of-collections.txt` for collections with `Status: 🔎`
-2. For each collection, fetches 3 random images from the Digital NZ API
-3. Displays clickable links to view each image
-4. Prompts for a yes/no preliminary selection decision
-5. If approved: prompts for notes, updates status to 🛠️
-6. If rejected: updates status to ❌
-7. Proceeds to the next collection
+1. Reads all collections from `Research/details-of-collections.txt`
+2. Builds the Lambda and starts a local server (clean build)
+3. For each collection, fetches 3 random images **through the Lambda**
+4. Displays clickable links to view each image (with processed URLs)
+5. Prompts for a yes/no selection decision
+6. If approved: prompts for notes, updates status to ✅
+7. If rejected: updates status to ❌
+8. Proceeds to the next collection
+9. Shuts down the Lambda server on completion
+
+## Why Lambda Testing Matters
+
+CollectionReviewer now tests through the actual Lambda instead of calling the Digital NZ API directly. This means:
+- You see the **final image URLs** that the Lambda returns
+- URL transformations (IIIF, etc.) are applied
+- Collection weighting and other Lambda logic is verified
+- You're testing the same code path as production
 
 ## Usage
 
@@ -65,12 +77,10 @@ Status updated to 🛠️
 
 ## Status Meanings
 
-**Input status:**
-- `🔎` - Automatically evaluated, ready for manual review
-
 **Output statuses:**
-- `🛠️` - Approved, needs implementation work (URL processing, etc.)
+- `✅` - Approved for inclusion
 - `❌` - Rejected, will not be included
+- `⚠️` - Unsure, needs further review
 
 ## Example Notes Added
 
@@ -113,12 +123,12 @@ If your terminal doesn't support clickable links, the URLs will still be display
 ## Requirements
 
 - Swift 6.0+
-- DIGITALNZ_API_KEY environment variable set
 - Terminal with standard input support
+- The Lambda must have `DIGITALNZ_API_KEY` configured (via environment or `.env` file)
 
 ## Limitations
 
-- Only processes collections with 🔎 status
 - Shows 3 random images (may not represent full collection variability)
 - Cannot be run non-interactively (requires user input)
 - Modifies file in place (no automatic backup - consider committing before running)
+- Requires Lambda build time at startup (uses clean builds to avoid cache issues)

@@ -5,8 +5,8 @@
 //  Interactive review tool for all collections
 //
 
-import Alamofire
 import Foundation
+import LambdaTesting
 import Synchronization
 
 #if canImport(FoundationNetworking)
@@ -64,53 +64,12 @@ func setupSignalHandler() {
     }
 }
 
-// MARK: - Models
-
-struct NZRecordsResult: Codable, Sendable {
-    enum CodingKeys: String, CodingKey {
-        case id
-        case title
-        case description
-        case thumbnailUrl = "thumbnail_url"
-        case largeThumbnailUrl = "large_thumbnail_url"
-        case objectUrl = "object_url"
-        case collection = "display_collection"
-        case landingUrl = "landing_url"
-        case originUrl = "origin_url"
-        case sourceUrl = "source_url"
-    }
-
-    var id: Int?
-    var title: String?
-    var description: String?
-    var thumbnailUrl: URL?
-    var largeThumbnailUrl: URL?
-    var objectUrl: URL?
-    var collection: String?
-    var landingUrl: URL?
-    var originUrl: URL?
-    var sourceUrl: URL?
-}
-
-struct NZRecordsSearch: Codable, Sendable {
-    enum CodingKeys: String, CodingKey {
-        case resultCount = "result_count"
-        case results
-    }
-
-    var resultCount: Int?
-    var results: [NZRecordsResult]?
-}
-
-struct NZRecordsResponse: Codable, Sendable {
-    var search: NZRecordsSearch?
-}
-
 // MARK: - Selection Status
 
 enum SelectionStatus: String {
     case yes = "y"
     case no = "n"
+    case unsure = "u"
     case skip = "s"
     case more = "m"
 
@@ -118,6 +77,7 @@ enum SelectionStatus: String {
         switch self {
         case .yes: return "✅"
         case .no: return "❌"
+        case .unsure: return "⚠️"
         case .skip, .more: return ""
         }
     }
@@ -126,6 +86,7 @@ enum SelectionStatus: String {
         switch self {
         case .yes: return "Yes"
         case .no: return "No"
+        case .unsure: return "Unsure"
         case .skip: return "Skip"
         case .more: return "More"
         }
@@ -142,65 +103,6 @@ struct CollectionEntry {
     var statusLineNumber: Int
     var currentStatus: String
     var endLineNumber: Int
-}
-
-// MARK: - Digital NZ API
-
-func fetchRandomImages(collection: String, apiKey: String, count: Int = 3) async throws -> [NZRecordsResult] {
-    let endpoint = "https://api.digitalnz.org/records.json"
-
-    // First request to get total count
-    let initialParameters: [String: String] = [
-        "page": "1",
-        "per_page": "0",
-        "and[category][]": "Images",
-        "and[primary_collection][]": collection,
-    ]
-
-    let headers = HTTPHeaders(["Authentication-Token": apiKey])
-
-    let initialResponse = try await AF.request(
-        endpoint,
-        parameters: initialParameters,
-        headers: headers
-    )
-    .serializingDecodable(NZRecordsResponse.self)
-    .value
-
-    guard let resultCount = initialResponse.search?.resultCount, resultCount > 0 else {
-        return []
-    }
-
-    var results: [NZRecordsResult] = []
-
-    // Fetch random images
-    for _ in 0..<count {
-        let resultsPerPage = 100
-        let pageCount = max(1, resultCount / resultsPerPage)
-        let randomPage = Int.random(in: 1...pageCount)
-
-        let parameters: [String: String] = [
-            "page": String(randomPage),
-            "per_page": String(resultsPerPage),
-            "and[category][]": "Images",
-            "and[primary_collection][]": collection,
-        ]
-
-        let response = try await AF.request(
-            endpoint,
-            parameters: parameters,
-            headers: headers
-        )
-        .serializingDecodable(NZRecordsResponse.self)
-        .value
-
-        if let pageResults = response.search?.results, !pageResults.isEmpty {
-            let randomIndex = Int.random(in: 0..<pageResults.count)
-            results.append(pageResults[randomIndex])
-        }
-    }
-
-    return results
 }
 
 // MARK: - File Parsing
@@ -336,6 +238,8 @@ func getSelectionInput(prompt: String) -> SelectionStatus {
                 return .yes
             case "n", "no":
                 return .no
+            case "u", "unsure":
+                return .unsure
             case "s", "skip":
                 return .skip
             case "m", "more":
@@ -344,7 +248,7 @@ func getSelectionInput(prompt: String) -> SelectionStatus {
                 break
             }
         }
-        print("Please enter y/n/m/s: ", terminator: "")
+        print("Please enter y/n/u/m/s: ", terminator: "")
         fflush(stdout)
     }
 }
@@ -377,16 +281,15 @@ func printCollectionInfo(_ collection: CollectionEntry) {
     print("")
 }
 
+func printError(_ message: String) {
+    print("\u{001B}[31m❌ Error: \(message)\u{001B}[0m")
+}
+
 // MARK: - Main
 
 @main
 struct CollectionReviewerApp {
     static func main() async throws {
-        guard let apiKey = ProcessInfo.processInfo.environment["DIGITALNZ_API_KEY"] else {
-            fputs("Error: DIGITALNZ_API_KEY environment variable not set\n", stderr)
-            exit(1)
-        }
-
         // Get path to details file
         let fileManager = FileManager.default
         let currentDir = fileManager.currentDirectoryPath
@@ -418,7 +321,7 @@ struct CollectionReviewerApp {
             let resumeChoice = getSelectionInput(prompt: "Resume from where you left off? (y = resume, n = start over, s = skip to end):")
 
             switch resumeChoice {
-            case .yes, .more:
+            case .yes, .more, .unsure:
                 startIndex = savedIndex
                 print("Resuming from collection \(startIndex + 1)...\n")
             case .no:
@@ -431,8 +334,33 @@ struct CollectionReviewerApp {
         }
 
         print("Found \(collections.count) collections.\n")
-        print("Selection options: y = Yes (✅), n = No (❌), m = More images, s = Skip\n")
+        print("Selection options: y = Yes (✅), n = No (❌), u = Unsure (⚠️), m = More images, s = Skip\n")
         print("Press Ctrl-C to save progress and exit.\n")
+
+        // Build and start the Lambda server
+        print("🔨 Building lambda...")
+        let serverManager = LambdaServerManager(port: 7000, host: "127.0.0.1")
+
+        guard await serverManager.buildLambda(clean: true) else {
+            printError("Build failed")
+            exit(1)
+        }
+        print("✅ Build complete\n")
+
+        print("🚀 Starting local lambda server...")
+        guard await serverManager.startServer() else {
+            printError("Failed to start lambda server")
+            exit(1)
+        }
+        print("✅ Server is ready!\n")
+
+        // Ensure cleanup on exit
+        defer {
+            print("\n🧹 Shutting down lambda server...")
+            Task {
+                await serverManager.stopServer()
+            }
+        }
 
         for index in startIndex..<collections.count {
             let collection = collections[index]
@@ -447,9 +375,17 @@ struct CollectionReviewerApp {
             // Image viewing and selection loop
             var selection: SelectionStatus = .more
             while selection == .more {
-                // Fetch random images
-                print("Fetching 3 random images...")
-                let images = try await fetchRandomImages(collection: collection.name, apiKey: apiKey, count: 3)
+                // Fetch random images via Lambda
+                print("Fetching 3 random images via Lambda...")
+                var images: [LambdaImageResponse] = []
+
+                for _ in 0..<3 {
+                    if let response = await serverManager.makeRequest(collection: collection.name) {
+                        if response.statusCode == 200 {
+                            images.append(response)
+                        }
+                    }
+                }
 
                 if images.isEmpty {
                     print("No images found for this collection.\n")
@@ -464,28 +400,28 @@ struct CollectionReviewerApp {
                         }
 
                         // Show landing URL
-                        if let landingUrl = image.landingUrl {
+                        if let landingUrlString = image.landingUrl, let landingUrl = URL(string: landingUrlString) {
                             print("  Landing: ", terminator: "")
-                            printClickableLink(landingUrl, label: landingUrl.absoluteString)
+                            printClickableLink(landingUrl, label: landingUrlString)
                         }
 
                         // Show large thumbnail URL
-                        if let largeThumbnail = image.largeThumbnailUrl {
+                        if let largeThumbnailString = image.largeThumbnailUrl, let largeThumbnail = URL(string: largeThumbnailString) {
                             print("  Large Thumb: ", terminator: "")
-                            printClickableLink(largeThumbnail, label: largeThumbnail.absoluteString)
+                            printClickableLink(largeThumbnail, label: largeThumbnailString)
                         }
 
                         // Show object URL if available
-                        if let objectUrl = image.objectUrl {
+                        if let objectUrlString = image.objectUrl, let objectUrl = URL(string: objectUrlString) {
                             print("  Object URL: ", terminator: "")
-                            printClickableLink(objectUrl, label: objectUrl.absoluteString)
+                            printClickableLink(objectUrl, label: objectUrlString)
                         }
                         print("")
                     }
                 }
 
                 // Get user decision
-                selection = getSelectionInput(prompt: "Selection (y/n/m/s):")
+                selection = getSelectionInput(prompt: "Selection (y/n/u/m/s):")
 
                 if selection == .more {
                     print("\nFetching more images...\n")

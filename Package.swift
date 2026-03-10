@@ -33,9 +33,14 @@ let package = Package(
                 .product(name: "SwiftSoup", package: "SwiftSoup")
             ]
         ),
+        .target(
+            name: "LambdaTesting",
+            dependencies: [],
+            path: "Sources/Testing/LambdaTesting"
+        ),
         .executableTarget(
             name: "CollectionTester",
-            dependencies: [],
+            dependencies: ["LambdaTesting"],
             path: "Sources/Testing/CollectionTester"
         ),
         .executableTarget(
@@ -57,9 +62,7 @@ let package = Package(
         ),
         .executableTarget(
             name: "CollectionReviewer",
-            dependencies: [
-                .product(name: "Alamofire", package: "Alamofire")
-            ],
+            dependencies: ["LambdaTesting"],
             path: "Sources/Testing/CollectionReviewer"
         ),
     ]

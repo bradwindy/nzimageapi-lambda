@@ -223,31 +223,16 @@ Automatically builds, starts a local Lambda server, makes a test request, and va
 
 📖 [Full documentation](Sources/Testing/CollectionTester/README-CollectionTester.md)
 
-### CollectionEvaluator
-
-Automatically evaluates collections marked with ❓ status by testing image resolutions and adding notes to `Research/details-of-collections.txt`.
-
-**Quick Start:**
-```bash
-export DIGITALNZ_API_KEY=your_api_key
-./Sources/Testing/CollectionEvaluator/evaluate-collections.sh
-```
-
-Scans for unevaluated collections, tests 3 image samples from each, analyzes quality, and updates the tracking file with findings. Creates timestamped backups.
-
-📖 [Full documentation](Sources/Testing/CollectionEvaluator/README-CollectionEvaluator.md)
-
 ### CollectionReviewer
 
-Interactive tool for manually reviewing collections with 🔎 status. Presents sample images for human assessment and records your decisions.
+Interactive tool for manually reviewing collections. Tests images through the actual Lambda to verify final image URLs.
 
 **Quick Start:**
 ```bash
-export DIGITALNZ_API_KEY=your_api_key
 ./Sources/Testing/CollectionReviewer/review-collections.sh
 ```
 
-Fetches 3 random images per collection, displays clickable links, prompts for yes/no selection, and updates status to 🛠️ (approved) or ❌ (rejected) with optional notes.
+Builds and starts the Lambda server, fetches 3 random images per collection through the Lambda, displays clickable links, and prompts for yes/no selection. Updates status to ✅ (approved) or ❌ (rejected) with optional notes.
 
 📖 [Full documentation](Sources/Testing/CollectionReviewer/README-CollectionReviewer.md)
 

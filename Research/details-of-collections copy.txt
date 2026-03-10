@@ -23,7 +23,6 @@ Filtered to collections with images, that have more than 100 items
 - Status: ✅
 - Thumbnail URL: Large
 - Implementation: Multi-step process to fetch high-res images:
-- Review [2025-11-24 15:56]: Large image finding and proxy works well, if slow, test speed
   1. Extract IE PID from thumbnail URL
   2. Get DVS session from DeliveryManagerServlet
   3. Extract FL PIDs from viewer page
@@ -54,9 +53,8 @@ Filtered to collections with images, that have more than 100 items
 - Review: Old news clippings/cartoons, again not what I'm looking for
 
 
-- Review [2025-11-24 16:45]: xlarge in url works, ask AI if it can get anything larger
 "Nelson Provincial Museum": 198,196
-- Status: ⚠️
+- Status: 🛠️
 - Thumbnail URL: Large
 - Average Resolution: 706x544
 - Quality: Medium resolution (600+ pixels)
@@ -64,63 +62,54 @@ Filtered to collections with images, that have more than 100 items
 - Evaluated: 2025-11-22
 - Review: Provided I can get a large image, these are good
 
-- Review [2025-11-24 16:45]: xlarge in url works, ask AI if it can get anything larger
 
 "Puke Ariki": 134,849
-- Status: ⚠️
+- Status: 🔎
 - Thumbnail URL: Large
 - Average Resolution: 726x723
 - Quality: Medium resolution (600+ pixels)
 - object_url: No
 - Evaluated: 2025-11-22
 - Review: Provided I can get a large image, these are good
-- Review [2025-11-24 16:50]: mostly quake pics i think
 
 
 "Canterbury Stories": 86,246
 - Status: ❌
 - Thumbnail URL: Large
-- Review [2025-11-24 17:16]: Large url no longer working, might need the alt way of getting recollect url
 
 
 "Tauranga City Libraries Other Collection": 65,226
-- Status: ⚠️
+- Status: ✅
 - Thumbnail URL: Large
 - Implementation: Recollect. Get ID from https://paekoroki.tauranga.govt.nz/assets/display/<ID>-600 and put into URL as such: https://paekoroki.tauranga.govt.nz/assets/downloadwiz/<ID>
-- Review [2025-11-24 17:16]: large url has not been recollect processed yet
 
 
 "Antarctica NZ Digital Asset Manager": 59,347
-- Status: ⚠️
+- Status: ✅
 - Thumbnail URL: Large
 - Implementation: Recollect. Get ID from http://antarctica.recollect.co.nz/assets/display/86651-600 and put into URL as such: http://antarctica.recollect.co.nz/assets/downloadwiz/<ID>
 - Review: Recollect, these are good, need large image
-- Review [2025-11-24 17:27]: Recollect, need to try large url
 
 
 "Hocken Digital Collections": 54,311
-- Status: ⚠️
+- Status: 🔎
 - Thumbnail URL: Large
 - Average Resolution: 854x844
 - Quality: Medium resolution (600+ pixels)
 - object_url: No
 - Evaluated: 2025-11-22
-- Review [2025-11-24 17:42]: recollect, need large
 
 
-- Review [2025-11-24 17:47]: No images returned, look into these and if proxy will work
 "Anthropology Photographic Archive": 51,483
 - Status: ❌
 - Review: Blocked by CORS on all URLs, also cannot find a full res URL from what data we get either way
 - Notes: Thumbnailer doesn't even work
 
-- Review [2025-11-24 17:47]: Ask AI to find large images
 
 "Air Force Museum of New Zealand Photograph Collection": 49,120
 - Status: ❌/⚠️
 - Review: Some URLs work, some are broken, but work with the thumbnailer.
 - Notes: A possible solution to this, as images are CC, could be to crawl and auto click download (which provides full res if available), then host myself? (Side project)
-- Review [2025-11-24 17:49]: Mostly pointless modern photos
 
 
 "Lincoln University Living Heritage: Tikaka Tuku Iho": 48,580
@@ -140,14 +129,12 @@ Filtered to collections with images, that have more than 100 items
 "Christchurch City Libraries Flickr": 42,757
 - Status: ❌
 - Review: Just boring photos of in and around ChCh library, not an archive.
-- Review [2025-11-24 17:52]: No images found?
 
 
 "New Zealand Electronic Text Collection": 42,009
 - Status: ❌
 - Review: Low quality newspaper image scans
 - Notes: Some might be low res, but this is a recollect, should be good
-- Review [2025-11-24 17:53]: Recollect, need large
 
 
 "Wellington City Council Archives": 41,508
@@ -157,9 +144,7 @@ Filtered to collections with images, that have more than 100 items
 - Quality: Low resolution (<600 pixels)
 - object_url: No
 - Evaluated: 2025-11-22
-- Review [2025-11-24 17:54]: No photos now?
 
-- Review [2025-11-24 17:59]: Thumbnailer not working but use proxy or AI. Check photos too
 
 "QuakeStudies Repository": 38,703
 - Status: ❌
@@ -167,20 +152,17 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Auckland Libraries Heritage Images Collection": 36,228
-- Status: ⚠️
+- Status: ✅
 - Thumbnail URL: Large
 - Review: Image URLs do not currently work, could enquire with council
 - Implementation: Append URL as a URL encoded query item to the url: https://thumbnailer.digitalnz.org/?format=jpeg&src=
 - Notes: Provided I can get a large image, these are good
-- Review [2025-11-24 18:00]: Good images, try xlarge, ai
-- Review [2025-11-24 18:02]: Xlarge, ai
 
 
 "MOTAT": 34,187
 - Status: 🔎
 
 
-- Review [2025-11-24 18:03]: Good images, ask ai for larger
 "New Zealand Maritime Museum": 33,803
 - Status: 🔎
 - Thumbnail URL: Large
@@ -188,21 +170,18 @@ Filtered to collections with images, that have more than 100 items
 - Quality: Medium resolution (600+ pixels)
 - object_url: No
 - Evaluated: 2025-11-22
-- Review [2025-11-24 18:04]: Text over images
 
 
 "National Publicity Studios black and white file prints": 33,796
-- Status: ⚠️
+- Status: ✅
 - Thumbnail URL: Large
 - Review: Low res, best I can get, but will be included as the images are interesting.
-- Review [2025-11-24 18:06]: Recollect, get large
 
 
 "V.C. Browne & Son NZ Aerial Photograph Collection": 31,506
 - Status: ✅
 - Thumbnail URL: Large
 - Review: Recollect, good
-- Review [2025-11-24 18:15]: Good images, proxy getting 403, hmmm, maybe web scraping
 
 
 "Mahara Upper Hutt Community Archive": 29,706
@@ -212,31 +191,25 @@ Filtered to collections with images, that have more than 100 items
 - Quality: Good resolution (1000+ pixels)
 - object_url: No
 - Evaluated: 2025-11-22
-- Review [2025-11-24 18:16]: No images found, but old notes say low res, worth checking everything
-- Review [2025-11-24 18:18]: Needs investigating, website may be unreliable
 
 
 "Hawke's Bay Knowledge Bank": 29,060
 - Status: ✅
 - Thumbnail URL: Large
 - Implementation: Remove image size from end of URL
-- Review [2025-11-24 18:19]: Large images are good, is this processed already?
 
 
 "Trove": 28,435
 - Status: ❌
 - Review: Images too low res
-- Review [2025-11-24 18:20]: Images maybe not worth it? Unlikely to have large versions
 
 
-- Review [2025-11-24 18:23]: Mixed bag of images, large thumb does not work, investigate
 "Picture Wairarapa": 25,949
 - Status: ⚠️/❌
 - Thumbnail URL: Large
 - Review: Cool images, as long as there's no weirdness in getting a large url, then worth having
 - Notes: Website currently down
 
-- Review [2025-11-24 18:25]: Large thumb often fails, but large image on site when you click image, worth giving to AI and adding
 
 "University of Auckland Photographs": 25,752
 - Status: 🔎
@@ -245,8 +218,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Te Ara - The Encyclopedia of New Zealand": 25,634
-- Status: ⚠️
-- Review [2025-11-24 19:12]: Large thumb broken, large image available from website
+- Status: 🔎
 
 
 "Kete Horowhenua": 24,104

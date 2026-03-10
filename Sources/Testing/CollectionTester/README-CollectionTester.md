@@ -1,6 +1,6 @@
 # CollectionTester
 
-A Swift command-line tool for testing the NZ Image API Lambda locally.
+A Swift command-line tool for testing the NZ Image API Lambda locally. Uses the shared `LambdaTesting` library for Lambda server management.
 
 ## What it replaces
 
@@ -10,12 +10,21 @@ A convenience wrapper script `test-collection.sh` is provided alongside Collecti
 
 ## What it does
 
-1. Builds the lambda
+1. Builds the lambda (optionally with `--clean` for a clean build)
 2. Starts a local lambda server
 3. Makes a test request for a specific or random collection
 4. Validates the JSON response
 5. Verifies the image URL is accessible
 6. Shuts down the server automatically
+
+## Shared Library
+
+CollectionTester uses the `LambdaTesting` library (`Sources/Testing/LambdaTesting/`) which provides:
+- Lambda build and server lifecycle management
+- Request formatting for API Gateway payloads
+- Image URL validation
+
+This library is also used by `CollectionReviewer` for consistent Lambda testing.
 
 ## Usage
 
@@ -53,6 +62,7 @@ DIGITALNZ_API_KEY=your_key .build/debug/CollectionTester --port 8000 "Canterbury
 
 - `--port <port>` - Port for lambda server (default: 7000)
 - `--host <host>` - Host for lambda server (default: 127.0.0.1)
+- `--clean` - Do a clean build before testing (recommended to avoid cache issues)
 - `-h, --help` - Show help message
 
 ## Example Output

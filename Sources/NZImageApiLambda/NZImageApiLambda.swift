@@ -18,10 +18,13 @@ struct NZImageApiLambda {
         case ("/image", .get):
             let requestedCollection = event.queryStringParameters?["collection"]
 
+            context.logger.log(level: .info, "Requested collection: \(requestedCollection ?? "random")")
+
             guard let image = await api.image(collection: requestedCollection, logger: { log in
-                context.logger.log(level: .trace, "\(log)")
+                context.logger.log(level: .info, "\(log)")
             }) else {
-                return APIGatewayV2Response(statusCode: .badRequest)
+                context.logger.log(level: .error, "Failed to get image for collection: \(requestedCollection ?? "random")")
+                return APIGatewayV2Response(statusCode: .badRequest, body: "Failed to get image for collection: \(requestedCollection ?? "random")")
             }
 
             let jsonEncoder = JSONEncoder()

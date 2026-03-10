@@ -311,9 +311,12 @@ final class URLProcessor: Sendable {
             )
 
         default:
-            throw URLProcessorError(
-                kind: .unknownCollectionName,
-                data: ["result": result.customDescription()]
+            // For collections without special URL processing, pass through unchanged
+            return try await handleUrl(
+                result: result,
+                urlModifier: { url in
+                    url.absoluteString
+                }
             )
         }
     }

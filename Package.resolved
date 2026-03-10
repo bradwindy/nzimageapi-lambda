@@ -1,5 +1,5 @@
 {
-  "originHash" : "e50e99455e8e7336decf11c09caa5ef49ddda0664a1bfebc67e40d000bd1363d",
+  "originHash" : "2bbee6bd4a75221cdb51c611a9c8fab9e3d95d9c45a4758fc50eebf0cb6726f9",
   "pins" : [
     {
       "identity" : "alamofire",
@@ -26,6 +26,15 @@
       "state" : {
         "revision" : "32f3be82a2690305887e50a92677dffa4a57d000",
         "version" : "2.1.0"
+      }
+    },
+    {
+      "identity" : "swift-async-algorithms",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-async-algorithms.git",
+      "state" : {
+        "revision" : "2773d4125311133a2f705ec374c363a935069d45",
+        "version" : "1.1.0"
       }
     },
     {
@@ -89,6 +98,15 @@
       "state" : {
         "revision" : "6e02c7a2467cf22526ac54521d4230d8c5890e62",
         "version" : "2.90.0"
+      }
+    },
+    {
+      "identity" : "swift-service-lifecycle",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swift-server/swift-service-lifecycle.git",
+      "state" : {
+        "revision" : "1de37290c0ab3c5a96028e0f02911b672fd42348",
+        "version" : "2.9.1"
       }
     },
     {
