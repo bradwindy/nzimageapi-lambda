@@ -4,7 +4,7 @@ Human-readable mirror of `progress.json` (the source of truth).
 Regenerate with `python3 Research/highres/gen_worklist.py`.
 
 ## Removal
-- [ ] REMOVE Wellington City Recollect — pending
+- [x] REMOVE Wellington City Recollect — done
 
 ## Collections (0/52 terminal)
 

@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-02T05:44:06Z",
+  "lastUpdated": "2026-06-02T05:47:59Z",
   "removal": {
     "collection": "Wellington City Recollect",
-    "status": "pending"
+    "status": "done"
   },
   "collections": [
     {

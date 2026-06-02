@@ -46,7 +46,6 @@ public struct NZImageApi: Sendable {
         "Waimate Museum and Archives PastPerfect": 0.01,
         "Te Toi Uku, Crown Lynn and Clayworks Museum": 0.009,
         "Culture Waitaki": 0.009,
-        "Wellington City Recollect": 0.006,
         "Te Hikoi Museum": 0.006,
         "V.C. Browne & Son NZ Aerial Photograph Collection": 0.005,
         "Tāmiro": 0.005,
