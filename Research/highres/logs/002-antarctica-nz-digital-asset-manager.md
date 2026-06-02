@@ -106,5 +106,6 @@ Tauranga-style win (apply `recollectLargest` with domain `adam.antarcticanz.govt
 
 ## Commit
 
-User-approved no-improvement 2026-06-02 (Research/highres bookkeeping only; no Swift change).
-SHA recorded after commit.
+`aa03e2d` — Investigate Antarctica NZ Digital Asset Manager: no higher-res source (no code
+change). User-approved no-improvement 2026-06-02 (Research/highres bookkeeping only; no Swift
+change).

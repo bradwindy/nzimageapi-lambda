@@ -6,12 +6,11 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 ## Removal
 - [x] REMOVE Wellington City Recollect — done
 
-## Collections (2/52 terminal)
+## Collections (3/52 terminal)
 
 ### recollect
 - [x] (01) Tauranga City Libraries Other Collection — group A — platform recollect — committed
 - [x] (02) Antarctica NZ Digital Asset Manager — group A — platform recollect — no-improvement
-- [ ] (03) National Publicity Studios black and white file prints — group A — platform recollect — todo
 - [ ] (04) National Army Museum — group A — platform recollect — todo
 - [ ] (05) Presbyterian Research Centre — group A — platform recollect — todo
 - [ ] (06) Hastings Recollect — group B — platform recollect — todo
@@ -81,3 +80,6 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 - [ ] (50) Te Ara - The Encyclopedia of New Zealand — group B — platform boutique — todo
 - [ ] (51) Kete Horowhenua — group B — platform boutique — todo
 - [ ] (52) Manawatū Heritage — group B — platform boutique — todo
+
+### ndha
+- [x] (03) National Publicity Studios black and white file prints — group A — platform ndha — no-improvement

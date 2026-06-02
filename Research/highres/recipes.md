@@ -181,8 +181,20 @@ hard-coded per collection.
   returns an image; if not, switch to cloudimg `force_format=jpeg` or a natlib
   JPEG derivative.
 
-### Verified findings (tapuhi)
-- _(append here)_
+### Verified findings (tapuhi / NDHA)
+- **NLNZStreamGate variant (National Publicity Studios, 2026-06-02):** some NDHA collections give
+  `large_thumbnail_url = https://ndhadeliver.natlib.govt.nz/NLNZStreamGate/get?dps_pid=IE<digits>`
+  (not the `dps_pid=IE…&dps_func=...` shape). This streams the **access copy** directly. The
+  TAPUHI 5-step (IE→DVS→ieViewer→FL) on these IEs finds a **single FL** whose `dps_func=stream`
+  bytes are **byte-identical** to NLNZStreamGate/get — i.e. the FL *is* the access copy, no larger
+  master. Only an "access" representation exists; `IE…&dps_func=download`/`downloadAll` → 404;
+  `FL…&dps_func=download` → same access JPEG as attachment; `IE…&dps_func=thumbnail` → ~150px. No
+  IIIF/Djatoka/zoom. ⇒ For NLNZStreamGate-shaped records the Rosetta master is not public; baseline
+  passthrough is already the ceiling (~900px access copy). Distinguish from TAPUHI proper (order
+  25), which DOES expose multiple FL streams incl. large masters — verify per collection.
+- Landing institution can differ from image host: National Publicity Studios is held by **Archives
+  NZ** (`collections.archives.govt.nz`, Axiell Arena/Liferay) but delivered via natlib NDHA. The
+  Arena SPA embeds the same ndhadeliver streams; no separate public hi-res download.
 
 ---
 

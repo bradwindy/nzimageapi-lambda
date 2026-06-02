@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-02T02:30:00Z",
+  "lastUpdated": "2026-06-02T03:15:00Z",
   "removal": {
     "collection": "Wellington City Recollect",
     "status": "done"
@@ -47,7 +47,7 @@
         "px": "~1000px wide (baseline already at the ceiling)",
         "urlPattern": "http://antarctica.recollect.co.nz/assets/display/<id>-600 (unchanged)"
       },
-      "commit": null,
+      "commit": "aa03e2d",
       "log": "logs/002-antarctica-nz-digital-asset-manager.md",
       "notes": "downloadwiz master 404 for 184/184 sampled records (disabled). Display pyramid hard-capped at ~1000px width; -600 == -max byte-identical; all larger tokens clamp; no alternate/original endpoint. 3196px original exists per og metadata but is not served anonymously. No code change. FOLLOW-UP: user emailed Antarctica NZ asking them to re-enable downloads; if re-enabled, re-check -> apply recollectLargest (domain adam.antarcticanz.govt.nz, asset id from large_thumbnail_url)."
     },
@@ -56,22 +56,22 @@
       "name": "National Publicity Studios black and white file prints",
       "slug": "national-publicity-studios-black-and-white-file-prints",
       "group": "A",
-      "platform": "recollect",
+      "platform": "ndha",
       "rawItemCount": 33796,
       "weight": null,
-      "status": "todo",
+      "status": "no-improvement",
       "baseline": {
-        "method": "passthrough (large_thumbnail_url)",
-        "px": null
+        "method": "passthrough (large_thumbnail_url = NLNZStreamGate/get?dps_pid=IE...)",
+        "px": "~900px wide JPEG access copy (e.g. 900x692)"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "no-improvement (passthrough unchanged)",
+        "px": "~900px wide (baseline already at the ceiling)",
+        "urlPattern": "https://ndhadeliver.natlib.govt.nz/NLNZStreamGate/get?dps_pid=IE... (unchanged)"
       },
       "commit": null,
       "log": "logs/003-national-publicity-studios-black-and-white-file-prints.md",
-      "notes": ""
+      "notes": "RE-DETECTED: not recollect -> NDHA/natlib (ndhadeliver.natlib.govt.nz, Rosetta), holding inst Archives NZ (collections.archives.govt.nz Arena). Baseline NLNZStreamGate/get = 900px access copy = the FL access stream (byte-identical). No preservation master delivered anonymously (IE download/downloadAll 404; only 'access' rep; thumbnail 150px). No IIIF/zoom. Archives NZ Arena embeds same streams, no public hi-res. No code change."
     },
     {
       "order": 4,
