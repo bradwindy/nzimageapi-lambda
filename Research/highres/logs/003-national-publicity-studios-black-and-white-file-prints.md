@@ -77,5 +77,5 @@ unchanged.
 
 ## Commit
 
+`60b7aa7` — Investigate National Publicity Studios: no higher-res source (no code change).
 User-approved no-improvement 2026-06-02 (Research/highres bookkeeping only; no Swift change).
-SHA recorded after commit.

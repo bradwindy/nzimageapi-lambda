@@ -53,6 +53,16 @@ hard-coded per collection.
 - **Pitfall:** Alamofire's HEAD is fine *following* redirects, but `Redirector.doNotFollow`
   misreported these 302s — and a stale lambda on :7000 masked test results. Use
   `headStatusFollowingRedirects` + kill :7000 between `CollectionTester` runs.
+- **nam.recollect.co.nz (National Army Museum, 2026-06-02):** **two-asset records.** The DigitalNZ
+  `large_thumbnail_url` id (e.g. 13722) is a master-less thumbnail asset — `downloadwiz` 404
+  (50/50), `-600`==`-max` capped ~1000px. The node's `og:image` points to a DIFFERENT, newer
+  primary asset id (e.g. 31444) that DOES have a master — `downloadwiz/<ogId>` = 200 for 41/41
+  records, decoding 1.2–5.2 MP (originals, octet-stream + attachment). ⇒ `recollectLargest` (which
+  rips the large_thumbnail id) would REGRESS this collection to ~1000px; you MUST scrape the landing
+  `og:image` to reach the master. The existing `og:image→downloadwiz` strategy is already optimal
+  (no-improvement). **Lesson:** when the large_thumbnail id's `downloadwiz` 404s but the collection
+  *looks* like it should have masters, check whether the landing `og:image` uses a different id with
+  a master before concluding "no master." (No fallback in the current code, but 41/41 had masters.)
 - **adam.antarcticanz.govt.nz (Antarctica NZ ADAM, 2026-06-02):** downloadwiz **disabled** —
   `/assets/downloadwiz/<assetId>` 404s for **184/184** sampled records ("goDownload failed").
   Display pyramid hard-capped at **width ~1000 px**: `-600` (= `large_thumbnail_url`) is

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-02T03:15:00Z",
+  "lastUpdated": "2026-06-02T04:00:00Z",
   "removal": {
     "collection": "Wellington City Recollect",
     "status": "done"
@@ -69,7 +69,7 @@
         "px": "~900px wide (baseline already at the ceiling)",
         "urlPattern": "https://ndhadeliver.natlib.govt.nz/NLNZStreamGate/get?dps_pid=IE... (unchanged)"
       },
-      "commit": null,
+      "commit": "60b7aa7",
       "log": "logs/003-national-publicity-studios-black-and-white-file-prints.md",
       "notes": "RE-DETECTED: not recollect -> NDHA/natlib (ndhadeliver.natlib.govt.nz, Rosetta), holding inst Archives NZ (collections.archives.govt.nz Arena). Baseline NLNZStreamGate/get = 900px access copy = the FL access stream (byte-identical). No preservation master delivered anonymously (IE download/downloadAll 404; only 'access' rep; thumbnail 150px). No IIIF/zoom. Archives NZ Arena embeds same streams, no public hi-res. No code change."
     },
@@ -81,19 +81,19 @@
       "platform": "recollect",
       "rawItemCount": 14035,
       "weight": null,
-      "status": "todo",
+      "status": "no-improvement",
       "baseline": {
-        "method": "og:image scrape -> downloadwiz",
-        "px": null
+        "method": "og:image scrape -> downloadwiz (on the og-id, which has the master)",
+        "px": "master 1.2-5.2 MP (e.g. 1220x996 .. 2680x1957)"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "no-improvement (current strategy already serves the master)",
+        "px": "master 1.2-5.2 MP (already the ceiling)",
+        "urlPattern": "https://nam.recollect.co.nz/assets/downloadwiz/<ogId> (unchanged)"
       },
       "commit": null,
       "log": "logs/004-national-army-museum.md",
-      "notes": ""
+      "notes": "Two asset ids per record: large_thumbnail id (~13.7k) has NO master (downloadwiz 404, 50/50; -600==-max ~1000px); og:image id (~31.4k) HAS the master (downloadwiz 200, 41/41). Current og:image->downloadwiz already serves that master (1.2-5.2 MP, octet-stream JPEG original) = the ceiling. recollectLargest would REGRESS (uses thumb id). Landing fetch unavoidable. No code change."
     },
     {
       "order": 5,
