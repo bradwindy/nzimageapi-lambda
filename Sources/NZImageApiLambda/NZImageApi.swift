@@ -39,7 +39,6 @@ public struct NZImageApi: Sendable {
         "Hawke's Bay Knowledge Bank": 0.029,
         "South Canterbury Museum": 0.023,
         "Howick Historical Village NZMuseums": 0.015,
-        "Presbyterian Research Centre": 0.014,
         "National Army Museum": 0.013,
         "TAPUHI": 0.011,
         "Auckland Art Gallery Toi o Tāmaki": 0.01,

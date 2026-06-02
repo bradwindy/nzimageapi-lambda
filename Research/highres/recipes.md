@@ -53,6 +53,15 @@ hard-coded per collection.
 - **Pitfall:** Alamofire's HEAD is fine *following* redirects, but `Redirector.doNotFollow`
   misreported these 302s — and a stale lambda on :7000 masked test results. Use
   `headStatusFollowingRedirects` + kill :7000 between `CollectionTester` runs.
+- **prc.recollect.co.nz → pcanzarchives.recollect.co.nz (Presbyterian Research Centre, 2026-06-02):
+  MIGRATED + LOGIN-WALLED.** A Recollect site can move domains and go private. `prc.recollect.co.nz`
+  301/302-redirects to `pcanzarchives.recollect.co.nz`, but the DigitalNZ-harvested asset ids 404 on
+  the new domain (re-IDed; no old→new mapping) and node pages 302→`/users/login`. DigitalNZ's data is
+  stale → the Lambda's passthrough emitted broken 404s. **Outcome: blocked + removed from the
+  Lambda.** ⇒ Lesson: for any Recollect collection, if `/assets/display/<id>` redirects to a
+  *different* `*.recollect.co.nz` host and/or `/nodes/view/<id>` lands on `/users/login`, the source
+  has migrated/gone private — check before assuming a fixable strategy. (Relevant to other recollect
+  collections still queued: Hocken, Lower Hutt, Hastings, Tāmiro, He Purapura.)
 - **nam.recollect.co.nz (National Army Museum, 2026-06-02):** **two-asset records.** The DigitalNZ
   `large_thumbnail_url` id (e.g. 13722) is a master-less thumbnail asset — `downloadwiz` 404
   (50/50), `-600`==`-max` capped ~1000px. The node's `og:image` points to a DIFFERENT, newer

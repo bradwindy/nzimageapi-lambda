@@ -188,8 +188,7 @@ final class URLProcessor: Sendable {
              "Waimate Museum and Archives PastPerfect",
              "Te Toi Uku, Crown Lynn and Clayworks Museum",
              "Te Hikoi Museum",
-             "V.C. Browne & Son NZ Aerial Photograph Collection",
-             "Presbyterian Research Centre":
+             "V.C. Browne & Son NZ Aerial Photograph Collection":
             return try await handleUrl(
                 result: result,
                 urlModifier: { url in

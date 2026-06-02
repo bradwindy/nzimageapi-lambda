@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-02T04:20:00Z",
+  "lastUpdated": "2026-06-02T05:00:00Z",
   "removal": {
     "collection": "Wellington City Recollect",
     "status": "done"
@@ -101,21 +101,22 @@
       "slug": "presbyterian-research-centre",
       "group": "A",
       "platform": "recollect",
-      "rawItemCount": 16122,
+      "rawItemCount": 16200,
       "weight": null,
-      "status": "todo",
+      "status": "blocked",
+      "removedFromLambda": true,
       "baseline": {
-        "method": "passthrough (large_thumbnail_url)",
-        "px": null
+        "method": "passthrough (large_thumbnail_url = prc.recollect.co.nz/assets/display/<id>-600)",
+        "px": "BROKEN: HTTP 404 (source migrated, asset ids dead)"
       },
       "chosen": {
-        "method": null,
+        "method": "blocked + REMOVED from Lambda (source migrated + login-walled; no anonymous mappable route)",
         "px": null,
         "urlPattern": null
       },
       "commit": null,
       "log": "logs/005-presbyterian-research-centre.md",
-      "notes": ""
+      "notes": "MIGRATED: prc.recollect.co.nz -> pcanzarchives.recollect.co.nz. Old asset ids 404 (5/5 display, 32/32 downloadwiz); nodes 302->/users/login (login required); re-IDed assets, no old->new mapping; no og:image; thumbnailer can't help (dead source). Baseline passthrough emitted broken 404s. USER DECISION: REMOVED from collectionWeights + passthrough case (like Wellington). FOLLOW-UP: user to email pcanzarchives@prcknox.org.nz for public access; re-check/re-add if granted or DigitalNZ re-harvests pcanzarchives.recollect.co.nz."
     },
     {
       "order": 6,
