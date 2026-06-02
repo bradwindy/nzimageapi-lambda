@@ -60,5 +60,5 @@ masters (158480, 111239) at **HTTP 200**. Production output unchanged.
 
 ## Commit
 
-User-approved no-improvement 2026-06-02 (Research/highres bookkeeping only; no Swift change).
-SHA recorded after commit.
+`062719b` — Investigate Tāmiro: existing downloadwiz already serves the master (no code change).
+User-approved no-improvement 2026-06-02.

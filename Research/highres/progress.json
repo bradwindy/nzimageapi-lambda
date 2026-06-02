@@ -202,7 +202,7 @@
         "px": "master ~5 MP (already the ceiling)",
         "urlPattern": "https://massey.recollect.co.nz/assets/downloadwiz/<id> (unchanged)"
       },
-      "commit": null,
+      "commit": "062719b",
       "log": "logs/009-tamiro.md",
       "notes": "downloadwiz masters 200 for 75/75 sampled (~2700px, 5MP); -600==-max ~1MP. Current strategy already serves the master = max. No master-less records found, so the missing -max fallback isn't hurting; adding recollectLargest probe would only add a wasted HEAD per request. No code change. If future check finds master-less records, migrate to recollectLargest."
     },
