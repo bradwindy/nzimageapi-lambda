@@ -51,6 +51,7 @@ public struct NZImageApi: Sendable {
         "Alexander Turnbull Library Flickr": 0.005,
         "He Purapura Marara Scattered Seeds": 0.005,
         "Hastings Recollect": 0.004,
+        "Lower Hutt MyRecollect": 0.002,
     ]
 
     public func image(collection: String?, logger: @Sendable (String) -> Void = { _ in }) async -> NZRecordsResult? {

@@ -53,6 +53,9 @@ hard-coded per collection.
 - **Pitfall:** Alamofire's HEAD is fine *following* redirects, but `Redirector.doNotFollow`
   misreported these 302s — and a stale lambda on :7000 masked test results. Use
   `headStatusFollowingRedirects` + kill :7000 between `CollectionTester` runs.
+- **huttcity.recollect.co.nz (Lower Hutt MyRecollect, 2026-06-02):** healthy Recollect, Tauranga-style.
+  `downloadwiz` masters 200 for 25/25 sampled (~5000px originals, 3.9–28 MP) vs ~1 MP `-600`; a few
+  dead records (404). og:image id == thumb id. **ADDED via `recollectLargest`.**
 - **hastings.recollect.co.nz (Hastings Recollect, 2026-06-02):** healthy Recollect, Tauranga-style.
   `downloadwiz` masters present for ~96% (24/25), large originals 1.5–59 MP (octet-stream), vs ~1 MP
   `-600`. ~4% dead records (display+downloadwiz 404). og:image id == thumb id. **ADDED via

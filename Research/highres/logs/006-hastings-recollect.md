@@ -62,4 +62,5 @@ between): **3/3 HTTP 200**, all `downloadwiz` masters. Processed-URL decoded dim
 
 ## Commit
 
-User-approved 2026-06-02. SHA recorded after commit.
+`6ee6228` — Hastings Recollect: add via recollectLargest (downloadwiz master, -max fallback).
+User-approved 2026-06-02.

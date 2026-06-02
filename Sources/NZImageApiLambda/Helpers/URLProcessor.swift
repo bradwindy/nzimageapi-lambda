@@ -48,6 +48,9 @@ final class URLProcessor: Sendable {
         "Hastings Recollect": { result, url in
             await recollectLargest(result, url)
         },
+        "Lower Hutt MyRecollect": { result, url in
+            await recollectLargest(result, url)
+        },
     ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
@@ -383,6 +386,7 @@ final class URLProcessor: Sendable {
     private static let recollectDomainMap = [
         "Tauranga City Libraries Other Collection": "paekoroki.tauranga.govt.nz",
         "Hastings Recollect": "hastings.recollect.co.nz",
+        "Lower Hutt MyRecollect": "huttcity.recollect.co.nz",
         "National Army Museum": "nam.recollect.co.nz",
         "Tāmiro": "massey.recollect.co.nz",
         "He Purapura Marara Scattered Seeds": "dunedin.recollect.co.nz",

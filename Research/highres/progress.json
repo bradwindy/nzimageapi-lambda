@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-02T05:40:00Z",
+  "lastUpdated": "2026-06-02T06:10:00Z",
   "removal": {
     "collection": "Wellington City Recollect",
     "status": "done"
@@ -136,7 +136,7 @@
         "px": "master 1.5-59 MP for ~96%; -max ~1MP fallback; ~4% dead (unfixable)",
         "urlPattern": "https://hastings.recollect.co.nz/assets/downloadwiz/<id>  OR  /assets/display/<id>-max"
       },
-      "commit": null,
+      "commit": "6ee6228",
       "log": "logs/006-hastings-recollect.md",
       "notes": "Healthy Recollect (no migration/login). downloadwiz masters 200 for 24/25 sampled (1.5-59 MP, octet-stream); 1 dead (47062, display+downloadwiz 404, ~4% CAT3). og:image id==thumb id. ADDED: recollectDomainMap + registry recollectLargest + collectionWeights 0.004 (provisional). swift build 0; CollectionTester x3 all HTTP 200 masters (59.3 MP, 31.9 MP, 1.5 MP)."
     },
@@ -146,21 +146,21 @@
       "slug": "lower-hutt-myrecollect",
       "group": "B",
       "platform": "recollect",
-      "rawItemCount": 1960,
-      "weight": null,
-      "status": "todo",
+      "rawItemCount": 2150,
+      "weight": 0.002,
+      "status": "committed",
       "baseline": {
-        "method": "raw large_thumbnail_url",
-        "px": null
+        "method": "raw large_thumbnail_url (/assets/display/<id>-600)",
+        "px": "~1 MP (e.g. 1000x756)"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "ADD via recollectLargest (downloadwiz master, -max fallback)",
+        "px": "master ~5000px (3.9-28 MP); -max ~1MP fallback; few-% dead (unfixable)",
+        "urlPattern": "https://huttcity.recollect.co.nz/assets/downloadwiz/<id>  OR  /assets/display/<id>-max"
       },
       "commit": null,
       "log": "logs/007-lower-hutt-myrecollect.md",
-      "notes": ""
+      "notes": "Healthy Recollect (no migration/login). downloadwiz masters 200 for 25/25 page-2+ sample (~5000px, 3.9-28 MP, octet-stream); 2 dead page-1 records (12819,7314 'Requested Asset does not exist'). og:image id==thumb id. ADDED: recollectDomainMap + registry recollectLargest + collectionWeights 0.002 (provisional). swift build 0; CollectionTester x3 all HTTP 200 masters (28.4/18.9/3.9 MP)."
     },
     {
       "order": 8,
