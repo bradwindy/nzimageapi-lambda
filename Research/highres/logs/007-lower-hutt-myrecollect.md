@@ -54,4 +54,5 @@ between): **3/3 HTTP 200** masters. Processed decoded dims: 6615 **5964×4762 (2
 
 ## Commit
 
-User-approved 2026-06-02. SHA recorded after commit.
+`f6512c9` — Lower Hutt MyRecollect: add via recollectLargest (downloadwiz master, -max fallback).
+User-approved 2026-06-02.

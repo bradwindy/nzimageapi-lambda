@@ -53,6 +53,14 @@ hard-coded per collection.
 - **Pitfall:** Alamofire's HEAD is fine *following* redirects, but `Redirector.doNotFollow`
   misreported these 302s — and a stale lambda on :7000 masked test results. Use
   `headStatusFollowingRedirects` + kill :7000 between `CollectionTester` runs.
+- **hocken.recollect.co.nz (Hocken Digital Collections, 2026-06-02):** thumb-id `downloadwiz` 404
+  (42/42, master disabled for the indexed asset). NAM-style og:image two-asset EXISTS (og dw=200)
+  but the og id is the **same image** and its master is capped ~2500px (often == og `-max`,
+  sometimes < thumb `-max`) — not worth the per-request landing fetch. `-max` is the practical
+  ceiling (~2000px, 2–6 MP) and ≥ `-600` across an 18-record sample (2–4×). **ADDED via new reusable
+  `recollectDisplayMax`** (rip id → `/assets/display/<id>-max`, NO downloadwiz probe — use this when
+  an instance's thumb master is uniformly 404 but `-max` > `-600`). Caveat: a small-original subset
+  has `-600` *upscaled* larger (by pixel count) than the true `-max`; `-max` is the honest res.
 - **huttcity.recollect.co.nz (Lower Hutt MyRecollect, 2026-06-02):** healthy Recollect, Tauranga-style.
   `downloadwiz` masters 200 for 25/25 sampled (~5000px originals, 3.9–28 MP) vs ~1 MP `-600`; a few
   dead records (404). og:image id == thumb id. **ADDED via `recollectLargest`.**

@@ -52,6 +52,7 @@ public struct NZImageApi: Sendable {
         "He Purapura Marara Scattered Seeds": 0.005,
         "Hastings Recollect": 0.004,
         "Lower Hutt MyRecollect": 0.002,
+        "Hocken Digital Collections": 0.05,
     ]
 
     public func image(collection: String?, logger: @Sendable (String) -> Void = { _ in }) async -> NZRecordsResult? {

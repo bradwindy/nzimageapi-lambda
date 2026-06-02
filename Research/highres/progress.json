@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-02T06:10:00Z",
+  "lastUpdated": "2026-06-02T06:45:00Z",
   "removal": {
     "collection": "Wellington City Recollect",
     "status": "done"
@@ -158,7 +158,7 @@
         "px": "master ~5000px (3.9-28 MP); -max ~1MP fallback; few-% dead (unfixable)",
         "urlPattern": "https://huttcity.recollect.co.nz/assets/downloadwiz/<id>  OR  /assets/display/<id>-max"
       },
-      "commit": null,
+      "commit": "f6512c9",
       "log": "logs/007-lower-hutt-myrecollect.md",
       "notes": "Healthy Recollect (no migration/login). downloadwiz masters 200 for 25/25 page-2+ sample (~5000px, 3.9-28 MP, octet-stream); 2 dead page-1 records (12819,7314 'Requested Asset does not exist'). og:image id==thumb id. ADDED: recollectDomainMap + registry recollectLargest + collectionWeights 0.002 (provisional). swift build 0; CollectionTester x3 all HTTP 200 masters (28.4/18.9/3.9 MP)."
     },
@@ -168,21 +168,21 @@
       "slug": "hocken-digital-collections",
       "group": "B",
       "platform": "recollect",
-      "rawItemCount": 54311,
-      "weight": null,
-      "status": "todo",
+      "rawItemCount": 56710,
+      "weight": 0.05,
+      "status": "committed",
       "baseline": {
-        "method": "raw large_thumbnail_url",
-        "px": null
+        "method": "raw large_thumbnail_url (/assets/display/<id>-600)",
+        "px": "~1 MP (0.7-1.6 MP)"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "ADD via recollectDisplayMax (serve /assets/display/<id>-max, no probe)",
+        "px": "~2000px, 2-6 MP (2-4x over -600)",
+        "urlPattern": "https://hocken.recollect.co.nz/assets/display/<id>-max"
       },
       "commit": null,
       "log": "logs/008-hocken-digital-collections.md",
-      "notes": ""
+      "notes": "No migration/login. thumb downloadwiz 404 (42/42, master disabled for indexed asset). NAM-style og:image two-asset EXISTS (og dw=200) but og=same image, og master capped ~2500px & mixed vs -max -> not worth landing fetch. -max ~2000px (2-6MP) >= -600 across 18-sample (2-4x). Rare small-original records: -600 upscaled > true -max by pixel count. CHOSEN recollectDisplayMax (new strategy, no wasted probe since thumb master always 404). build 0; CollectionTester x3 HTTP200 (2.4/3.0/0.7 MP)."
     },
     {
       "order": 9,

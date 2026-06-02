@@ -51,6 +51,9 @@ final class URLProcessor: Sendable {
         "Lower Hutt MyRecollect": { result, url in
             await recollectLargest(result, url)
         },
+        "Hocken Digital Collections": { result, url in
+            recollectDisplayMax(result, url)
+        },
     ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
@@ -383,10 +386,28 @@ final class URLProcessor: Sendable {
         return masterStatus == 200 ? downloadwiz : maxDerivative
     }
 
+    /// Recollect (Axiell): serve the largest display derivative `/assets/display/<id>-max`
+    /// directly. Use this for instances where the `downloadwiz` master is disabled for every
+    /// record (so `recollectLargest`'s HEAD probe would always 404 and waste a round-trip) but
+    /// the `-max` derivative is still larger than the harvested `-600` (e.g. a ~2000px display
+    /// ceiling). Rips the asset id from the `large_thumbnail_url`; falls back to the original URL
+    /// if the id can't be parsed.
+    private static func recollectDisplayMax(_ result: NZRecordsResult, _ url: URL) -> String {
+        guard let collection = result.collection,
+              let domain = try? recollectDomain(for: collection),
+              let id = url.absoluteString.slice(from: "display/", to: "-")
+        else {
+            return url.absoluteString
+        }
+
+        return "https://\(domain)/assets/display/\(id)-max"
+    }
+
     private static let recollectDomainMap = [
         "Tauranga City Libraries Other Collection": "paekoroki.tauranga.govt.nz",
         "Hastings Recollect": "hastings.recollect.co.nz",
         "Lower Hutt MyRecollect": "huttcity.recollect.co.nz",
+        "Hocken Digital Collections": "hocken.recollect.co.nz",
         "National Army Museum": "nam.recollect.co.nz",
         "Tāmiro": "massey.recollect.co.nz",
         "He Purapura Marara Scattered Seeds": "dunedin.recollect.co.nz",
