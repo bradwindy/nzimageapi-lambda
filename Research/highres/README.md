@@ -4,6 +4,43 @@ This directory is the **single source of truth** for the high-res collection swe
 A fresh Claude Code session with zero prior context can resume the work using only
 these files.
 
+## Current resume state (updated 2026-06-02)
+
+**Wellington removal: done.** Collections **1–9 terminal**; **NEXT → order 10: He Purapura Marara
+Scattered Seeds** (recollect, `dunedin.recollect.co.nz`). `progress.json` is authoritative; this is
+a human summary.
+
+| # | collection | platform | outcome |
+|---|------------|----------|---------|
+| 01 | Tauranga City Libraries Other | recollect | committed — `recollectLargest` (master/-max) |
+| 02 | Antarctica NZ DAM | recollect | no-improvement — masters disabled; user emailed to re-enable |
+| 03 | National Publicity Studios | ndha (natlib) | no-improvement — 900px access copy is the ceiling |
+| 04 | National Army Museum | recollect | no-improvement — existing og:image→downloadwiz already serves master |
+| 05 | Presbyterian Research Centre | recollect | **blocked + REMOVED** — migrated to login-walled `pcanzarchives`; user to email for access |
+| 06 | Hastings Recollect | recollect | committed ADD — `recollectLargest` (15–59 MP masters) |
+| 07 | Lower Hutt MyRecollect | recollect | committed ADD — `recollectLargest` (~5000px masters) |
+| 08 | Hocken Digital Collections | recollect | committed ADD — `recollectDisplayMax` (-max ~2000px) |
+| 09 | Tāmiro | recollect | no-improvement — existing `downloadwiz` already serves 5 MP master |
+
+**Next up (order 10) — He Purapura Marara Scattered Seeds:** currently in the legacy `switch`
+(shared with Tāmiro) using `recollectDownloadUrlString` → `downloadwiz` (no fallback),
+`dunedin.recollect.co.nz`. Likely Tāmiro-like (verify master availability; decide no-improvement vs
+migrate to `recollectLargest` for a `-max` fallback).
+
+**Reusable strategies in `URLProcessor` (registry):** `recollectLargest` (HEAD-probe `downloadwiz`
+→ master, else `-max`; for instances WITH masters), `recollectDisplayMax` (rip id → `-max`, no
+probe; for instances where the thumb `downloadwiz` is uniformly 404 but `-max` > `-600`, e.g.
+Hocken). Recollect domains live in `recollectDomainMap`.
+
+**Provisional weights pending final renormalization:** Hastings 0.004, Lower Hutt 0.002, Hocken
+0.05 (added); Presbyterian 0.014 (removed). Weights currently sum < 1.0 — expected; the final pass
+recomputes all from `rawItemCount`.
+
+**Env gotchas:** `swift build`/`run` + DigitalNZ/asset hosts need the command sandbox OFF;
+`lsof -ti :7000 | xargs -r kill -9` between `CollectionTester` runs (stale-binary trap); git
+commits are 1Password-SSH-signed and intermittently fail with "failed to fill whole buffer" — just
+re-run.
+
 ## Goal
 
 For the NZ Image API Lambda (wraps DigitalNZ), make each served collection return

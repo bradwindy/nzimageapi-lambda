@@ -68,4 +68,5 @@ between): **3/3 HTTP 200** `-max`. Processed decoded dims vs baseline: 253402 `-
 
 ## Commit
 
-User-approved 2026-06-02. SHA recorded after commit.
+`52dc5f4` — Hocken Digital Collections: add via recollectDisplayMax (serve -max derivative).
+User-approved 2026-06-02.

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-02T06:45:00Z",
+  "lastUpdated": "2026-06-02T07:10:00Z",
   "removal": {
     "collection": "Wellington City Recollect",
     "status": "done"
@@ -180,7 +180,7 @@
         "px": "~2000px, 2-6 MP (2-4x over -600)",
         "urlPattern": "https://hocken.recollect.co.nz/assets/display/<id>-max"
       },
-      "commit": null,
+      "commit": "52dc5f4",
       "log": "logs/008-hocken-digital-collections.md",
       "notes": "No migration/login. thumb downloadwiz 404 (42/42, master disabled for indexed asset). NAM-style og:image two-asset EXISTS (og dw=200) but og=same image, og master capped ~2500px & mixed vs -max -> not worth landing fetch. -max ~2000px (2-6MP) >= -600 across 18-sample (2-4x). Rare small-original records: -600 upscaled > true -max by pixel count. CHOSEN recollectDisplayMax (new strategy, no wasted probe since thumb master always 404). build 0; CollectionTester x3 HTTP200 (2.4/3.0/0.7 MP)."
     },
@@ -190,21 +190,21 @@
       "slug": "tamiro",
       "group": "A",
       "platform": "recollect",
-      "rawItemCount": 5586,
+      "rawItemCount": 5628,
       "weight": null,
-      "status": "todo",
+      "status": "no-improvement",
       "baseline": {
-        "method": "downloadwiz from -600",
-        "px": null
+        "method": "recollectDownloadUrlString -> downloadwiz (no fallback)",
+        "px": "master ~2700px (~5 MP)"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "no-improvement (current downloadwiz already serves the master = max)",
+        "px": "master ~5 MP (already the ceiling)",
+        "urlPattern": "https://massey.recollect.co.nz/assets/downloadwiz/<id> (unchanged)"
       },
       "commit": null,
       "log": "logs/009-tamiro.md",
-      "notes": ""
+      "notes": "downloadwiz masters 200 for 75/75 sampled (~2700px, 5MP); -600==-max ~1MP. Current strategy already serves the master = max. No master-less records found, so the missing -max fallback isn't hurting; adding recollectLargest probe would only add a wasted HEAD per request. No code change. If future check finds master-less records, migrate to recollectLargest."
     },
     {
       "order": 10,
