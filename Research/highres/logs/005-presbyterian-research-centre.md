@@ -84,4 +84,5 @@ to this removal). No regression from the Presbyterian removal.
 
 ## Commit
 
-User-approved removal 2026-06-02 (remove from Lambda + bookkeeping). SHA recorded after commit.
+`3e88ae9` — Remove Presbyterian Research Centre: source migrated behind login wall (blocked).
+User-approved removal 2026-06-02 (removed from Lambda + bookkeeping).

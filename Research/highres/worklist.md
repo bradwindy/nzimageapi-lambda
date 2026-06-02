@@ -6,14 +6,14 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 ## Removal
 - [x] REMOVE Wellington City Recollect — done
 
-## Collections (5/52 terminal)
+## Collections (6/52 terminal)
 
 ### recollect
 - [x] (01) Tauranga City Libraries Other Collection — group A — platform recollect — committed
 - [x] (02) Antarctica NZ Digital Asset Manager — group A — platform recollect — no-improvement
 - [x] (04) National Army Museum — group A — platform recollect — no-improvement
 - [x] (05) Presbyterian Research Centre — group A — platform recollect — blocked
-- [ ] (06) Hastings Recollect — group B — platform recollect — todo
+- [x] (06) Hastings Recollect — group B — platform recollect — committed
 - [ ] (07) Lower Hutt MyRecollect — group B — platform recollect — todo
 - [ ] (08) Hocken Digital Collections — group B — platform recollect — todo
 - [ ] (09) Tāmiro — group A — platform recollect — todo

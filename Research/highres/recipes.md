@@ -53,6 +53,11 @@ hard-coded per collection.
 - **Pitfall:** Alamofire's HEAD is fine *following* redirects, but `Redirector.doNotFollow`
   misreported these 302s — and a stale lambda on :7000 masked test results. Use
   `headStatusFollowingRedirects` + kill :7000 between `CollectionTester` runs.
+- **hastings.recollect.co.nz (Hastings Recollect, 2026-06-02):** healthy Recollect, Tauranga-style.
+  `downloadwiz` masters present for ~96% (24/25), large originals 1.5–59 MP (octet-stream), vs ~1 MP
+  `-600`. ~4% dead records (display+downloadwiz 404). og:image id == thumb id. **ADDED via
+  `recollectLargest`** (registry + recollectDomainMap). Confirms the reusable recollect master
+  strategy generalises across instances.
 - **prc.recollect.co.nz → pcanzarchives.recollect.co.nz (Presbyterian Research Centre, 2026-06-02):
   MIGRATED + LOGIN-WALLED.** A Recollect site can move domains and go private. `prc.recollect.co.nz`
   301/302-redirects to `pcanzarchives.recollect.co.nz`, but the DigitalNZ-harvested asset ids 404 on
