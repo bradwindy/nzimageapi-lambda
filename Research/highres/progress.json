@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-02T06:32:41Z",
+  "lastUpdated": "2026-06-02T02:30:00Z",
   "removal": {
     "collection": "Wellington City Recollect",
     "status": "done"
@@ -35,21 +35,21 @@
       "slug": "antarctica-nz-digital-asset-manager",
       "group": "A",
       "platform": "recollect",
-      "rawItemCount": 59347,
+      "rawItemCount": 59372,
       "weight": null,
-      "status": "todo",
+      "status": "no-improvement",
       "baseline": {
-        "method": "passthrough (large_thumbnail_url)",
-        "px": null
+        "method": "passthrough (large_thumbnail_url = /assets/display/<id>-600)",
+        "px": "~1000px wide display derivative (e.g. 999x673)"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "no-improvement (passthrough unchanged)",
+        "px": "~1000px wide (baseline already at the ceiling)",
+        "urlPattern": "http://antarctica.recollect.co.nz/assets/display/<id>-600 (unchanged)"
       },
       "commit": null,
       "log": "logs/002-antarctica-nz-digital-asset-manager.md",
-      "notes": ""
+      "notes": "downloadwiz master 404 for 184/184 sampled records (disabled). Display pyramid hard-capped at ~1000px width; -600 == -max byte-identical; all larger tokens clamp; no alternate/original endpoint. 3196px original exists per og metadata but is not served anonymously. No code change. FOLLOW-UP: user emailed Antarctica NZ asking them to re-enable downloads; if re-enabled, re-check -> apply recollectLargest (domain adam.antarcticanz.govt.nz, asset id from large_thumbnail_url)."
     },
     {
       "order": 3,

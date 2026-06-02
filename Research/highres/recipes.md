@@ -53,6 +53,17 @@ hard-coded per collection.
 - **Pitfall:** Alamofire's HEAD is fine *following* redirects, but `Redirector.doNotFollow`
   misreported these 302s — and a stale lambda on :7000 masked test results. Use
   `headStatusFollowingRedirects` + kill :7000 between `CollectionTester` runs.
+- **adam.antarcticanz.govt.nz (Antarctica NZ ADAM, 2026-06-02):** downloadwiz **disabled** —
+  `/assets/downloadwiz/<assetId>` 404s for **184/184** sampled records ("goDownload failed").
+  Display pyramid hard-capped at **width ~1000 px**: `-600` (= `large_thumbnail_url`) is
+  byte-identical to `-max`, and `-1000…-4000` all clamp to the same file; `-original/-full/-master`
+  and `/assets/{download,original,file,fullsize,master}/<id>` 404. The `?u=<sig>` token does not
+  unlock anything larger. og:image advertises the true original (e.g. 3196×2152) but it is not
+  served by any anonymous route. The "Download" button → `/nodes/download/<nodeId>` is a JS dialog
+  that calls downloadwiz (fails). **Outcome: no-improvement** — baseline passthrough already at the
+  ceiling. ⇒ Lesson: a Recollect instance can have masters fully disabled; always sample
+  downloadwiz before assuming Tauranga-style master availability. Note `landing_url` carries a
+  **node id** (`/nodes/view/<node>`), distinct from the **asset id** in the image URL.
 
 ---
 
