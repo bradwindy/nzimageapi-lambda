@@ -1,0 +1,1155 @@
+{
+  "schemaVersion": 1,
+  "apiKeyEnvVar": "DIGITALNZ_API_KEY",
+  "lastUpdated": "2026-06-02T05:44:06Z",
+  "removal": {
+    "collection": "Wellington City Recollect",
+    "status": "pending"
+  },
+  "collections": [
+    {
+      "order": 1,
+      "name": "Tauranga City Libraries Other Collection",
+      "slug": "tauranga-city-libraries-other-collection",
+      "group": "A",
+      "platform": "recollect",
+      "rawItemCount": 65226,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "downloadwiz from -600",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/001-tauranga-city-libraries-other-collection.md",
+      "notes": ""
+    },
+    {
+      "order": 2,
+      "name": "Antarctica NZ Digital Asset Manager",
+      "slug": "antarctica-nz-digital-asset-manager",
+      "group": "A",
+      "platform": "recollect",
+      "rawItemCount": 59347,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "passthrough (large_thumbnail_url)",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/002-antarctica-nz-digital-asset-manager.md",
+      "notes": ""
+    },
+    {
+      "order": 3,
+      "name": "National Publicity Studios black and white file prints",
+      "slug": "national-publicity-studios-black-and-white-file-prints",
+      "group": "A",
+      "platform": "recollect",
+      "rawItemCount": 33796,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "passthrough (large_thumbnail_url)",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/003-national-publicity-studios-black-and-white-file-prints.md",
+      "notes": ""
+    },
+    {
+      "order": 4,
+      "name": "National Army Museum",
+      "slug": "national-army-museum",
+      "group": "A",
+      "platform": "recollect",
+      "rawItemCount": 14035,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "og:image scrape -> downloadwiz",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/004-national-army-museum.md",
+      "notes": ""
+    },
+    {
+      "order": 5,
+      "name": "Presbyterian Research Centre",
+      "slug": "presbyterian-research-centre",
+      "group": "A",
+      "platform": "recollect",
+      "rawItemCount": 16122,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "passthrough (large_thumbnail_url)",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/005-presbyterian-research-centre.md",
+      "notes": ""
+    },
+    {
+      "order": 6,
+      "name": "Hastings Recollect",
+      "slug": "hastings-recollect",
+      "group": "B",
+      "platform": "recollect",
+      "rawItemCount": 3636,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/006-hastings-recollect.md",
+      "notes": ""
+    },
+    {
+      "order": 7,
+      "name": "Lower Hutt MyRecollect",
+      "slug": "lower-hutt-myrecollect",
+      "group": "B",
+      "platform": "recollect",
+      "rawItemCount": 1960,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/007-lower-hutt-myrecollect.md",
+      "notes": ""
+    },
+    {
+      "order": 8,
+      "name": "Hocken Digital Collections",
+      "slug": "hocken-digital-collections",
+      "group": "B",
+      "platform": "recollect",
+      "rawItemCount": 54311,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/008-hocken-digital-collections.md",
+      "notes": ""
+    },
+    {
+      "order": 9,
+      "name": "Tāmiro",
+      "slug": "tamiro",
+      "group": "A",
+      "platform": "recollect",
+      "rawItemCount": 5586,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "downloadwiz from -600",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/009-tamiro.md",
+      "notes": ""
+    },
+    {
+      "order": 10,
+      "name": "He Purapura Marara Scattered Seeds",
+      "slug": "he-purapura-marara-scattered-seeds",
+      "group": "A",
+      "platform": "recollect",
+      "rawItemCount": 10686,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "downloadwiz from -600",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/010-he-purapura-marara-scattered-seeds.md",
+      "notes": ""
+    },
+    {
+      "order": 11,
+      "name": "Ministry for Culture and Heritage Te Ara Flickr",
+      "slug": "ministry-for-culture-and-heritage-te-ara-flickr",
+      "group": "B",
+      "platform": "flickr",
+      "rawItemCount": 15738,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/011-ministry-for-culture-and-heritage-te-ara-flickr.md",
+      "notes": ""
+    },
+    {
+      "order": 12,
+      "name": "Alexander Turnbull Library Flickr",
+      "slug": "alexander-turnbull-library-flickr",
+      "group": "A",
+      "platform": "flickr",
+      "rawItemCount": 4307,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "object_url direct",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/012-alexander-turnbull-library-flickr.md",
+      "notes": ""
+    },
+    {
+      "order": 13,
+      "name": "Dunedin City Council Archives Flickr",
+      "slug": "dunedin-city-council-archives-flickr",
+      "group": "B",
+      "platform": "flickr",
+      "rawItemCount": 1768,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/013-dunedin-city-council-archives-flickr.md",
+      "notes": ""
+    },
+    {
+      "order": 14,
+      "name": "State Library of New South Wales Flickr",
+      "slug": "state-library-of-new-south-wales-flickr",
+      "group": "B",
+      "platform": "flickr",
+      "rawItemCount": 179,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/014-state-library-of-new-south-wales-flickr.md",
+      "notes": ""
+    },
+    {
+      "order": 15,
+      "name": "Australian National Maritime Museum Flickr",
+      "slug": "australian-national-maritime-museum-flickr",
+      "group": "B",
+      "platform": "flickr",
+      "rawItemCount": 126,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/015-australian-national-maritime-museum-flickr.md",
+      "notes": ""
+    },
+    {
+      "order": 16,
+      "name": "Kura Heritage Collections Online",
+      "slug": "kura-heritage-collections-online",
+      "group": "A",
+      "platform": "iiif",
+      "rawItemCount": 367587,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "iiif /full/2048,/",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/016-kura-heritage-collections-online.md",
+      "notes": ""
+    },
+    {
+      "order": 17,
+      "name": "Howick Historical Village NZMuseums",
+      "slug": "howick-historical-village-nzmuseums",
+      "group": "A",
+      "platform": "ehiveIIIF",
+      "rawItemCount": 13426,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "passthrough (large_thumbnail_url)",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/017-howick-historical-village-nzmuseums.md",
+      "notes": ""
+    },
+    {
+      "order": 18,
+      "name": "Mataura Museum NZMuseums",
+      "slug": "mataura-museum-nzmuseums",
+      "group": "B",
+      "platform": "ehiveIIIF",
+      "rawItemCount": 3422,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/018-mataura-museum-nzmuseums.md",
+      "notes": ""
+    },
+    {
+      "order": 19,
+      "name": "New Zealand Portrait Gallery NZMuseums",
+      "slug": "new-zealand-portrait-gallery-nzmuseums",
+      "group": "B",
+      "platform": "ehiveIIIF",
+      "rawItemCount": 136,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/019-new-zealand-portrait-gallery-nzmuseums.md",
+      "notes": ""
+    },
+    {
+      "order": 20,
+      "name": "Waimate Museum and Archives PastPerfect",
+      "slug": "waimate-museum-and-archives-pastperfect",
+      "group": "A",
+      "platform": "pastPerfect",
+      "rawItemCount": 8667,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "passthrough (large_thumbnail_url)",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/020-waimate-museum-and-archives-pastperfect.md",
+      "notes": ""
+    },
+    {
+      "order": 21,
+      "name": "Te Papa Collections Online",
+      "slug": "te-papa-collections-online",
+      "group": "A",
+      "platform": "weservProxy",
+      "rawItemCount": 365674,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "weserv proxy",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/021-te-papa-collections-online.md",
+      "notes": ""
+    },
+    {
+      "order": 22,
+      "name": "Auckland Museum Collections",
+      "slug": "auckland-museum-collections",
+      "group": "A",
+      "platform": "aklMuseumCloudimg",
+      "rawItemCount": 257891,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "cloudimg height=1000 via publicapi",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/022-auckland-museum-collections.md",
+      "notes": ""
+    },
+    {
+      "order": 23,
+      "name": "Auckland Libraries Heritage Images Collection",
+      "slug": "auckland-libraries-heritage-images-collection",
+      "group": "A",
+      "platform": "thumbnailerProxy",
+      "rawItemCount": 36228,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "thumbnailer.digitalnz.org jpeg",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/023-auckland-libraries-heritage-images-collection.md",
+      "notes": ""
+    },
+    {
+      "order": 24,
+      "name": "Hawke's Bay Knowledge Bank",
+      "slug": "hawke-s-bay-knowledge-bank",
+      "group": "A",
+      "platform": "weservProxy",
+      "rawItemCount": 29060,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "weserv proxy (dash strip)",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/024-hawke-s-bay-knowledge-bank.md",
+      "notes": ""
+    },
+    {
+      "order": 25,
+      "name": "TAPUHI",
+      "slug": "tapuhi",
+      "group": "A",
+      "platform": "tapuhi",
+      "rawItemCount": 300748,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "natlib 5-step IIIF/JP2 -> weserv webp",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/025-tapuhi.md",
+      "notes": ""
+    },
+    {
+      "order": 26,
+      "name": "Canterbury Museum",
+      "slug": "canterbury-museum",
+      "group": "A",
+      "platform": "stringSwap",
+      "rawItemCount": 229481,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "swap large->xlarge",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/026-canterbury-museum.md",
+      "notes": ""
+    },
+    {
+      "order": 27,
+      "name": "Auckland Art Gallery Toi o Tāmaki",
+      "slug": "auckland-art-gallery-toi-o-tamaki",
+      "group": "A",
+      "platform": "stringSwap",
+      "rawItemCount": 18192,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "swap medium->xlarge",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/027-auckland-art-gallery-toi-o-tamaki.md",
+      "notes": ""
+    },
+    {
+      "order": 28,
+      "name": "Culture Waitaki",
+      "slug": "culture-waitaki",
+      "group": "A",
+      "platform": "stringSwap",
+      "rawItemCount": 8309,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "swap large->xlarge",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/028-culture-waitaki.md",
+      "notes": ""
+    },
+    {
+      "order": 29,
+      "name": "South Canterbury Museum",
+      "slug": "south-canterbury-museum",
+      "group": "A",
+      "platform": "boutique",
+      "rawItemCount": 22269,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "passthrough (large_thumbnail_url)",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/029-south-canterbury-museum.md",
+      "notes": ""
+    },
+    {
+      "order": 30,
+      "name": "V.C. Browne & Son NZ Aerial Photograph Collection",
+      "slug": "v-c-browne-son-nz-aerial-photograph-collection",
+      "group": "A",
+      "platform": "boutique",
+      "rawItemCount": 31506,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "passthrough (large_thumbnail_url)",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/030-v-c-browne-son-nz-aerial-photograph-collection.md",
+      "notes": ""
+    },
+    {
+      "order": 31,
+      "name": "Te Hikoi Museum",
+      "slug": "te-hikoi-museum",
+      "group": "A",
+      "platform": "boutique",
+      "rawItemCount": 8589,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "passthrough (large_thumbnail_url)",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/031-te-hikoi-museum.md",
+      "notes": ""
+    },
+    {
+      "order": 32,
+      "name": "Te Toi Uku, Crown Lynn and Clayworks Museum",
+      "slug": "te-toi-uku-crown-lynn-and-clayworks-museum",
+      "group": "A",
+      "platform": "boutique",
+      "rawItemCount": 8106,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "passthrough (large_thumbnail_url)",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/032-te-toi-uku-crown-lynn-and-clayworks-museum.md",
+      "notes": ""
+    },
+    {
+      "order": 33,
+      "name": "Te Ūaka The Lyttelton Museum",
+      "slug": "te-uaka-the-lyttelton-museum",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 18588,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/033-te-uaka-the-lyttelton-museum.md",
+      "notes": ""
+    },
+    {
+      "order": 34,
+      "name": "Wyndham & Districts Historical Museum",
+      "slug": "wyndham-districts-historical-museum",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 3937,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/034-wyndham-districts-historical-museum.md",
+      "notes": ""
+    },
+    {
+      "order": 35,
+      "name": "Feilding Library",
+      "slug": "feilding-library",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 3585,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/035-feilding-library.md",
+      "notes": ""
+    },
+    {
+      "order": 36,
+      "name": "Clutha Heritage",
+      "slug": "clutha-heritage",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 2754,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/036-clutha-heritage.md",
+      "notes": ""
+    },
+    {
+      "order": 37,
+      "name": "John Kinder Theological Library",
+      "slug": "john-kinder-theological-library",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 2714,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/037-john-kinder-theological-library.md",
+      "notes": ""
+    },
+    {
+      "order": 38,
+      "name": "Tasman Heritage",
+      "slug": "tasman-heritage",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 2668,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/038-tasman-heritage.md",
+      "notes": ""
+    },
+    {
+      "order": 39,
+      "name": "Western Bay Community Archives",
+      "slug": "western-bay-community-archives",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 2420,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/039-western-bay-community-archives.md",
+      "notes": ""
+    },
+    {
+      "order": 40,
+      "name": "War Art Online",
+      "slug": "war-art-online",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 1477,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/040-war-art-online.md",
+      "notes": ""
+    },
+    {
+      "order": 41,
+      "name": "Far North District Libraries Rediscovery",
+      "slug": "far-north-district-libraries-rediscovery",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 1435,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/041-far-north-district-libraries-rediscovery.md",
+      "notes": ""
+    },
+    {
+      "order": 42,
+      "name": "Pakiaka Rotorua Heritage Online",
+      "slug": "pakiaka-rotorua-heritage-online",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 1374,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/042-pakiaka-rotorua-heritage-online.md",
+      "notes": ""
+    },
+    {
+      "order": 43,
+      "name": "Victoria and Albert Museum",
+      "slug": "victoria-and-albert-museum",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 549,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/043-victoria-and-albert-museum.md",
+      "notes": ""
+    },
+    {
+      "order": 44,
+      "name": "The University of Waikato Art Collection",
+      "slug": "the-university-of-waikato-art-collection",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 540,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/044-the-university-of-waikato-art-collection.md",
+      "notes": ""
+    },
+    {
+      "order": 45,
+      "name": "Te Ahu Museum",
+      "slug": "te-ahu-museum",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 504,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/045-te-ahu-museum.md",
+      "notes": ""
+    },
+    {
+      "order": 46,
+      "name": "Ngā Puhipuhi o Te Herenga Waka—Victoria University of Wellington Art Collection",
+      "slug": "nga-puhipuhi-o-te-herenga-waka-victoria-university-of-wellington-art-collection",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 488,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/046-nga-puhipuhi-o-te-herenga-waka-victoria-university-of-wellington-art-collection.md",
+      "notes": ""
+    },
+    {
+      "order": 47,
+      "name": "Nelson Provincial Museum",
+      "slug": "nelson-provincial-museum",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 198196,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/047-nelson-provincial-museum.md",
+      "notes": ""
+    },
+    {
+      "order": 48,
+      "name": "Puke Ariki",
+      "slug": "puke-ariki",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 134849,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/048-puke-ariki.md",
+      "notes": ""
+    },
+    {
+      "order": 49,
+      "name": "Picture Wairarapa",
+      "slug": "picture-wairarapa",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 25949,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/049-picture-wairarapa.md",
+      "notes": ""
+    },
+    {
+      "order": 50,
+      "name": "Te Ara - The Encyclopedia of New Zealand",
+      "slug": "te-ara-the-encyclopedia-of-new-zealand",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 25634,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/050-te-ara-the-encyclopedia-of-new-zealand.md",
+      "notes": ""
+    },
+    {
+      "order": 51,
+      "name": "Kete Horowhenua",
+      "slug": "kete-horowhenua",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 24104,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/051-kete-horowhenua.md",
+      "notes": ""
+    },
+    {
+      "order": 52,
+      "name": "Manawatū Heritage",
+      "slug": "manawatu-heritage",
+      "group": "B",
+      "platform": "boutique",
+      "rawItemCount": 22365,
+      "weight": null,
+      "status": "todo",
+      "baseline": {
+        "method": "raw large_thumbnail_url",
+        "px": null
+      },
+      "chosen": {
+        "method": null,
+        "px": null,
+        "urlPattern": null
+      },
+      "commit": null,
+      "log": "logs/052-manawatu-heritage.md",
+      "notes": ""
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+# High-Resolution Collection Sweep — Durable Record
+
+This directory is the **single source of truth** for the high-res collection sweep.
+A fresh Claude Code session with zero prior context can resume the work using only
+these files.
+
+## Goal
+
+For the NZ Image API Lambda (wraps DigitalNZ), make each served collection return
+the **highest-resolution** browser-displayable image we can extract. Two jobs, one
+collection at a time, fully resumable from disk:
+
+1. **Re-check** every collection already in the Lambda (`collectionWeights`) for a
+   higher-res extraction than what ships today.
+2. **Add** every approved/unsure collection not yet in the Lambda, reverse-
+   engineering its source site for the largest image.
+
+## Files
+
+- `progress.json` — **MACHINE-READABLE source of truth.** Determines the next
+  collection. One entry per collection (52), in processing order, plus the Wellington
+  removal. Schema fields: `order, name, slug, group (A=recheck/B=add), platform,
+  rawItemCount, weight, status, baseline, chosen, commit, log, notes`.
+- `worklist.md` — human-readable mirror of `progress.json`, grouped by platform
+  cluster. Regenerate with `python3 Research/highres/gen_worklist.py` whenever
+  `progress.json` changes.
+- `gen_worklist.py` — the regenerator for `worklist.md`.
+- `recipes.md` — per-platform detection + extraction recipes (a floor, not a
+  ceiling) and the **Discovery Playbook**. Grows a "Verified findings" section per
+  platform as facts are measured.
+- `logs/<NNN>-<slug>.md` — one investigation log per collection (NNN = `order`).
+
+## The secret (NEVER commit it)
+
+The DigitalNZ API key lives only in the gitignored repo-root `.env` as
+`DIGITALNZ_API_KEY=…`. Export it before any tooling:
+`export DIGITALNZ_API_KEY=$(grep '^DIGITALNZ_API_KEY=' .env | cut -d= -f2)`.
+**Never** write the key into any file under `Research/highres/`; redact to
+`$DIGITALNZ_API_KEY` in any logged URL.
+
+## How to resume (next-collection algorithm)
+
+1. `export DIGITALNZ_API_KEY=…` (from `.env`).
+2. Read `progress.json`.
+3. If `removal.status == "pending"` → do the Wellington City Recollect removal first.
+4. Else the next collection is the first entry (sorted by `order`) whose `status` ∉
+   `{committed, no-improvement, blocked}`.
+   - An entry at `awaiting-approval` resumes by **re-surfacing its final URL to the
+     user** for testing (loop Step 7) — NOT by re-investigating.
+5. When every entry is terminal → run the final weights renormalization + cleanup
+   commit (see the plan).
+
+A session updates exactly **one** collection per loop iteration and rewrites
+`progress.json` + `worklist.md` **before** moving on, so a crash never loses more
+than the in-flight collection.
+
+## The per-collection loop (brief)
+
+0. Select next `C`; `status="investigating"`; persist; open `logs/<NNN>-<slug>.md`.
+1. Pull raw records from DigitalNZ (ignore the stale notes in
+   `Research/details-of-collections.txt`).
+2. Investigate the live site from scratch; detect platform by signal; run the
+   **Discovery Playbook** (recipes.md) — mandatory for every collection.
+3. Enumerate & measure candidates by **decoded pixel area** (`curl | sips`; proxy
+   JP2/TIFF via cloudimg). Always measure the baseline too.
+4. Pick the winner (larger area AND browser-displayable AND HTTP 200). Else
+   `no-improvement` (Group A) or `blocked`.
+5. Implement in Swift (platform function + registry entry; delete legacy `case` in
+   the same commit). Group B: add to `collectionWeights` (provisional weight) and to
+   `recollectDomainMap` if Recollect.
+6. Verify: `swift build` (exit 0) → `swift run CollectionTester "<name>"` (HTTP 200 +
+   image type) → `curl|sips` the **processed** URL beats baseline → run tester 2–3×.
+7. **USER TEST & APPROVAL GATE (mandatory, every collection).** Surface the final URL
+   + measured dims + baseline comparison; set `status="awaiting-approval"`; persist;
+   pause. The user opens and tests the URL and must explicitly approve before any
+   commit or starting the next collection.
+8. After approval: update the log, `progress.json` (`status`→`committed`+SHA),
+   `recipes.md` Verified findings; regenerate `worklist.md`; one commit per
+   collection (trailer below). For `no-improvement`/`blocked`, still commit the
+   `Research/highres/` update.
+9. Loop.
+
+## Build / test / measure commands
+
+```
+swift build                                  # exit 0
+swift run CollectionTester "<EXACT name>"    # full pipeline; HTTP 200 + image type
+swift run ImageResolutionChecker "<name>"    # reference cross-check (raw record only)
+# decoded-pixel measurement of any candidate:
+curl -sL --max-time 120 -A 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' \
+  "<candidate>" -o "$TMPDIR/cand" && sips -g pixelWidth -g pixelHeight "$TMPDIR/cand" && file "$TMPDIR/cand"
+```
+Network + `swift build`/`swift run` need the command sandbox disabled in this
+environment (swift spawns its own sandbox; DigitalNZ/asset hosts aren't allowlisted).
+
+## Commit trailer (every commit)
+
+```
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+```
+
+## Final passes (after all 52 are terminal)
+
+- **Weights:** `weight_i = rawItemCount_i / Σ rawItemCount` over collections that
+  ended up IN the Lambda (committed/kept; exclude blocked/not-added and Wellington);
+  round to 3 dp; add the rounding residual to the largest-weight entry so the dict
+  sums to exactly 1.000 (the cumulative-sum picker needs ~1.0). Rewrite the
+  `collectionWeights` literal in descending-weight order. Commit.
+- **Cleanup:** delete the now-empty legacy `switch` (`default: passthrough`); re-verify
+  any migrated collections. Commit.
