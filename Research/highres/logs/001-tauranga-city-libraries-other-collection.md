@@ -102,4 +102,5 @@ their uses, no inline proxy needed.
 
 ## Commit
 
-Pending user approval (loop Step 7).
+`f62a456` — Tauranga City Libraries: serve Recollect master with -max fallback
+(user-approved 2026-06-02).
