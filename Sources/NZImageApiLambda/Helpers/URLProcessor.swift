@@ -41,7 +41,11 @@ final class URLProcessor: Sendable {
     /// legacy `switch` case in the same commit. Empty until the first migration; the
     /// `switch` below is the fallback during migration and becomes a bare
     /// `default: passthrough` once every collection has moved across.
-    static let strategies: [String: URLStrategy] = [:]
+    static let strategies: [String: URLStrategy] = [
+        "Tauranga City Libraries Other Collection": { result, url in
+            await recollectLargest(result, url)
+        },
+    ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
         guard let collection = result.collection else {
@@ -152,8 +156,7 @@ final class URLProcessor: Sendable {
                 }
             )
 
-        case "Tauranga City Libraries Other Collection",
-             "Tāmiro",
+        case "Tāmiro",
              "He Purapura Marara Scattered Seeds":
 
             return try await handleUrl(
@@ -346,6 +349,33 @@ final class URLProcessor: Sendable {
     /// TAPUHI / NDHA: resolve the largest FL stream and serve it via the weserv proxy.
     private static func tapuhi(_ result: NZRecordsResult, _ url: URL) async throws -> String {
         try await fetchTapuhiHighResUrl(from: url)
+    }
+
+    /// Recollect (Axiell): prefer the full-resolution master at
+    /// `/assets/downloadwiz/<id>` (often 5000 px) and fall back to the largest display
+    /// derivative `/assets/display/<id>-max` when no master is retained.
+    ///
+    /// Many records have no master: `downloadwiz` 302-redirects to an error page
+    /// ("goDownload failed" / "Requested Asset does not exist"). A bare downloadwiz URL
+    /// would then serve that HTML error instead of an image, so we probe it with a
+    /// non-redirect-following HEAD and only use it when it returns 200; otherwise the
+    /// `-max` derivative (the true ceiling for those records) is served. The master is
+    /// delivered as a downloadable `application/octet-stream` JPEG, which is the highest
+    /// resolution available and renders in an `<img>`.
+    private static func recollectLargest(_ result: NZRecordsResult, _ url: URL) async -> String {
+        guard let collection = result.collection,
+              let domain = try? recollectDomain(for: collection),
+              let id = url.absoluteString.slice(from: "display/", to: "-")
+        else {
+            return url.absoluteString
+        }
+
+        let downloadwiz = "https://\(domain)/assets/downloadwiz/\(id)"
+        let maxDerivative = "https://\(domain)/assets/display/\(id)-max"
+
+        let masterStatus = await NetworkRequestManager().headStatusFollowingRedirects(endpoint: downloadwiz)
+
+        return masterStatus == 200 ? downloadwiz : maxDerivative
     }
 
     private static let recollectDomainMap = [

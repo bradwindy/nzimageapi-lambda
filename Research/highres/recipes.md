@@ -37,7 +37,22 @@ hard-coded per collection.
   NOT always largest; downloadwiz wins. Never hard-code `-max`.
 
 ### Verified findings (recollect)
-- _(append per-domain measured facts here as collections are processed)_
+- **paekoroki.tauranga.govt.nz (Tauranga, 2026-06-02):** Three record classes. CAT1
+  (~63%): `/assets/downloadwiz/<id>` = original master ~4600–5200 px (15–36 MP), served
+  `application/octet-stream` + `Content-Disposition: attachment` + `nosniff` (downloads
+  rather than displays inline, but renders in `<img>`; user accepts download). CAT2
+  (~31%): no master — `downloadwiz` 302→"goDownload failed"; `-max` is the ceiling
+  (~1000–1500 px) and ALL larger tokens (`-1200`…`-4000`) return the same capped image.
+  CAT3 (~6%): asset deleted — `-600`/`-max` 302→"Requested Asset does not exist".
+- **Strategy `recollectLargest`:** HEAD-probe `downloadwiz` *following redirects*; status
+  200 ⟺ master present → use it; else use `/assets/display/<id>-max`. Asset id = digits
+  between `display/` and the first `-`.
+- **Master is hotlink-protected:** weserv/cloudimg/thumbnailer all get **403** fetching
+  `downloadwiz` server-side; a `Range` header makes it 302. So the master can only be
+  delivered as the raw `downloadwiz` URL (no proxy).
+- **Pitfall:** Alamofire's HEAD is fine *following* redirects, but `Redirector.doNotFollow`
+  misreported these 302s — and a stale lambda on :7000 masked test results. Use
+  `headStatusFollowingRedirects` + kill :7000 between `CollectionTester` runs.
 
 ---
 

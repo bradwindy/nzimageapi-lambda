@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-02T05:47:59Z",
+  "lastUpdated": "2026-06-02T06:32:12Z",
   "removal": {
     "collection": "Wellington City Recollect",
     "status": "done"
@@ -13,21 +13,21 @@
       "slug": "tauranga-city-libraries-other-collection",
       "group": "A",
       "platform": "recollect",
-      "rawItemCount": 65226,
+      "rawItemCount": 65285,
       "weight": null,
-      "status": "todo",
+      "status": "committed",
       "baseline": {
-        "method": "downloadwiz from -600",
-        "px": null
+        "method": "always downloadwiz (broken HTML for ~37% non-master records)",
+        "px": "5000x4982 on CAT1; broken on CAT2/CAT3"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "recollectLargest: downloadwiz master if HEAD-follow==200 else -max",
+        "px": "~4600-5200px master (CAT1 ~63%); ~1000-1500px -max (CAT2 ~31%); CAT3 ~6% dead",
+        "urlPattern": "https://paekoroki.tauranga.govt.nz/assets/downloadwiz/<id>  OR  /assets/display/<id>-max"
       },
       "commit": null,
       "log": "logs/001-tauranga-city-libraries-other-collection.md",
-      "notes": ""
+      "notes": "Strict improvement over baseline: fixes ~31% (CAT2) that previously served a 404 HTML page. CAT3 (~6%) deleted at source, unfixable."
     },
     {
       "order": 2,

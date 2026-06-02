@@ -91,6 +91,25 @@ final class NetworkRequestManager: ValidatedRequestManager {
         }
     }
 
+    /// Returns the final HTTP status code of a HEAD request **following redirects**,
+    /// or 0 on failure. Used to probe whether an endpoint ultimately serves content
+    /// (200) versus redirecting to an error page (e.g. a Recollect master download that
+    /// 302s and then resolves to a 404). A HEAD carries no body, so this is cheap and
+    /// safe at request time even for very large assets. Uses a browser User-Agent and a
+    /// short timeout.
+    func headStatusFollowingRedirects(endpoint: String) async -> Int {
+        let configuration = URLSessionConfiguration.default
+        configuration.httpAdditionalHeaders = [
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+        ]
+        configuration.timeoutIntervalForRequest = 15
+
+        let session = Session(configuration: configuration)
+        let response = await session.request(endpoint, method: .head).serializingData().response
+
+        return response.response?.statusCode ?? 0
+    }
+
     func headRequest(endpoint: String) async throws -> (contentType: String, contentLength: Int64) {
         let configuration = URLSessionConfiguration.default
         configuration.httpAdditionalHeaders = [
