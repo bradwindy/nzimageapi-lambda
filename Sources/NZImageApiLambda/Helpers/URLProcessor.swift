@@ -31,11 +31,30 @@ final class URLProcessor: Sendable {
         var data: [String: String]
     }
 
+    /// A reusable, per-collection URL-rewriting strategy. Receives the full `result`
+    /// (so platform functions can read `collection`/`landingUrl`/`objectUrl`) plus the
+    /// current `large_thumbnail_url`, and returns the final URL string.
+    typealias URLStrategy = @Sendable (_ result: NZRecordsResult, _ url: URL) async throws -> String
+
+    /// Per-collection strategy registry. Migrated incrementally during the high-res
+    /// sweep: when a collection is (re)processed it gains an entry here and loses its
+    /// legacy `switch` case in the same commit. Empty until the first migration; the
+    /// `switch` below is the fallback during migration and becomes a bare
+    /// `default: passthrough` once every collection has moved across.
+    static let strategies: [String: URLStrategy] = [:]
+
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
         guard let collection = result.collection else {
             throw URLProcessorError(
                 kind: .nilCollection,
                 data: ["result": result.customDescription()]
+            )
+        }
+
+        if let strategy = Self.strategies[collection] {
+            return try await handleUrl(
+                result: result,
+                urlModifier: { try await strategy(result, $0) }
             )
         }
 
@@ -112,7 +131,7 @@ final class URLProcessor: Sendable {
             return try await handleUrl(
                 result: result,
                 urlModifier: { url in
-                    ripId(
+                    Self.ripId(
                         from: url,
                         to: { "https://kura.aucklandlibraries.govt.nz/iiif/2/photos:\($0)/full/2048,/0/default.jpg" },
                         startString: "/image/photos/",
@@ -140,7 +159,7 @@ final class URLProcessor: Sendable {
             return try await handleUrl(
                 result: result,
                 urlModifier: { url in
-                    try recollectDownloadUrlString(
+                    try Self.recollectDownloadUrlString(
                         from: url,
                         collection: collection
                     )
@@ -179,7 +198,7 @@ final class URLProcessor: Sendable {
             return try await handleUrl(
                 result: result,
                 urlModifier: { url in
-                    try await self.fetchTapuhiHighResUrl(from: url)
+                    try await Self.fetchTapuhiHighResUrl(from: url)
                 }
             )
 
@@ -259,7 +278,7 @@ final class URLProcessor: Sendable {
                             return url.absoluteString
                         }
 
-                        return ripId(
+                        return Self.ripId(
                             from: contentUrl,
                             to: { "https://\(contentUrlHost)/assets/downloadwiz/\($0)" },
                             startString: "display/",
@@ -285,14 +304,58 @@ final class URLProcessor: Sendable {
 
     // MARK: Private
 
-    private let recollectDomainMap = [
+    // MARK: Reusable platform strategy functions
+    //
+    // Building blocks for the `strategies` registry, each with (a subset of) the
+    // `URLStrategy` shape. They are pure/static so the static registry can compose
+    // them. Migrated in one collection at a time during the high-res sweep.
+
+    /// Return the current `large_thumbnail_url` unchanged.
+    private static func passthrough(_ result: NZRecordsResult, _ url: URL) -> String {
+        url.absoluteString
+    }
+
+    /// Use `result.objectUrl` directly when present (often the full-res original);
+    /// otherwise fall back to the current URL.
+    private static func objectUrlDirect(_ result: NZRecordsResult, _ url: URL) -> String {
+        result.objectUrl?.absoluteString ?? url.absoluteString
+    }
+
+    /// Proxy through images.weserv.nl at native resolution (bypasses hotlink
+    /// protection). Note: weserv has a 71 MP cap and cannot decode JP2.
+    private static func weservProxy(_ result: NZRecordsResult, _ url: URL) -> String {
+        guard let escaped = url.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else {
+            return url.absoluteString
+        }
+        return "https://images.weserv.nl/?url=\(escaped)"
+    }
+
+    /// Proxy through thumbnailer.digitalnz.org, normalising to JPEG.
+    private static func thumbnailerProxy(_ result: NZRecordsResult, _ url: URL) -> String {
+        guard let escaped = url.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else {
+            return url.absoluteString
+        }
+        return "https://thumbnailer.digitalnz.org/?format=jpeg&src=\(escaped)"
+    }
+
+    /// Build a strategy that swaps a size token in the URL (e.g. `large` -> `xlarge`).
+    private static func stringSwap(from: String, to: String) -> URLStrategy {
+        { _, url in url.absoluteString.replacingOccurrences(of: from, with: to) }
+    }
+
+    /// TAPUHI / NDHA: resolve the largest FL stream and serve it via the weserv proxy.
+    private static func tapuhi(_ result: NZRecordsResult, _ url: URL) async throws -> String {
+        try await fetchTapuhiHighResUrl(from: url)
+    }
+
+    private static let recollectDomainMap = [
         "Tauranga City Libraries Other Collection": "paekoroki.tauranga.govt.nz",
         "National Army Museum": "nam.recollect.co.nz",
         "Tāmiro": "massey.recollect.co.nz",
         "He Purapura Marara Scattered Seeds": "dunedin.recollect.co.nz",
     ]
 
-    private func recollectDownloadUrlString(
+    private static func recollectDownloadUrlString(
         from url: URL,
         collection: String
     )
@@ -308,7 +371,7 @@ final class URLProcessor: Sendable {
         )
     }
 
-    private func recollectDomain(for collection: String) throws -> String {
+    private static func recollectDomain(for collection: String) throws -> String {
         guard let domain = recollectDomainMap[collection] else {
             throw URLProcessorError(
                 kind: .unableToFindRecollectDomain,
@@ -319,7 +382,7 @@ final class URLProcessor: Sendable {
         return domain
     }
 
-    private func ripId(
+    private static func ripId(
         from url: URL,
         to: (String) -> String,
         startString: String,
@@ -367,7 +430,7 @@ final class URLProcessor: Sendable {
         return modifiableResult
     }
 
-    private func fetchTapuhiHighResUrl(from url: URL) async throws -> String {
+    private static func fetchTapuhiHighResUrl(from url: URL) async throws -> String {
         let urlString = url.absoluteString
         let baseURL = "https://ndhadeliver.natlib.govt.nz"
         let requestManager = NetworkRequestManager()
