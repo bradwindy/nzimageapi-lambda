@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-02T04:00:00Z",
+  "lastUpdated": "2026-06-02T04:20:00Z",
   "removal": {
     "collection": "Wellington City Recollect",
     "status": "done"
@@ -49,7 +49,7 @@
       },
       "commit": "aa03e2d",
       "log": "logs/002-antarctica-nz-digital-asset-manager.md",
-      "notes": "downloadwiz master 404 for 184/184 sampled records (disabled). Display pyramid hard-capped at ~1000px width; -600 == -max byte-identical; all larger tokens clamp; no alternate/original endpoint. 3196px original exists per og metadata but is not served anonymously. No code change. FOLLOW-UP: user emailed Antarctica NZ asking them to re-enable downloads; if re-enabled, re-check -> apply recollectLargest (domain adam.antarcticanz.govt.nz, asset id from large_thumbnail_url)."
+      "notes": "downloadwiz master 404 for 184/184 sampled records (disabled). Display pyramid hard-capped at ~1000px width; -600 == -max byte-identical; all larger tokens clamp; no alternate/original endpoint. 3196px original exists per og metadata but is not served anonymously. No code change. RE-CHECKED (og:image two-asset trick from NAM order 4): 36/36 records have og:image id == large_thumbnail id and downloadwiz 404 on both -> NAM trick does not apply. FOLLOW-UP: user emailed Antarctica NZ asking them to re-enable downloads; if re-enabled, re-check -> apply recollectLargest (domain adam.antarcticanz.govt.nz, asset id from large_thumbnail_url)."
     },
     {
       "order": 3,
@@ -91,7 +91,7 @@
         "px": "master 1.2-5.2 MP (already the ceiling)",
         "urlPattern": "https://nam.recollect.co.nz/assets/downloadwiz/<ogId> (unchanged)"
       },
-      "commit": null,
+      "commit": "98a7ea0",
       "log": "logs/004-national-army-museum.md",
       "notes": "Two asset ids per record: large_thumbnail id (~13.7k) has NO master (downloadwiz 404, 50/50; -600==-max ~1000px); og:image id (~31.4k) HAS the master (downloadwiz 200, 41/41). Current og:image->downloadwiz already serves that master (1.2-5.2 MP, octet-stream JPEG original) = the ceiling. recollectLargest would REGRESS (uses thumb id). Landing fetch unavoidable. No code change."
     },

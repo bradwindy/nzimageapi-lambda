@@ -79,8 +79,8 @@ unchanged.
 
 ## Commit
 
-User-approved no-improvement 2026-06-02 (Research/highres bookkeeping only; no Swift change).
-SHA recorded after commit.
+`98a7ea0` — Investigate National Army Museum: current og:image->downloadwiz already optimal (no
+code change). User-approved no-improvement 2026-06-02 (Research/highres bookkeeping only).
 
 > Follow-up requested by user after this approval: re-check Antarctica (order 2) for the same
 > two-asset / og:image-master pattern. See logs/002 addendum.

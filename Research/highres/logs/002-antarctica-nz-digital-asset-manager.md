@@ -95,6 +95,18 @@ No code change to verify. Baseline behaviour confirmed live: `…/display/<id>-6
 200 `image/jpeg`, decoded ~1000 px wide — identical to `-max`. (Existing production output is
 unchanged.)
 
+## Addendum (2026-06-02) — og:image two-asset re-check (prompted by NAM, order 4)
+
+National Army Museum (order 4) revealed a Recollect pattern where the DigitalNZ `large_thumbnail`
+id is a master-less thumbnail while the landing `og:image` points to a *different* primary asset
+that DOES have a `downloadwiz` master. Re-checked Antarctica for the same escape hatch: sampled 36
+records across 9 pages, comparing the large_thumbnail asset id vs the landing `og:image` asset id
+and probing `downloadwiz` on both.
+
+**Result: 36/36 had og:image id == large_thumbnail id (no second asset), and `downloadwiz` 404 on
+BOTH ids.** So the NAM trick does not apply — Antarctica genuinely serves no master under any id.
+no-improvement stands; the `downloadwiz` re-enable email remains the only path to higher res.
+
 ## Follow-up (re-check trigger)
 
 The user (collection rights-holder) has **emailed Antarctica NZ to ask them to re-enable
