@@ -96,6 +96,11 @@ final class URLProcessor: Sendable {
                 endString: "/default.jpg"
             )
         },
+        "Mataura Museum NZMuseums": { result, url in
+            // eHive: the harvested `_l` is 800 px-capped, but eHive's public IIIF service over the
+            // master TIFF serves the full native (up to ~12 MP here) for every record. Pure URL build.
+            ehiveIIIFLargest(result, url)
+        },
     ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
@@ -444,6 +449,48 @@ final class URLProcessor: Sendable {
         }
 
         return bestURL ?? flickrLargest(result, url)
+    }
+
+    /// eHive (Vernon Systems; the NZMuseums front-end). The public derivative the harvest gives us
+    /// (`…_l.jpg`) is capped at 800 px on the long side, but eHive also runs a **public IIIF Image
+    /// API 2.0 service over the master TIFF** at `iiif.ehive.com` (the OpenSeadragon viewer on each
+    /// object page points an `info.json` there). Requesting `/full/full/` returns the full native
+    /// master — frequently several megapixels (up to ~12 MP observed for Mataura), for every record
+    /// regardless of rights, with no sign-in. Where a record's master happens to be ≤ 800 px the
+    /// service simply returns that native size (never upscales), so this is always ≥ the `_l`
+    /// derivative — a safe strict improvement.
+    ///
+    /// Transform (pure string construction, no request-time fetch):
+    ///   `https://images.ehive.com/accounts/<a>/objects/images/<id>_<token>_l.jpg`
+    ///   → identifier `accounts/<a>/objects/images/<id>_<token>.tif` (drop the `_l` size suffix; `.jpg`→`.tif`)
+    ///   → `https://iiif.ehive.com/iiif/2/<identifier, "/"→"%2f">/full/full/0/default.jpg`.
+    /// The image id (`<id>_<token>`) contains an underscore, so we drop only the *last* `_<size>`
+    /// segment. The slashes are encoded as lowercase `%2f` to match the identifier eHive's own viewer
+    /// uses. Falls back to the original URL if the host/filename shape is unexpected.
+    private static func ehiveIIIFLargest(_ result: NZRecordsResult, _ url: URL) -> String {
+        let urlString = url.absoluteString
+
+        guard urlString.contains("images.ehive.com"),
+              url.lastPathComponent.hasSuffix(".jpg")
+        else {
+            return urlString
+        }
+
+        let filename = url.lastPathComponent                  // e.g. "ce51j4_1i1a_l.jpg"
+        let stem = String(filename.dropLast(".jpg".count))    // "ce51j4_1i1a_l"
+
+        // Drop the trailing "_<size>" suffix (the id itself contains an underscore).
+        guard let lastUnderscore = stem.lastIndex(of: "_") else { return urlString }
+        let masterFilename = String(stem[..<lastUnderscore]) + ".tif" // "ce51j4_1i1a.tif"
+
+        // Rebuild the asset path with the master filename ("/"-separated, no leading slash).
+        var components = url.pathComponents.filter { $0 != "/" } // [accounts,4033,objects,images,<file>]
+        guard !components.isEmpty else { return urlString }
+        components[components.count - 1] = masterFilename
+        let identifier = components.joined(separator: "/")      // "accounts/4033/objects/images/ce51j4_1i1a.tif"
+        let encoded = identifier.replacingOccurrences(of: "/", with: "%2f")
+
+        return "https://iiif.ehive.com/iiif/2/\(encoded)/full/full/0/default.jpg"
     }
 
     /// Proxy through images.weserv.nl at native resolution (bypasses hotlink

@@ -241,12 +241,34 @@ hard-coded per collection.
 - **"Public Domain unlocks the original anonymously" — NOT reliable.** It's an account setting; tested
   on Howick's single PD record (`21faf96e…`) → still `_l` 800px (`_xl`/`_o` 500). So a PD rights value
   does NOT guarantee a larger anonymous image; the account must have enabled full-res public access.
-- **Howick Historical Village NZMuseums (2026-06-06, order 17): no-improvement.** account 3000; 13,460
-  CC BY-NC + 1 Public Domain; ALL capped at `_l` 800px anonymously AND when signed in (user verified
-  the login). Current passthrough already serves `_l`. No code change. Follow-up: user emailing the
-  museum for originals. ⇒ For orders 18 (Mataura) / 19 (NZ Portrait Gallery): measure `_l` and check
-  the rights-facet + whether any record serves >800px anonymously before concluding; the ceiling is
-  per-account so they could differ from Howick.
+- **★★★ CORRECTION (2026-06-07, order 18 Mataura): eHive HAS a public IIIF Image API 2.0 service over
+  the MASTER TIFF — on a SEPARATE host, `iiif.ehive.com` (not `images.ehive.com`).** The earlier
+  finding "no public IIIF for capped accounts" was WRONG: it only probed `images.ehive.com/.../info.json`
+  and the `_xl`/`_o` suffixes. The real service is wired to each object page's **OpenSeadragon** viewer:
+  `info: "https://iiif.ehive.com/iiif/2/accounts%2f<acct>%2fobjects%2fimages%2f<imageId>_<token>.tif/info.json"`
+  (identifier = the master TIFF, size suffix dropped, `.jpg`→`.tif`, `/`→`%2f`). **Discovery key:** grep
+  the landing-page HTML for `iiif` / `openseadragon` / `tileSources` and pull the `info` URL.
+  - **`/full/full/0/default.jpg` returns the FULL NATIVE master** as browser `image/jpeg`, for **every
+    record regardless of rights** (the IIIF endpoint is NOT rights-gated, unlike the `_xl`/`_o` suffixes
+    which 500). `/full/full/` == `/full/max/` (byte-identical; no `maxWidth/maxArea` declared ⇒ true
+    native, never upscaled — passes the Kura lesson).
+  - **Swift strategy `ehiveIIIFLargest` (URLProcessor):** from `images.ehive.com/accounts/<a>/objects/
+    images/<id>_<token>_l.jpg`, drop the **last** `_<size>` segment (the id itself has an underscore),
+    `.jpg`→`.tif`, `/`→`%2f`, build `https://iiif.ehive.com/iiif/2/<enc>/full/full/0/default.jpg`. Pure
+    string construction, no request-time fetch. Handles UUID-style ids (`<hex>_l.jpg`, one underscore).
+- **Mataura Museum NZMuseums (2026-06-07, order 18): ADD via `ehiveIIIFLargest`.** account 4033; 3,443
+  records (3379 All-rights + 47 PD + others). IIIF native beat `_l` on **28/28 uniform sample, 0
+  failures**: ~half at 1.56× (1000px masters; floor, since `_l` is 800px-capped), ~half 3.5×–36×
+  (1500–4800px masters; max observed 4800×3502 = 16.8 MP). Suffix probe still caps at `_l` 800 (`_xl`/
+  `_o`/`_full`/`_master` → 500; the 47 PD records' suffix route is also capped) — the win is ENTIRELY
+  via the IIIF master endpoint. Weight 0.003 provisional. Committed (see progress.json).
+- **★ Howick (order 17) RE-OPENED 2026-06-07:** account 3000 ALSO has `iiif.ehive.com` — tested records
+  return up to 2816×2112 (5.9 MP, ~12× the `_l` 0.48 MP), about half have genuine 800px masters. The
+  order-17 "no-improvement" (which checked the eHive UI + `_xl`/`_o` + `images.ehive.com`, but missed
+  `iiif.ehive.com`) was WRONG. Re-done with `ehiveIIIFLargest` (see log 017 / 018). **LESSON for any
+  eHive account: ALWAYS check `iiif.ehive.com/iiif/2/accounts%2f<acct>%2fobjects%2fimages%2f<id>.tif/
+  info.json` — the `_l` 800px derivative is NOT the ceiling; the master TIFF is publicly served via
+  IIIF regardless of rights or the eHive UI/login cap.** ⇒ Apply to NZ Portrait Gallery (19) directly.
 
 ---
 
