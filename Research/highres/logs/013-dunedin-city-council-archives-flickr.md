@@ -51,4 +51,5 @@
 
 ## Commit
 
-(pending user approval)
+`36287a1` — Add Dunedin City Council Archives Flickr via general Flickr rule (object_url _o original).
+User-approved 2026-06-06.
