@@ -28,7 +28,7 @@ NZMuseums** (eHive / NZMuseums, Group B add). `progress.json` is authoritative; 
 | 15 | Australian National Maritime Museum Flickr | flickr | committed ADD — `object_url _o ?? flickrLandingLargest` (4–28 MP) |
 | 11↻ | Te Ara Flickr (retrofit) | flickr | committed — `_b`→`flickrLandingLargest` (scrape `_h`/`_k`/`_o`; fixes stale-secret 410s) |
 | 16 | Kura Heritage Collections Online | iiif (CONTENTdm) | committed — `/full/2048,/`(upscaled)→`/full/max/` honest native (≤2000px); migrated to registry |
-| 17 | Howick Historical Village NZMuseums | eHive | no-improvement — `_l` 800px is the ceiling for ALL users (verified login); original sign-in-gated/absent. User emailing museum |
+| 17 | Howick Historical Village NZMuseums | eHive | no-improvement — `_l` 800px is the ceiling for ALL users (verified login); original sign-in-gated/absent. User EMAILED museum (`collections@fencible.org.nz`) for originals |
 
 **Next up (order 18) — Mataura Museum NZMuseums** (Group B add; **eHive**; rawItemCount 3,422).
 Same platform as Howick (eHive `images.ehive.com`). Per the `ehiveIIIF` recipe: `_l` (800px) is the
@@ -50,10 +50,16 @@ at 2000px; no larger master via download endpoints.)
 present → serve the `_o` original (free, no fetch — Turnbull 12, Dunedin 13, ANMM 15); `object_url`
 null → `flickrLandingLargest` (scrape the photo page for `_h`/`_k`/`_o`, `_b` fallback — SLNSW 14, Te
 Ara 11). Reusable registry helpers: `flickrLargest` (`_b` swap), `flickrLandingLargest` (page-scrape).
-`getSizes` API is unavailable (Flickr Pro now required for a key). Legacy `switch` still holds: Tāmiro
-(sole recollect occupant) + non-recollect cases (Auckland Libraries, Auckland Museum, Kura,
-Canterbury/Culture Waitaki, Te Papa, passthrough group, TAPUHI, Hawke's Bay, Auckland Art Gallery,
-National Army Museum).
+`getSizes` API is unavailable (Flickr Pro now required for a key).
+
+**Legacy `switch` remaining (NOT yet migrated to the registry)** — these are the still-untouched
+collections (each migrates to the registry as it's processed): Tāmiro (sole recollect occupant,
+no-improvement), Auckland Libraries Heritage (thumbnailer), Auckland Museum (cloudimg),
+Canterbury/Culture Waitaki (large→xlarge), Te Papa (weserv), passthrough group (Antarctica, National
+Publicity, South Canterbury, Howick, Waimate, Te Toi Uku, Te Hikoi, V.C. Browne), TAPUHI
+(fetchTapuhiHighResUrl), Hawke's Bay (weserv), Auckland Art Gallery (medium→xlarge), National Army
+Museum (og:image→downloadwiz). Migrated to the registry so far: all Recollect (1–10), all Flickr
+(11–15), Kura (16).
 
 **Reusable strategies in `URLProcessor` (registry):** `recollectLargest` (HEAD-probe `downloadwiz`
 → master, else `-max`; for instances WITH masters), `recollectDisplayMax` (rip id → `-max`, no
