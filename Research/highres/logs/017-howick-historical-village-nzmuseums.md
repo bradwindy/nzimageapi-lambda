@@ -144,4 +144,5 @@ the institution's master for some records.
 
 ### Commit (re-do)
 
-`41bbcce` was the original no-improvement; the re-do is committed separately (see progress.json).
+`43392fc` — Re-do Howick (eHive) via IIIF master TIFF; order 17 was wrongly no-improvement. User-approved
+2026-06-07 (honest-native-always). The original no-improvement was `41bbcce`.
