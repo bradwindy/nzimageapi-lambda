@@ -422,7 +422,7 @@
         "px": "24/24 uniform-sample WIN (1.27x-49.3x; max 5616x3744 = 21 MP). 0 equal, 0 honest-smaller, 0 IIIF failures -- cleanest eHive result (portrait gallery uploads big masters).",
         "urlPattern": "https://iiif.ehive.com/iiif/2/accounts%2f3272%2fobjects%2fimages%2f<id>.tif/full/full/0/default.jpg"
       },
-      "commit": null,
+      "commit": "5b060bd",
       "log": "logs/019-new-zealand-portrait-gallery-nzmuseums.md",
       "notes": "eHive account 3272; all 136 'All rights reserved' (IIIF master endpoint not rights-gated). object_url null. Reuses ehiveIIIFLargest (no new code). Uniform sample 24/24 win (1.27x-49.3x), NO honest-smaller/upscaled-_l anomalies (unlike Howick's ~11%), 0 IIIF failures. swift build 0; CollectionTester x3 HTTP200 image/jpeg. Provisional weight 0.001 (rawItemCount 136)."
     },

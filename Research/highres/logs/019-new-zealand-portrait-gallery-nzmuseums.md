@@ -60,4 +60,5 @@ browser-displayable `image/jpeg`, no rights gate, no request-time fetch.
 
 ## Commit
 
-(pending user approval)
+`5b060bd` — Add New Zealand Portrait Gallery (eHive) via IIIF master TIFF (1.27x-49.3x over _l).
+User-approved 2026-06-07.
