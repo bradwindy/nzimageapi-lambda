@@ -6,9 +6,9 @@ these files.
 
 ## Current resume state (updated 2026-06-06)
 
-**Wellington removal: done.** Collections **1–15 terminal** (Flickr cluster COMPLETE); **NEXT → order
-16: Kura Heritage Collections Online** (IIIF — opens the IIIF work). `progress.json` is authoritative;
-this is a human summary.
+**Wellington removal: done.** Collections **1–16 terminal**; **NEXT → order 17: Howick Historical
+Village NZMuseums** (eHive / NZMuseums, opens the eHive cluster 17–19). `progress.json` is
+authoritative; this is a human summary.
 
 | # | collection | platform | outcome |
 |---|------------|----------|---------|
@@ -28,14 +28,18 @@ this is a human summary.
 | 14 | State Library of NSW Flickr | flickr | committed ADD — new `flickrLandingLargest` (page-scrape `_o`, up to 44.9 MP) |
 | 15 | Australian National Maritime Museum Flickr | flickr | committed ADD — `object_url _o ?? flickrLandingLargest` (4–28 MP) |
 | 11↻ | Te Ara Flickr (retrofit) | flickr | committed — `_b`→`flickrLandingLargest` (scrape `_h`/`_k`/`_o`; fixes stale-secret 410s) |
+| 16 | Kura Heritage Collections Online | iiif (CONTENTdm) | committed — `/full/2048,/`(upscaled)→`/full/max/` honest native (≤2000px); migrated to registry |
 
-**Next up (order 16) — Kura Heritage Collections Online** (Group A re-check; **IIIF**; rawItemCount
-367,587 — the largest collection). Currently in the legacy `switch`: hardcoded
-`/iiif/2/photos:<id>/full/2048,/0/default.jpg`. Per the IIIF recipe + Discovery Playbook: fetch the
-image service `info.json`, read the true `width`/`height`/`maxWidth`/`maxArea`/`sizes[]`, and request
-the real max (v3 `/full/max/` or v2 `/full/<maxW>,/`) instead of the hardcoded 2048 — check whether
-the original exceeds 2048 and whether the server caps below it. This opens the IIIF work (only Kura in
-this sweep). Then order 17 (Howick, eHive/NZMuseums IIIF).
+**Next up (order 17) — Howick Historical Village NZMuseums** (Group A re-check; **eHive/NZMuseums**;
+rawItemCount 13,426). Currently passthrough in the legacy `switch`. Per the `ehiveIIIF` recipe +
+Discovery Playbook: NZMuseums records sit on eHive — check for a IIIF `info.json`/zoom or the eHive
+public REST API; public derivatives are often capped ~800px unless the item is public-domain. Sample
+the raw `large_thumbnail_url` host, look for an `object_url` original, and measure before deciding.
+Orders 18–19 (Mataura Museum, NZ Portrait Gallery — both NZMuseums) follow.
+
+**IIIF note (Kura):** for any IIIF service NEVER hardcode a width — `sizeAboveFull` makes a fixed
+width > native UPSCALE (fake pixels). Read `info.json`; request `/full/max/`. (Kura's native is capped
+at 2000px; no larger master via download endpoints.)
 
 **Flickr cluster (orders 11–15) COMPLETE.** Final Flickr decision tree (in `recipes.md`): `object_url`
 present → serve the `_o` original (free, no fetch — Turnbull 12, Dunedin 13, ANMM 15); `object_url`

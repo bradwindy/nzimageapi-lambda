@@ -356,9 +356,9 @@
         "px": "native up to 2000px long side (3.1/2.7/3.2 MP measured); 4-7x the raw baseline 0.4-0.5 MP; no fake upscaling",
         "urlPattern": "https://kura.aucklandlibraries.govt.nz/iiif/2/photos:<id>/full/max/0/default.jpg"
       },
-      "commit": "PENDING",
+      "commit": "a13ccbb",
       "log": "logs/016-kura-heritage-collections-online.md",
-      "notes": "USER CHOSE /full/max/ (honest native), 2026-06-06. CONTENTdm IIIF 2.0 level2. info.json shows native capped at 2000px LONG SIDE universally (0/30 sampled > 2048; sizes[] tops at native; many exactly 2000). NO larger master: utils/getfile + api download both return the SAME native (1378x2000 for 235744); /full/2828,/ and /full/4000,/ = 403. Current /full/2048,/ UPSCALES every image to 2048 wide (sizeAboveFull) -> interpolated fake pixels (portrait 1378->2048 width = heavy upscale). /full/max/ = /full/full/ = honest native. FORK: A=/full/max/ (honest native, sharper, fewer px) vs B=keep /full/2048,/ (more px, fake). Recommending A. baseline singleitem default.jpg = 689x1000 (0.7MP) -- BOTH A and B beat that."
+      "notes": "COMMITTED a13ccbb. USER CHOSE /full/max/ (honest native), 2026-06-06. CONTENTdm IIIF 2.0 level2. info.json shows native capped at 2000px LONG SIDE universally (0/30 sampled > 2048; sizes[] tops at native; many exactly 2000). NO larger master: utils/getfile + api download both return the SAME native (1378x2000 for 235744); /full/2828,/ and /full/4000,/ = 403. Current /full/2048,/ UPSCALES every image to 2048 wide (sizeAboveFull) -> interpolated fake pixels (portrait 1378->2048 width = heavy upscale). /full/max/ = /full/full/ = honest native. FORK: A=/full/max/ (honest native, sharper, fewer px) vs B=keep /full/2048,/ (more px, fake). Recommending A. baseline singleitem default.jpg = 689x1000 (0.7MP) -- BOTH A and B beat that."
     },
     {
       "order": 17,

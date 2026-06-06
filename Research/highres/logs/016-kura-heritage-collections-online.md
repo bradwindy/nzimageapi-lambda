@@ -65,4 +65,5 @@ honest native and 4–7× the raw baseline.
 
 ## Commit
 
-(pending)
+`a13ccbb` — Kura Heritage Collections Online: serve honest IIIF native /full/max/ (was upscaled
+/full/2048,/). User-approved 2026-06-06.
