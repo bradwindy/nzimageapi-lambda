@@ -230,7 +230,23 @@ hard-coded per collection.
 - **Collections:** Howick Historical Village, Mataura Museum, NZ Portrait Gallery.
 
 ### Verified findings (ehiveIIIF)
-- _(append here)_
+- **eHive image URLs:** `https://images.ehive.com/accounts/<acct>/objects/images/<imageId>_<token>_<size>.jpg`.
+  Public size suffixes: `_t` 75, `_s` 150, `_m` 400, **`_l` 800** (long side). `_l` is the anonymous
+  max; `_xl`/`_o`/`_full`/`_master`/no-suffix/base-id all **HTTP 500**, `?size=original` ignored.
+- **The 800px cap is server-side by RIGHTS TYPE, not URL-level (and per-account).** eHive docs: public
+  viewers get either the full original OR 800×800, set per account/rights; **signed-in users get the
+  original** (no public URL/mechanism). No public IIIF/DeepZoom for capped accounts (`.dzi`,
+  `/info.json`, `/iiif/.../info.json` → 404/500). REST API (developers.ehive.com) is OAuth-gated. No
+  known anonymous tool/trick (dezoomify respects the server cap).
+- **"Public Domain unlocks the original anonymously" — NOT reliable.** It's an account setting; tested
+  on Howick's single PD record (`21faf96e…`) → still `_l` 800px (`_xl`/`_o` 500). So a PD rights value
+  does NOT guarantee a larger anonymous image; the account must have enabled full-res public access.
+- **Howick Historical Village NZMuseums (2026-06-06, order 17): no-improvement.** account 3000; 13,460
+  CC BY-NC + 1 Public Domain; ALL capped at `_l` 800px anonymously AND when signed in (user verified
+  the login). Current passthrough already serves `_l`. No code change. Follow-up: user emailing the
+  museum for originals. ⇒ For orders 18 (Mataura) / 19 (NZ Portrait Gallery): measure `_l` and check
+  the rights-facet + whether any record serves >800px anonymously before concluding; the ceiling is
+  per-account so they could differ from Howick.
 
 ---
 
