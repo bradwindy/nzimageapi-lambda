@@ -70,6 +70,11 @@ final class URLProcessor: Sendable {
             // Same shape as Turnbull: `object_url` is the `_o` original (~100%); `_b` fallback.
             result.objectUrl?.absoluteString ?? flickrLargest(result, url)
         },
+        "State Library of New South Wales Flickr": { result, url in
+            // object_url is null; the originals (up to ~45 MP) need per-photo alternate secrets
+            // recovered from the photo page. Scrape the landing page for the largest size.
+            await flickrLandingLargest(result, url)
+        },
     ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
@@ -373,6 +378,64 @@ final class URLProcessor: Sendable {
         }
 
         return prefix + newStem + ".jpg"
+    }
+
+    /// Flickr size suffixes ranked by resolution (largest first). `o` = original.
+    private static let flickrSizeRank: [String: Int] = [
+        "o": 100, "6k": 90, "5k": 80, "4k": 70, "3k": 60, "k": 50, "h": 40,
+        "b": 30, "c": 20, "z": 10, "w": 6, "m": 5, "n": 4, "q": 3, "t": 2, "s": 1,
+    ]
+
+    /// Flickr where `object_url` is null (e.g. State Library of NSW, the Te Ara pool): the largest
+    /// derivatives (`_h`/`_k`/`_o`, up to the full original — often tens of megapixels) use per-photo
+    /// *alternate* secrets that are NOT constructible from the harvested `_z` URL. They live only in
+    /// the photo page's embedded size model (the `flickr.photos.getSizes` API needs a paid key). So
+    /// fetch the landing (photo) page once, recover every size URL for THIS photo id, and return the
+    /// largest by size rank. One bounded HTML GET at request time (the page is parsed, never the
+    /// image). Falls back to `flickrLargest` (`_b`, 1024) when there is no landing URL, the fetch
+    /// fails, or nothing parses — so a transient Flickr hiccup still yields a valid larger-than-
+    /// thumbnail image.
+    ///
+    /// The size URLs are embedded JSON-escaped (`\/`); we normalise those to `/` before scanning, and
+    /// filter strictly to `<photoId>_<secret>_<size>` so related/recommended photos on the page can't
+    /// leak in.
+    private static func flickrLandingLargest(_ result: NZRecordsResult, _ url: URL) async -> String {
+        guard url.absoluteString.contains("staticflickr.com"),
+              let photoId = url.lastPathComponent.split(separator: "_").first.map(String.init),
+              let landing = result.landingUrl
+        else {
+            return flickrLargest(result, url)
+        }
+
+        guard let html = try? await NetworkRequestManager().fetchHTML(endpoint: landing.absoluteString) else {
+            return flickrLargest(result, url)
+        }
+
+        let unescaped = html.replacingOccurrences(of: "\\/", with: "/")
+        let pattern = "live\\.staticflickr\\.com/[0-9]+/\(photoId)_[0-9a-z]+_([0-9a-z]+)\\.(?:jpg|png|gif)"
+
+        guard let regex = try? NSRegularExpression(pattern: pattern) else {
+            return flickrLargest(result, url)
+        }
+
+        let nsString = unescaped as NSString
+        var bestURL: String?
+        var bestRank = -1
+
+        regex.enumerateMatches(
+            in: unescaped,
+            range: NSRange(location: 0, length: nsString.length)
+        ) { match, _, _ in
+            guard let match else { return }
+            let size = nsString.substring(with: match.range(at: 1))
+            let rank = flickrSizeRank[size] ?? 0
+            if rank > bestRank {
+                bestRank = rank
+                bestURL = "https://" + nsString.substring(with: match.range)
+            }
+        }
+
+        return bestURL ?? flickrLargest(result, url)
     }
 
     /// Proxy through images.weserv.nl at native resolution (bypasses hotlink

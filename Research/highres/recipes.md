@@ -159,6 +159,27 @@ hard-coded per collection.
   Turnbull — `object_url` = `_o` original for 45/45 uniform sample (0 null, all `image/jpeg`),
   0.4–27.7 MP vs `_z` 0.3 MP. **ADDED** via the general Flickr rule (registry closure
   `object_url ?? flickrLargest`) + weight 0.002. Confirms the rule generalises across Flickr accounts.
+- **⚠️ CORRECTION — the largest sizes need the PHOTO PAGE, not a same-secret swap (2026-06-06).**
+  `_b`/`_c`/`_z` share the base secret, but `_h`/`_k`/`_o` (up to the full original, tens of MP) use
+  **per-photo alternate secrets** that live ONLY in the photo page's embedded size model (or the
+  paid `getSizes` API). The size URLs there are **JSON-escaped (`\/`)** — you MUST de-escape before
+  grepping, and **filter strictly to `<photoId>_<secret>_<size>`** so related/recommended photos on
+  the page don't leak in. A scrape of the main-page `displayUrl` list (without de-escaping) silently
+  undercounts → this is why the Te Ara order-11 "0/63 exceed 1024" was wrong (some Te Ara photos are
+  `_h`/`_k`/`_o`, up to ~13 MP).
+- **`flickr.photos.getSizes` is NOT usable here:** Flickr now requires **Flickr Pro (paid)** to
+  create an API key. Use the page scrape instead.
+- **Reusable `flickrLandingLargest` (URLProcessor):** for Flickr collections with **null
+  `object_url`**. Fetch `result.landingUrl`, `replacingOccurrences("\\/", "/")`, `NSRegularExpression`
+  `live\.staticflickr\.com/[0-9]+/<photoId>_[0-9a-z]+_([0-9a-z]+)\.(jpg|png|gif)`, pick the max by
+  `flickrSizeRank` (o>6k>5k>4k>3k>k>h>b>c>z>w>m>n>q>t>s). One bounded HTML GET/request; falls back to
+  `flickrLargest` (`_b`) on no-landing/fetch-fail/no-match. Decision tree per Flickr collection:
+  `object_url` present (Turnbull, Dunedin CC) → serve it (`_o`, free, no fetch); `object_url` null
+  (SLNSW, ANMM, Te Ara) → `flickrLandingLargest`.
+- **State Library of New South Wales Flickr (2026-06-06):** account `statelibraryofnsw`, high-res
+  Commons; `object_url` null; landing page exposes `_o` originals up to **44.9 MP** (7792px; mixed —
+  small scans too). **ADDED via `flickrLandingLargest`** + weight 0.001. CollectionTester ×3 → `_o`
+  9.1 MP vs `_z` 0.3 MP (~30×).
 
 ---
 

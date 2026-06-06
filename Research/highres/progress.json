@@ -301,20 +301,20 @@
       "group": "B",
       "platform": "flickr",
       "rawItemCount": 174,
-      "weight": null,
-      "status": "investigating",
+      "weight": 0.001,
+      "status": "committed",
       "baseline": {
         "method": "raw large_thumbnail_url (staticflickr _z = 640px); object_url is NULL",
-        "px": null
+        "px": "~640px (0.3 MP)"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "ADD via flickrLandingLargest (scrape photo page for the largest size, up to _o original; _b fallback)",
+        "px": "_o originals up to ~45 MP (9.1 MP observed); mixed (small originals too); always >= _b",
+        "urlPattern": "largest live.staticflickr.com/<srv>/<id>_<altsecret>_<size>.jpg from the landing page (o>6k>..>b)"
       },
       "commit": null,
       "log": "logs/014-state-library-of-new-south-wales-flickr.md",
-      "notes": "INVESTIGATING (2026-06-06). object_url NULL for all. SLNSW is a high-res Flickr Commons account: landing page (de-escaped \\/) exposes _o ORIGINALS up to 44.9 MP (7792px) under alternate secrets, NOT in the main-page displayUrl JSON. flickrLargest (_b/1024) would discard ~98% of the resolution for the big ones. RELIABLE method (verified): fetch landing page, strict-filter to THIS photo id, pick largest size by rank (o>6k>5k>4k>3k>k>h>b...). Measured: 3805829153=44.9MP, 3419414899=44.8MP, 14210949316=0.9MP, 4194047894=1.5MP (mixed; small originals too). USER DECISION (2026-06-06): use flickr.photos.getSizes API (key in .env FLICKR_API_KEY, read via ProcessInfo env like DIGITALNZ_API_KEY); fallback chain on getSizes failure = flickrLargest (_b/1024). ALSO retrofit Te Ara (order 11) to the same getSizes strategy. PLAN: new flickrGetSizesLargest strategy (extract photo_id from large_thumbnail_url _z; GET https://api.flickr.com/services/rest/?method=flickr.photos.getSizes&api_key=$KEY&photo_id=$PID&format=json&nojsoncallback=1; pick size.size[] with max width*height whose source is browser-displayable; else _b). Apply to SLNSW(14), ANMM(15), Te Ara(11 retrofit). BLOCKED pending user adding FLICKR_API_KEY to .env."
+      "notes": "INVESTIGATING (2026-06-06). object_url NULL for all. SLNSW is a high-res Flickr Commons account: landing page (de-escaped \\/) exposes _o ORIGINALS up to 44.9 MP (7792px) under alternate secrets, NOT in the main-page displayUrl JSON. flickrLargest (_b/1024) would discard ~98% of the resolution for the big ones. RELIABLE method (verified): fetch landing page, strict-filter to THIS photo id, pick largest size by rank (o>6k>5k>4k>3k>k>h>b...). Measured: 3805829153=44.9MP, 3419414899=44.8MP, 14210949316=0.9MP, 4194047894=1.5MP (mixed; small originals too). USER DECISION (2026-06-06): getSizes was the first choice BUT Flickr now requires Flickr Pro (paid) to create an API key -> NOT available. PIVOTED to landing-page scrape (flickrLandingLargest): fetch result.landingUrl, de-escape \\/, regex-extract live.staticflickr.com/<srv>/<photoId>_<secret>_<size>.(jpg|png|gif) strict-filtered to the photo id, pick largest by rank (o>6k>5k>4k>3k>k>h>b>c>z>...), fallback flickrLargest (_b) on no-landing/fetch-fail/no-match. One bounded HTML GET per request. ADDED to SLNSW (registry + weight 0.001). build 0; CollectionTester x3 -> 3/3 HTTP200 image/jpeg _o originals 9.1 MP (3500px) vs _z 0.3 MP (~30x). STILL TO DO after SLNSW approval: ANMM(15) same strategy; retrofit Te Ara(11) from flickrLargest -> flickrLandingLargest."
     },
     {
       "order": 15,
