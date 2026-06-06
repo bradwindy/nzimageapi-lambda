@@ -89,4 +89,5 @@ decode cleanly (sips) and render in `<img>` (same as the approved Tauranga/Hasti
 
 ## Commit
 
-(pending user approval)
+`ac56f8f` — He Purapura Marara Scattered Seeds: migrate to recollectLargest (fix CAT2 fallback).
+User-approved 2026-06-06.
