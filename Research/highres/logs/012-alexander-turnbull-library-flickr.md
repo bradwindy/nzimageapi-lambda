@@ -74,4 +74,5 @@ production output.
 
 ## Commit
 
-(pending user approval)
+`c4b4b24` — Alexander Turnbull Library Flickr: migrate to registry (object_url _o original, _b fallback).
+User-approved 2026-06-06.
