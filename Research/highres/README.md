@@ -6,8 +6,8 @@ these files.
 
 ## Current resume state (updated 2026-06-07)
 
-**Wellington removal: done.** Collections **1–19 terminal** (and **Howick 17 RE-DONE** — see below);
-**NEXT → order 20: Waimate Museum and Archives PastPerfect** (PastPerfect, Group A re-check).
+**Wellington removal: done.** Collections **1–20 terminal** (and **Howick 17 RE-DONE** — see below);
+**NEXT → order 21: Te Papa Collections Online** (weserv proxy, Group A re-check).
 `progress.json` is authoritative; this is a human summary.
 
 | # | collection | platform | outcome |
@@ -32,13 +32,15 @@ these files.
 | 17 | Howick Historical Village NZMuseums | eHive | **RE-DONE** (was wrongly no-improvement) — migrated passthrough→`ehiveIIIFLargest`; `iiif.ehive.com` master TIFF serves up to ~14× (3000×2001) for ~85%, honest native for the rest. User still emailed museum for true TIFF originals |
 | 18 | Mataura Museum NZMuseums | eHive | committed ADD — new `ehiveIIIFLargest` (IIIF `/full/full/` master TIFF, 1.56×–36×; 28/28 win) |
 | 19 | New Zealand Portrait Gallery NZMuseums | eHive | committed ADD — `ehiveIIIFLargest` (24/24 win, 1.27×–49.3×, up to 21 MP; no anomalies) |
+| 20 | Waimate Museum and Archives PastPerfect | pastPerfect | no-improvement — PPO display capped at 950px; true originals exist as 403-locked S3 upload zips (`imageuploads2/0000001110/`). User to seek access |
 
-**Next up (order 20) — Waimate Museum and Archives PastPerfect** (Group A re-check; **PastPerfect**;
-rawItemCount 8,667; currently passthrough in the legacy switch). Per the `pastPerfect` recipe: full-size
-at `/Media/<UUID>`, record page at `/Webobject/<UUID>`, plain GET. Detect the host
-(`*.pastperfectonline.com`?) live, run the Discovery Playbook, and measure `/Media/` vs the harvested
-`large_thumbnail_url`. The eHive cluster (17–19) is COMPLETE; the next eHive-style work would only be a
-Howick re-check if the museum supplies true TIFF originals.
+**Next up (order 21) — Te Papa Collections Online** (Group A re-check; **weserv proxy**; rawItemCount
+365,674; currently `case "Te Papa Collections Online"` in the legacy switch → weserv proxy of
+`large_thumbnail_url`). Per the Discovery Playbook: check whether Te Papa's source (collections.tepapa
+/ the `*.tepapa.govt.nz` image host or its IIIF/`/preview`→`/full`) yields more than the weserv-proxied
+harvested URL; measure decoded area of the current weserv output vs any larger native. The eHive cluster
+(17–19) is COMPLETE; Waimate (20, PastPerfect) is no-improvement (950px PPO cap; true originals are
+403-locked S3 upload zips at `imageuploads2/0000001110/` — re-check only if access is granted).
 
 **★ eHive lesson (CORRECTED 2026-06-07 — the order-17 Howick conclusion was WRONG):** the `_l` (800px)
 suffix is NOT the ceiling. eHive runs a **public IIIF Image API 2.0 service over the master TIFF** at

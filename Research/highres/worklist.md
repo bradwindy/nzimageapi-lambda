@@ -6,7 +6,7 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 ## Removal
 - [x] REMOVE Wellington City Recollect — done
 
-## Collections (19/52 terminal)
+## Collections (20/52 terminal)
 
 ### recollect
 - [x] (01) Tauranga City Libraries Other Collection — group A — platform recollect — committed
@@ -35,7 +35,7 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 - [x] (19) New Zealand Portrait Gallery NZMuseums — group B — platform ehiveIIIF — committed
 
 ### pastPerfect
-- [ ] (20) Waimate Museum and Archives PastPerfect — group A — platform pastPerfect — todo
+- [x] (20) Waimate Museum and Archives PastPerfect — group A — platform pastPerfect — no-improvement
 
 ### weservProxy
 - [ ] (21) Te Papa Collections Online — group A — platform weservProxy — todo
