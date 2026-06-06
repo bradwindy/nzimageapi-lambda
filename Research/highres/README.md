@@ -6,9 +6,8 @@ these files.
 
 ## Current resume state (updated 2026-06-06)
 
-**Wellington removal: done.** Collections **1–16 terminal**; **NEXT → order 17: Howick Historical
-Village NZMuseums** (eHive / NZMuseums, opens the eHive cluster 17–19). `progress.json` is
-authoritative; this is a human summary.
+**Wellington removal: done.** Collections **1–17 terminal**; **NEXT → order 18: Mataura Museum
+NZMuseums** (eHive / NZMuseums, Group B add). `progress.json` is authoritative; this is a human summary.
 
 | # | collection | platform | outcome |
 |---|------------|----------|---------|
@@ -29,13 +28,19 @@ authoritative; this is a human summary.
 | 15 | Australian National Maritime Museum Flickr | flickr | committed ADD — `object_url _o ?? flickrLandingLargest` (4–28 MP) |
 | 11↻ | Te Ara Flickr (retrofit) | flickr | committed — `_b`→`flickrLandingLargest` (scrape `_h`/`_k`/`_o`; fixes stale-secret 410s) |
 | 16 | Kura Heritage Collections Online | iiif (CONTENTdm) | committed — `/full/2048,/`(upscaled)→`/full/max/` honest native (≤2000px); migrated to registry |
+| 17 | Howick Historical Village NZMuseums | eHive | no-improvement — `_l` 800px is the ceiling for ALL users (verified login); original sign-in-gated/absent. User emailing museum |
 
-**Next up (order 17) — Howick Historical Village NZMuseums** (Group A re-check; **eHive/NZMuseums**;
-rawItemCount 13,426). Currently passthrough in the legacy `switch`. Per the `ehiveIIIF` recipe +
-Discovery Playbook: NZMuseums records sit on eHive — check for a IIIF `info.json`/zoom or the eHive
-public REST API; public derivatives are often capped ~800px unless the item is public-domain. Sample
-the raw `large_thumbnail_url` host, look for an `object_url` original, and measure before deciding.
-Orders 18–19 (Mataura Museum, NZ Portrait Gallery — both NZMuseums) follow.
+**Next up (order 18) — Mataura Museum NZMuseums** (Group B add; **eHive**; rawItemCount 3,422).
+Same platform as Howick (eHive `images.ehive.com`). Per the `ehiveIIIF` recipe: `_l` (800px) is the
+anonymous suffix max; the public ceiling is **per-account**, so DON'T assume Howick's 800px cap —
+measure `_l`, check the DigitalNZ **rights facet** (Public Domain records on a full-access account
+serve the original anonymously), and probe whether any record exceeds 800px before deciding
+no-improvement vs add. Then order 19 (NZ Portrait Gallery, also eHive).
+
+**eHive lesson (Howick):** `_l` (800px) is the anonymous suffix max; `_xl`/`_o`/etc → HTTP 500; no
+public IIIF; REST API OAuth-gated; the original is sign-in-gated AND the per-account cap can apply to
+signed-in users too (Howick caps everyone at 800px). The "Public Domain → original" exception is an
+account setting, not guaranteed (Howick's 1 PD record is also capped).
 
 **IIIF note (Kura):** for any IIIF service NEVER hardcode a width — `sizeAboveFull` makes a fixed
 width > native UPSCALE (fake pixels). Read `info.json`; request `/full/max/`. (Kura's native is capped

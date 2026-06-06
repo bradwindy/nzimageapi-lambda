@@ -86,5 +86,5 @@ copies exist and can be requested. Re-check and re-do this collection if access 
 
 ## Commit
 
-`<this commit>` — Investigate Howick Historical Village (eHive): 800px is the ceiling for all users
+`41bbcce` — Investigate Howick Historical Village (eHive): 800px is the ceiling for all users
 (no code change). User-confirmed no-improvement 2026-06-06.
