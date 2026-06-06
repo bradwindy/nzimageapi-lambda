@@ -54,6 +54,7 @@ public struct NZImageApi: Sendable {
         "Lower Hutt MyRecollect": 0.002,
         "Hocken Digital Collections": 0.05,
         "Ministry for Culture and Heritage Te Ara Flickr": 0.015,
+        "Dunedin City Council Archives Flickr": 0.002,
     ]
 
     public func image(collection: String?, logger: @Sendable (String) -> Void = { _ in }) async -> NZRecordsResult? {

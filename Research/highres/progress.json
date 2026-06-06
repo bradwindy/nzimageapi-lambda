@@ -279,20 +279,20 @@
       "group": "B",
       "platform": "flickr",
       "rawItemCount": 1768,
-      "weight": null,
-      "status": "todo",
+      "weight": 0.002,
+      "status": "committed",
       "baseline": {
-        "method": "raw large_thumbnail_url",
-        "px": null
+        "method": "raw large_thumbnail_url (staticflickr _z = 640px)",
+        "px": "~640px (0.3 MP)"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "ADD via the general Flickr rule (object_url _o original, else flickrLargest _b)",
+        "px": "_o original 0.4-27.7 MP (browser-displayable image/jpeg); _b fallback if object_url null",
+        "urlPattern": "object_url https://live.staticflickr.com/<server>/<id>_<originalsecret>_o.jpg OR _b fallback"
       },
       "commit": null,
       "log": "logs/013-dunedin-city-council-archives-flickr.md",
-      "notes": ""
+      "notes": "AWAITING APPROVAL (2026-06-06). Flickr account 95014006@N04. Same shape as Alexander Turnbull: object_url = _o ORIGINAL for 45/45 uniform sample (0 null, 0 non-jpg; all image/jpeg HTTP200). _o originals 0.4-27.7 MP vs _z 0.3 MP (6-27x typical; some small originals ~750px still > _z). _o is the Flickr ceiling. ADDED via registry closure (object_url ?? flickrLargest) + collectionWeights 0.002 (provisional). build 0; CollectionTester x3 HTTP200 image/jpeg _o (1.9/8.1/1.3 MP)."
     },
     {
       "order": 14,

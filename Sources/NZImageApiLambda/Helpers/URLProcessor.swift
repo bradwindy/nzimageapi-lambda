@@ -66,6 +66,10 @@ final class URLProcessor: Sendable {
             // largest reachable derivative (`_b`) only if `object_url` is ever absent.
             result.objectUrl?.absoluteString ?? flickrLargest(result, url)
         },
+        "Dunedin City Council Archives Flickr": { result, url in
+            // Same shape as Turnbull: `object_url` is the `_o` original (~100%); `_b` fallback.
+            result.objectUrl?.absoluteString ?? flickrLargest(result, url)
+        },
     ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {

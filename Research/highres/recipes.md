@@ -155,6 +155,10 @@ hard-coded per collection.
   ~100% (object_url present), and upgrades the null fallback from raw `_z`(640) to `_b`(1024).
   ⇒ **General Flickr rule:** prefer `object_url` (the `_o` original, common on Commons / download-
   enabled accounts); use `flickrLargest` (`_b`) only when `object_url` is absent or itself capped.
+- **Dunedin City Council Archives Flickr (2026-06-06):** account `95014006@N04`; identical shape to
+  Turnbull — `object_url` = `_o` original for 45/45 uniform sample (0 null, all `image/jpeg`),
+  0.4–27.7 MP vs `_z` 0.3 MP. **ADDED** via the general Flickr rule (registry closure
+  `object_url ?? flickrLargest`) + weight 0.002. Confirms the rule generalises across Flickr accounts.
 
 ---
 
