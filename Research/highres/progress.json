@@ -258,19 +258,19 @@
       "platform": "flickr",
       "rawItemCount": 4307,
       "weight": null,
-      "status": "todo",
+      "status": "committed",
       "baseline": {
-        "method": "object_url direct",
-        "px": null
+        "method": "objectUrlDirect (legacy switch) -> object_url (_o original), else raw _z (640) fallback",
+        "px": "_o original 5.8-25.9 MP (already served); _z fallback 0.3 MP (only if object_url null)"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "no resolution change (objectUrlDirect already serves the _o original = Flickr ceiling); MIGRATED legacy case -> registry + upgraded the null fallback from raw _z to flickrLargest (_b/1024)",
+        "px": "_o original 5.8-25.9 MP (unchanged); null fallback now _b 1024 instead of _z 640 (unobserved edge case)",
+        "urlPattern": "object_url (https://live.staticflickr.com/<server>/<id>_<originalsecret>_o.jpg) OR _b fallback"
       },
       "commit": null,
       "log": "logs/012-alexander-turnbull-library-flickr.md",
-      "notes": ""
+      "notes": "AWAITING APPROVAL (2026-06-06). National Library NZ Commons account (nationallibrarynz_commons). object_url = _o ORIGINAL for 50/50 uniform sample (0 null, 0 non-jpg; all image/jpeg HTTP200). _o originals are large (5.8/19.1/25.9 MP) vs _z 0.3 MP. Current objectUrlDirect already serves _o = the Flickr ceiling (nothing beats the original; _b only ever <= _o). => NO RESOLUTION IMPROVEMENT possible from this source. Made a low-risk strict->= change anyway: migrated the legacy switch case to the registry (objectUrl ?? flickrLargest) which (a) advances the switch->registry migration and (b) upgrades the object_url-null fallback from raw _z (640) to flickrLargest _b (1024) for the unobserved null case. Behavior identical on ~100% of records (object_url present -> _o). build 0; CollectionTester x3 HTTP200 image/jpeg _o originals (25.9/5.8/19.1 MP)."
     },
     {
       "order": 13,

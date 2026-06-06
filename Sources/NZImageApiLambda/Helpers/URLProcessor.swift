@@ -60,6 +60,12 @@ final class URLProcessor: Sendable {
         "Ministry for Culture and Heritage Te Ara Flickr": { result, url in
             flickrLargest(result, url)
         },
+        "Alexander Turnbull Library Flickr": { result, url in
+            // National Library NZ Commons publishes the full original at `object_url`
+            // (`_o`, ~100% of records) — that is the Flickr ceiling. Fall back to the
+            // largest reachable derivative (`_b`) only if `object_url` is ever absent.
+            result.objectUrl?.absoluteString ?? flickrLargest(result, url)
+        },
     ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
@@ -256,18 +262,6 @@ final class URLProcessor: Sendable {
                         of: "medium",
                         with: "xlarge"
                     )
-                }
-            )
-
-        case "Alexander Turnbull Library Flickr":
-            return try await handleUrl(
-                result: result,
-                urlModifier: { url in
-                    guard let objectUrl = result.objectUrl?.absoluteString else {
-                        return url.absoluteString
-                    }
-
-                    return objectUrl
                 }
             )
 

@@ -146,6 +146,15 @@ hard-coded per collection.
   `_z` 640 → `_b` 1024 = 2.56× area. ⇒ Lesson for the remaining Flickr collections (12–15): check
   `object_url` first (Turnbull serves originals there) — `flickrLargest` is the fallback when only a
   capped static `_z`/`_c` is harvested; sample the max-size distribution before assuming originals exist.
+- **Alexander Turnbull Library Flickr (2026-06-06):** **Flickr Commons** account
+  (`nationallibrarynz_commons`) — `object_url` is the `_o` **original** for 50/50 uniform sample (0
+  null, 0 non-jpg; all `image/jpeg` HTTP 200), 5.8–25.9 MP vs `_z` 0.3 MP. ⇒ When a record has an
+  `_o` `object_url`, that's the Flickr ceiling (`_b` only ever ≤ `_o`); `objectUrlDirect` is optimal,
+  no resolution gain available. **no-resolution-improvement.** Committed a strict-≥ cleanup only:
+  migrated the legacy case to the registry as `result.objectUrl ?? flickrLargest(...)` — identical on
+  ~100% (object_url present), and upgrades the null fallback from raw `_z`(640) to `_b`(1024).
+  ⇒ **General Flickr rule:** prefer `object_url` (the `_o` original, common on Commons / download-
+  enabled accounts); use `flickrLargest` (`_b`) only when `object_url` is absent or itself capped.
 
 ---
 
