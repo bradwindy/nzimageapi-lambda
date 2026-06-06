@@ -234,21 +234,21 @@
       "slug": "ministry-for-culture-and-heritage-te-ara-flickr",
       "group": "B",
       "platform": "flickr",
-      "rawItemCount": 15738,
-      "weight": null,
-      "status": "todo",
+      "rawItemCount": 15714,
+      "weight": 0.015,
+      "status": "committed",
       "baseline": {
-        "method": "raw large_thumbnail_url",
-        "px": null
+        "method": "raw large_thumbnail_url (live.staticflickr.com/.../<id>_<secret>_z.jpg = 640px)",
+        "px": "~640px long side (0.27-0.31 MP)"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "ADD via flickrLargest (swap size suffix to _b = Large 1024)",
+        "px": "~1024px long side (0.70-0.79 MP), 2.5-2.6x baseline area; min(1024, original) so sub-1024 originals return unchanged",
+        "urlPattern": "https://live.staticflickr.com/<server>/<id>_<secret>_b.jpg"
       },
       "commit": null,
       "log": "logs/011-ministry-for-culture-and-heritage-te-ara-flickr.md",
-      "notes": ""
+      "notes": "AWAITING APPROVAL (2026-06-06). FIRST non-Recollect collection. object_url=null; large_thumbnail=staticflickr _z (640). Flickr secret rule (confirmed via flickr.com/services/api/misc.urls.html + secondary): _b/_c/_z and all smaller share the photo's BASE secret -> reachable by pure string swap; _h(1600)/_k(2048) need a per-photo ALTERNATE secret, _o needs originalsecret -> only via photo page / getSizes (needs key). Empirical max-size distribution over 63 uniform photos: 0 exceed 1024 (_b 56, _c 4, _z 3) -> >1024 originals vanishingly rare in the Te Ara pool, NOT worth a per-request page scrape (fragile + latency on 100% of requests for ~0% benefit). Flickr never upscales: requesting _b on a sub-1024 original returns the original (safe, never 404). CHOSEN: flickrLargest = swap size token to _b. New reusable platform fn (reusable for the other Flickr collections 12-15, though some may instead use object_url originals). collectionWeights add 0.015 (provisional). build 0; CollectionTester x3 HTTP200 image/jpeg _b (0.79/0.70/0.70 MP vs _z 0.31/0.27/0.27)."
     },
     {
       "order": 12,

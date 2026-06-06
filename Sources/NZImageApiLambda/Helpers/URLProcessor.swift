@@ -57,6 +57,9 @@ final class URLProcessor: Sendable {
         "He Purapura Marara Scattered Seeds": { result, url in
             await recollectLargest(result, url)
         },
+        "Ministry for Culture and Heritage Te Ara Flickr": { result, url in
+            flickrLargest(result, url)
+        },
     ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
@@ -332,6 +335,46 @@ final class URLProcessor: Sendable {
     /// otherwise fall back to the current URL.
     private static func objectUrlDirect(_ result: NZRecordsResult, _ url: URL) -> String {
         result.objectUrl?.absoluteString ?? url.absoluteString
+    }
+
+    /// Flickr (`live.staticflickr.com`): upgrade the size suffix to `_b` (Large, 1024 px on the
+    /// long side). `_b` and every smaller size share the photo's base secret, so `_b` is reachable
+    /// by a pure string swap — no API key, no page scrape. Flickr never upscales, so a photo whose
+    /// original is smaller than 1024 px simply returns the original at the `_b` URL (safe for every
+    /// record; never 404s). Sizes above 1024 (`_h`/`_k`/`_o`) require a per-photo *alternate* secret
+    /// only available via the photo page / `getSizes` API, and are vanishingly rare in the harvested
+    /// pools (0/63 sampled for Te Ara), so we don't pay a per-request fetch to chase them.
+    ///
+    /// URL shape: `https://live.staticflickr.com/<server>/<id>_<secret>[_<size>].jpg`. The `<id>`
+    /// and `<secret>` never contain `_`, so splitting the filename on `_` cleanly isolates an
+    /// optional trailing size token.
+    private static func flickrLargest(_ result: NZRecordsResult, _ url: URL) -> String {
+        let urlString = url.absoluteString
+
+        guard urlString.contains("staticflickr.com"),
+              let lastSlash = urlString.lastIndex(of: "/")
+        else {
+            return urlString
+        }
+
+        let prefix = urlString[...lastSlash]
+        let file = String(urlString[urlString.index(after: lastSlash)...])
+
+        guard file.hasSuffix(".jpg") else { return urlString }
+
+        let stem = String(file.dropLast(".jpg".count))
+        let parts = stem.split(separator: "_")
+
+        // 2 parts => "<id>_<secret>" (no size token) -> append "_b".
+        // 3+ parts => "<id>_<secret>_<size>" -> replace the size token with "b".
+        let newStem: String
+        if parts.count >= 3 {
+            newStem = parts.dropLast().joined(separator: "_") + "_b"
+        } else {
+            newStem = stem + "_b"
+        }
+
+        return prefix + newStem + ".jpg"
     }
 
     /// Proxy through images.weserv.nl at native resolution (bypasses hotlink

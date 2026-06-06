@@ -129,7 +129,23 @@ hard-coded per collection.
   Council Archives, State Library of NSW, Australian National Maritime Museum.
 
 ### Verified findings (flickr)
-- _(append here)_
+- **Secret rule (confirmed: flickr.com/services/api/misc.urls.html + secondary sources):** sizes
+  `_b`(1024)/`_c`(800)/`_z`(640) and everything **below** `_h` share the photo's **base secret**, so
+  they're reachable by a pure string swap on a harvested static URL. `_h`(1600) and `_k`(2048) each
+  use a **unique per-photo secret**; `_o`(original) uses `originalsecret`. ⇒ `_b` is the largest size
+  obtainable WITHOUT the photo page / `getSizes` API (needs a key). **Flickr never upscales** —
+  requesting a size larger than the original returns the original at that URL (HTTP 200, not 404), so
+  `_z`→`_b` is safe for every record.
+- **Reusable `flickrLargest` (URLProcessor):** swap the size token to `_b`. Filename is
+  `<id>_<secret>[_<size>].jpg` and `<id>`/`<secret>` never contain `_`, so split on `_`: 3+ parts ⇒
+  replace the trailing size token with `b`; 2 parts (no token = the `_500` default) ⇒ append `_b`.
+- **Ministry for Culture and Heritage Te Ara Flickr (2026-06-06):** `object_url` null; harvested `_z`
+  (640). Max-size distribution over 63 uniform photos: `_b` 56, `_c` 4, `_z` 3 — **0 exceed 1024**.
+  Pool is web-resolution uploads; per-request page-scraping for `_h`/`_k`/`_o` not worth it (≈0%
+  benefit + fragility/latency). **ADDED via `flickrLargest`** (registry + weight 0.015). Baseline
+  `_z` 640 → `_b` 1024 = 2.56× area. ⇒ Lesson for the remaining Flickr collections (12–15): check
+  `object_url` first (Turnbull serves originals there) — `flickrLargest` is the fallback when only a
+  capped static `_z`/`_c` is harvested; sample the max-size distribution before assuming originals exist.
 
 ---
 
