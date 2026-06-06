@@ -268,7 +268,11 @@ hard-coded per collection.
   `iiif.ehive.com`) was WRONG. Re-done with `ehiveIIIFLargest` (see log 017 / 018). **LESSON for any
   eHive account: ALWAYS check `iiif.ehive.com/iiif/2/accounts%2f<acct>%2fobjects%2fimages%2f<id>.tif/
   info.json` — the `_l` 800px derivative is NOT the ceiling; the master TIFF is publicly served via
-  IIIF regardless of rights or the eHive UI/login cap.** ⇒ Apply to NZ Portrait Gallery (19) directly.
+  IIIF regardless of rights or the eHive UI/login cap.**
+- **New Zealand Portrait Gallery NZMuseums (2026-06-07, order 19): ADD via `ehiveIIIFLargest`.** account
+  3272; 136 records (all "All rights reserved" — irrelevant). **24/24 uniform win, 0 honest-smaller, 0
+  failures** (1.27×–49.3×; masters up to 5616×3744 = 21 MP). Cleanest eHive account (a portrait gallery
+  uploads big masters; no upscaled-`_l` anomalies). Weight 0.001. ⇒ eHive cluster (17–19) COMPLETE.
 
 ---
 

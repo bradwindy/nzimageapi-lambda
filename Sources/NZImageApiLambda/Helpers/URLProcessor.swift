@@ -107,6 +107,10 @@ final class URLProcessor: Sendable {
             // (about half), and exactly the `_l` 800 px native for the rest (never a regression).
             ehiveIIIFLargest(result, url)
         },
+        "New Zealand Portrait Gallery NZMuseums": { result, url in
+            // eHive account 3272 — same IIIF master-TIFF route as Mataura/Howick.
+            ehiveIIIFLargest(result, url)
+        },
     ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
