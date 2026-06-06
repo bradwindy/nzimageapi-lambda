@@ -84,6 +84,18 @@ final class URLProcessor: Sendable {
             if let objectUrl = result.objectUrl?.absoluteString { return objectUrl }
             return await flickrLandingLargest(result, url)
         },
+        "Kura Heritage Collections Online": { _, url in
+            // CONTENTdm IIIF 2.0. The service caps at the native size (≤ 2000 px long side; no larger
+            // master exists — verified the download endpoints return the same native). Request
+            // `/full/max/` for the honest native resolution; the previous hardcoded `/full/2048,/`
+            // upscaled every image (`sizeAboveFull`) to fake-interpolated 2048-wide pixels.
+            ripId(
+                from: url,
+                to: { "https://kura.aucklandlibraries.govt.nz/iiif/2/photos:\($0)/full/max/0/default.jpg" },
+                startString: "/image/photos/",
+                endString: "/default.jpg"
+            )
+        },
     ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
@@ -167,19 +179,6 @@ final class URLProcessor: Sendable {
                     }
 
                     return "https://ajrctguoxo.cloudimg.io/v7/_collectionsecure_/\(processedUrlStub)?c=11?ci_url_encoded=1&force_format=jpeg&height=1000"
-                }
-            )
-
-        case "Kura Heritage Collections Online":
-            return try await handleUrl(
-                result: result,
-                urlModifier: { url in
-                    Self.ripId(
-                        from: url,
-                        to: { "https://kura.aucklandlibraries.govt.nz/iiif/2/photos:\($0)/full/2048,/0/default.jpg" },
-                        startString: "/image/photos/",
-                        endString: "/default.jpg"
-                    )
                 }
             )
 

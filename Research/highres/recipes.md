@@ -205,7 +205,20 @@ hard-coded per collection.
   `info.json` max.
 
 ### Verified findings (iiif)
-- _(append here)_
+- **Kura Heritage Collections Online = CONTENTdm (2026-06-06).** `kura.aucklandlibraries.govt.nz`,
+  OCLC CONTENTdm, IIIF 2.0 level2. `large_thumbnail_url` is the CONTENTdm `singleitem` image API
+  (`/digital/api/singleitem/image/photos/<id>/default.jpg`); the asset id sits between `/image/photos/`
+  and `/default.jpg`. IIIF base: `/iiif/2/photos:<id>/`.
+- **Native capped at 2000 px long side; no larger master.** `info.json` `width`/`height` and `sizes[]`
+  top out at the native size (0/30 sampled > 2048; many exactly 2000). The CONTENTdm download
+  endpoints (`utils/getfile/...`, `digital/api/collection/photos/id/<id>/download`) return the SAME
+  native — there is no bigger preservation file. `/full/2828,/` and `/full/4000,/` → **403**.
+- **`sizeAboveFull` ⇒ a hardcoded width UPSCALES.** The old `/full/2048,/` interpolated every image to
+  2048-wide fake pixels (portrait native 1378 → 2048). Use **`/full/max/`** (== `/full/full/` here) for
+  the honest native. ⇒ **Lesson:** for any IIIF service, NEVER hardcode a width — read `info.json` and
+  request `/full/max/` (v2) or `/full/max/` (v3); a profile listing `sizeAboveFull` means a fixed width
+  > native yields interpolation, not detail. Decision (quality vs pixel-count, like Hocken): user chose
+  honest native. **Migrated switch → registry.**
 
 ---
 
