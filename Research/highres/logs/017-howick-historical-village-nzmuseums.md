@@ -80,9 +80,13 @@ larger public variant exists (suffix probes + IIIF/DZI probes all 404/500). Prod
 image is available even when authenticated** for the Howick account — eHive caps at 800px for everyone
 here. ⇒ no-improvement is final.
 
-**Follow-up:** user to email **Howick Historical Village** — `village@historicalvillage.org.nz`
-(09 576 9506, 75 Bells Road, Lloyd Elsmore Park, Pakuranga) — asking whether higher-resolution/original
-copies exist and can be requested. Re-check and re-do this collection if access is granted.
+**Follow-up:** user to email **Howick Historical Village** collections team for higher-resolution
+copies. Best contact (verified on their own pages): **`collections@fencible.org.nz`** (the address their
+Research Facilities / reproductions page directs requests to; they supply "Digital image – emailed" as a
+paid reproduction service) — alt `collections@historicalvillage.org.nz` (staff directory; museum uses
+both domains); general `village@historicalvillage.org.nz`; phone (09) 576 9506. (Could NOT verify the
+research-subagent's claimed staff name "Lee Lowden" — not asserted.) Re-check/re-do this collection if
+higher-res access is granted.
 
 ## Commit
 
