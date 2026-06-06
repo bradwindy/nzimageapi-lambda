@@ -6,9 +6,9 @@ these files.
 
 ## Current resume state (updated 2026-06-06)
 
-**Wellington removal: done.** Collections **1–13 terminal**; **NEXT → order 14: State Library of New
-South Wales Flickr** (flickr, Group B add, only 179 records). `progress.json` is authoritative; this is
-a human summary.
+**Wellington removal: done.** Collections **1–15 terminal** (Flickr cluster COMPLETE); **NEXT → order
+16: Kura Heritage Collections Online** (IIIF — opens the IIIF work). `progress.json` is authoritative;
+this is a human summary.
 
 | # | collection | platform | outcome |
 |---|------------|----------|---------|
@@ -25,19 +25,26 @@ a human summary.
 | 11 | Ministry for Culture and Heritage Te Ara Flickr | flickr | committed ADD — new `flickrLargest` (swap → `_b`/1024, 2.5× area) |
 | 12 | Alexander Turnbull Library Flickr | flickr | committed — no res gain (`object_url` `_o` original already served); migrated to registry + `_b` null fallback |
 | 13 | Dunedin City Council Archives Flickr | flickr | committed ADD — general Flickr rule (`object_url` `_o`, up to 27.7 MP) |
+| 14 | State Library of NSW Flickr | flickr | committed ADD — new `flickrLandingLargest` (page-scrape `_o`, up to 44.9 MP) |
+| 15 | Australian National Maritime Museum Flickr | flickr | committed ADD — `object_url _o ?? flickrLandingLargest` (4–28 MP) |
+| 11↻ | Te Ara Flickr (retrofit) | flickr | committed — `_b`→`flickrLandingLargest` (scrape `_h`/`_k`/`_o`; fixes stale-secret 410s) |
 
-**Next up (order 14) — State Library of New South Wales Flickr** (Group B add; `flickr`; rawItemCount
-**179** — tiny). Apply the **general Flickr rule**: check `object_url` first (likely `_o` original for
-an institutional Commons account); `object_url ?? flickrLargest`. If `object_url` is null/capped, use
-`flickrLargest` (`_b`) and sample the max-size distribution. Order 15 (Australian National Maritime
-Museum Flickr, 126 records) closes the Flickr cluster; order 16 (Kura, IIIF) opens the IIIF work.
+**Next up (order 16) — Kura Heritage Collections Online** (Group A re-check; **IIIF**; rawItemCount
+367,587 — the largest collection). Currently in the legacy `switch`: hardcoded
+`/iiif/2/photos:<id>/full/2048,/0/default.jpg`. Per the IIIF recipe + Discovery Playbook: fetch the
+image service `info.json`, read the true `width`/`height`/`maxWidth`/`maxArea`/`sizes[]`, and request
+the real max (v3 `/full/max/` or v2 `/full/<maxW>,/`) instead of the hardcoded 2048 — check whether
+the original exceeds 2048 and whether the server caps below it. This opens the IIIF work (only Kura in
+this sweep). Then order 17 (Howick, eHive/NZMuseums IIIF).
 
-**Recollect cluster (orders 1–10) complete; Flickr cluster (11–15) in progress (11–13 done).**
-Registry holds `flickrLargest` (swap → `_b`; Flickr never upscales) + per-collection Flickr closures
-(`object_url ?? flickrLargest` for Turnbull & Dunedin CC). Legacy `switch` still holds: Tāmiro (sole
-recollect occupant, all-master, no fallback needed) + the non-recollect cases (Auckland Libraries,
-Auckland Museum, Kura, Canterbury/Culture Waitaki, Te Papa, passthrough group, TAPUHI, Hawke's Bay,
-Auckland Art Gallery, National Army Museum).
+**Flickr cluster (orders 11–15) COMPLETE.** Final Flickr decision tree (in `recipes.md`): `object_url`
+present → serve the `_o` original (free, no fetch — Turnbull 12, Dunedin 13, ANMM 15); `object_url`
+null → `flickrLandingLargest` (scrape the photo page for `_h`/`_k`/`_o`, `_b` fallback — SLNSW 14, Te
+Ara 11). Reusable registry helpers: `flickrLargest` (`_b` swap), `flickrLandingLargest` (page-scrape).
+`getSizes` API is unavailable (Flickr Pro now required for a key). Legacy `switch` still holds: Tāmiro
+(sole recollect occupant) + non-recollect cases (Auckland Libraries, Auckland Museum, Kura,
+Canterbury/Culture Waitaki, Te Papa, passthrough group, TAPUHI, Hawke's Bay, Auckland Art Gallery,
+National Army Museum).
 
 **Reusable strategies in `URLProcessor` (registry):** `recollectLargest` (HEAD-probe `downloadwiz`
 → master, else `-max`; for instances WITH masters), `recollectDisplayMax` (rip id → `-max`, no
