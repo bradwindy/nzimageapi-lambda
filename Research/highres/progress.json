@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-02T07:10:00Z",
+  "lastUpdated": "2026-06-06T00:00:00Z",
   "removal": {
     "collection": "Wellington City Recollect",
     "status": "done"
@@ -212,21 +212,21 @@
       "slug": "he-purapura-marara-scattered-seeds",
       "group": "A",
       "platform": "recollect",
-      "rawItemCount": 10686,
+      "rawItemCount": 10744,
       "weight": null,
-      "status": "todo",
+      "status": "committed",
       "baseline": {
-        "method": "downloadwiz from -600",
-        "px": null
+        "method": "recollectDownloadUrlString -> bare downloadwiz (no probe, no fallback)",
+        "px": "CAT1 (~90%): master 2.5-14 MP (already served); CAT2 (~0.6%): BROKEN (emits downloadwiz 302->404); restricted (~10%): BROKEN (login-walled, 404)"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "migrate to recollectLargest (HEAD-probe downloadwiz master, else -max fallback)",
+        "px": "CAT1 (~90%): master 2.5-14 MP (unchanged vs baseline); CAT2 (~0.6%): FIXED -> -max ~600px image; restricted (~10%): unchanged (still 404 at source)",
+        "urlPattern": "https://dunedin.recollect.co.nz/assets/downloadwiz/<id>  OR  /assets/display/<id>-max"
       },
       "commit": null,
       "log": "logs/010-he-purapura-marara-scattered-seeds.md",
-      "notes": ""
+      "notes": "AWAITING APPROVAL (2026-06-06). dunedin.recollect.co.nz. Uniform 100-record sample (pages 2-1070): CAT1 ~90% (downloadwiz master 200, 3-23x the ~1000px display tier; -600==-max byte-identical), restricted/login-walled ~10% (node->users/login, all asset endpoints 404, unfixable anonymously), CAT2 ~0.6% (downloadwiz 302->404 but -600/-max 200). NOT Tāmiro-like: Tāmiro had 0 CAT2 so the bare-downloadwiz no-fallback was safe; He Purapura HAS CAT2 that the current strategy serves as a broken 404. Migrated to recollectLargest = strict improvement: identical master on CAT1, fixes CAT2 (serves -max), no regression on restricted; also unifies with Tauranga/Hastings/Lower Hutt and removes He Purapura from the legacy switch (Tāmiro left as sole occupant). NOTE: resolution on the common CAT1 path is UNCHANGED (baseline already served the master); the delta is correctness (CAT2 fix) + the HEAD-probe round-trip cost on every request. CollectionTester x3: 3/3 HTTP200 masters (422907=4.7MP, 451175=2.7MP, 202327=2.5MP) vs -600 0.7-1.5MP."
     },
     {
       "order": 11,

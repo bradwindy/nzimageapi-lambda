@@ -99,6 +99,23 @@ hard-coded per collection.
   ceiling. ⇒ Lesson: a Recollect instance can have masters fully disabled; always sample
   downloadwiz before assuming Tauranga-style master availability. Note `landing_url` carries a
   **node id** (`/nodes/view/<node>`), distinct from the **asset id** in the image URL.
+- **massey.recollect.co.nz (Tāmiro, 2026-06-02):** all-master. `downloadwiz` 200 for 75/75; ~2700px
+  (5 MP) vs ~1 MP `-600` (==`-max`). **0 CAT2, 0 dead in sample** → the existing bare-`downloadwiz`
+  (no fallback) already serves the master for ~100%. **no-improvement** (a `recollectLargest` probe
+  would only add a wasted HEAD since the fallback never fires). Left in the legacy `switch`.
+- **dunedin.recollect.co.nz (He Purapura Marara Scattered Seeds, 2026-06-06):** healthy-but-mixed,
+  community-contributed. Uniform 100-record sample: **CAT1 ~90%** (`downloadwiz` master 200, 3–23×
+  the ~1000px display tier, `-600`==`-max`), **restricted/login-walled ~10%** (`/nodes/view/<n>`
+  302→`/users/login`; downloadwiz + all `display/<id>-*` 404 anonymously — community uploads not
+  publicly released; unfixable, NOT deleted), **CAT2 ~0.6%** (downloadwiz 302→404 but `-600`/`-max`
+  200). ⇒ Unlike Tāmiro, He Purapura HAS a CAT2 tail that the bare-`downloadwiz` no-fallback case
+  served as a **broken 404**. **Migrated to `recollectLargest`** (registry; removed from the
+  Tāmiro-shared legacy case). Strict improvement: master unchanged on CAT1, CAT2 fixed → `-max`, no
+  regression on restricted. ⇒ **Lesson:** "restricted/login-walled" records (node→`/users/login`,
+  all assets 404) are a distinct category from CAT2/CAT3 — they're private, not gone, and unfixable
+  anonymously; a biased page sample can wildly over/under-count them, so sample uniformly across the
+  full result set. The bare-`downloadwiz` (no fallback) is safe ONLY when CAT2==0 (Tāmiro); prefer
+  `recollectLargest` whenever any CAT2 exists.
 
 ---
 

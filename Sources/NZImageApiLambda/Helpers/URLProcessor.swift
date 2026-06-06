@@ -54,6 +54,9 @@ final class URLProcessor: Sendable {
         "Hocken Digital Collections": { result, url in
             recollectDisplayMax(result, url)
         },
+        "He Purapura Marara Scattered Seeds": { result, url in
+            await recollectLargest(result, url)
+        },
     ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
@@ -165,8 +168,7 @@ final class URLProcessor: Sendable {
                 }
             )
 
-        case "Tāmiro",
-             "He Purapura Marara Scattered Seeds":
+        case "Tāmiro":
 
             return try await handleUrl(
                 result: result,
