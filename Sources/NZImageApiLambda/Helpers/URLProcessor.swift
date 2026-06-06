@@ -58,7 +58,10 @@ final class URLProcessor: Sendable {
             await recollectLargest(result, url)
         },
         "Ministry for Culture and Heritage Te Ara Flickr": { result, url in
-            flickrLargest(result, url)
+            // object_url is null; a subset of the pool has `_h`/`_k`/`_o` originals (up to ~13 MP)
+            // reachable only via the photo page's alternate secrets. Scrape for the largest;
+            // `flickrLandingLargest` falls back to `_b` (1024) when nothing larger is present.
+            await flickrLandingLargest(result, url)
         },
         "Alexander Turnbull Library Flickr": { result, url in
             // National Library NZ Commons publishes the full original at `object_url`
@@ -74,6 +77,12 @@ final class URLProcessor: Sendable {
             // object_url is null; the originals (up to ~45 MP) need per-photo alternate secrets
             // recovered from the photo page. Scrape the landing page for the largest size.
             await flickrLandingLargest(result, url)
+        },
+        "Australian National Maritime Museum Flickr": { result, url in
+            // High-res Commons account: object_url is the `_o` original (~100%) — serve it directly
+            // (no fetch). Falls back to the page scrape (not just `_b`) on the rare null object_url.
+            if let objectUrl = result.objectUrl?.absoluteString { return objectUrl }
+            return await flickrLandingLargest(result, url)
         },
     ]
 

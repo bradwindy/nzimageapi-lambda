@@ -70,4 +70,5 @@ discard ~98% of the resolution on the large originals).
 
 ## Commit
 
-(pending user approval)
+`bad9b2e` — Add State Library of NSW Flickr via new flickrLandingLargest (page-scrape original).
+User-approved 2026-06-06.

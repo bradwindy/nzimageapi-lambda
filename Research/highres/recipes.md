@@ -180,6 +180,17 @@ hard-coded per collection.
   Commons; `object_url` null; landing page exposes `_o` originals up to **44.9 MP** (7792px; mixed —
   small scans too). **ADDED via `flickrLandingLargest`** + weight 0.001. CollectionTester ×3 → `_o`
   9.1 MP vs `_z` 0.3 MP (~30×).
+- **Australian National Maritime Museum Flickr (2026-06-06):** account `anmm_thecommons`. Despite
+  being a high-res Commons account, `object_url` IS populated (= `_o` original, 35/35 sampled, 4–28 MP)
+  — so it's the Turnbull/Dunedin shape, NOT object_url-null like SLNSW. **ADDED via
+  `object_url ?? flickrLandingLargest`** (original for free when present; page-scrape original as the
+  null fallback) + weight 0.001. ⇒ Always check `object_url` per record — Commons membership does NOT
+  imply `object_url` is null.
+- **Te Ara Flickr RETROFIT (2026-06-06):** order 11 was committed as `flickrLargest` (`_b`/1024) on a
+  flawed "0/63 exceed 1024" reading. **Switched to `flickrLandingLargest`.** A subset has `_h`/`_k`/`_o`
+  originals (up to ~13 MP); also fixes records whose harvested `_z`/`_b` base secret is **stale (HTTP
+  410)** by recovering a live alternate secret from the page. ⇒ Final Flickr decision tree:
+  `object_url` present → serve it (free `_o`); `object_url` null → `flickrLandingLargest` (scrape).
 
 ---
 

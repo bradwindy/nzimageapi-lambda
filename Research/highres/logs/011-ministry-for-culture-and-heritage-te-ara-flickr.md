@@ -80,3 +80,24 @@ All ≥ 2.5× baseline area.
 
 `c47ae4e` — Add Ministry for Culture and Heritage Te Ara Flickr via flickrLargest (_b/1024).
 User-approved 2026-06-06.
+
+## RETROFIT (2026-06-06) — flickrLargest → flickrLandingLargest
+
+**Why:** the "0/63 photos exceed 1024" finding above was wrong. It came from scraping the main photo
+page's `displayUrl` JSON **without de-escaping `\/`**, which silently omitted the larger sizes
+(`_h`/`_k`/`_o`) that use per-photo *alternate* secrets. A correct landing-page scrape (de-escape
+`\/`, strict per-photo-id filter) shows a meaningful subset of Te Ara photos have `_h`/`_k`/`_o`
+originals up to ~13 MP. So `flickrLargest` (`_b`/1024) **under-delivered**.
+
+**Discovered during order 14 (SLNSW).** The reusable `flickrLandingLargest` (fetch landing page →
+de-escape → pick largest size by rank → `_b` fallback) was built there. The user chose to retrofit
+Te Ara (the `getSizes` API alternative is unavailable — Flickr now requires paid Pro for an API key).
+
+**Change:** `strategies["Ministry for Culture and Heritage Te Ara Flickr"]` switched from
+`flickrLargest` to `flickrLandingLargest`. No weight change.
+
+**Verification:** `swift build` 0; `CollectionTester` ×3 → 3/3 HTTP 200 `image/jpeg`, sizes `_o`/`_o`/`_4k`.
+Measured: 6686019803 → `_o` **1746×1221 (2.1 MP)** vs old `_b` 1024×716 (0.7 MP) — 3× the old result;
+4087419821 → `_4k` **3787×2068 (7.8 MP)** where the harvested `_z` **and** `_b` both return **HTTP 410**
+(stale base secret) — so the retrofit also **fixes broken records** by recovering a live alternate
+secret from the page. Retrofit shares its commit with the ANMM (order 15) add.
