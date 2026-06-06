@@ -91,4 +91,5 @@ copies. Re-check if access is obtained.
 
 ## Commit
 
-(pending user confirmation)
+`54478da` — Investigate Waimate (PastPerfect): 950px is the public ceiling (no code change).
+User-confirmed no-improvement 2026-06-07 (after the deep S3 dig).
