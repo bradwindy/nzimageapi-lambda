@@ -78,4 +78,5 @@ All ≥ 2.5× baseline area.
 
 ## Commit
 
-(pending user approval)
+`c47ae4e` — Add Ministry for Culture and Heritage Te Ara Flickr via flickrLargest (_b/1024).
+User-approved 2026-06-06.

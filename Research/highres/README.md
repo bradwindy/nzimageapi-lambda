@@ -6,9 +6,8 @@ these files.
 
 ## Current resume state (updated 2026-06-06)
 
-**Wellington removal: done.** Collections **1–10 terminal**; **NEXT → order 11: Ministry for Culture
-and Heritage Te Ara Flickr** (flickr, first of the Flickr cluster). `progress.json` is authoritative;
-this is a human summary.
+**Wellington removal: done.** Collections **1–11 terminal**; **NEXT → order 12: Alexander Turnbull
+Library Flickr** (flickr, Group A re-check). `progress.json` is authoritative; this is a human summary.
 
 | # | collection | platform | outcome |
 |---|------------|----------|---------|
@@ -22,19 +21,22 @@ this is a human summary.
 | 08 | Hocken Digital Collections | recollect | committed ADD — `recollectDisplayMax` (-max ~2000px) |
 | 09 | Tāmiro | recollect | no-improvement — existing `downloadwiz` already serves 5 MP master |
 | 10 | He Purapura Marara Scattered Seeds | recollect | committed — migrate to `recollectLargest` (fix rare CAT2; ~10% restricted/login-walled) |
+| 11 | Ministry for Culture and Heritage Te Ara Flickr | flickr | committed ADD — new `flickrLargest` (swap → `_b`/1024, 2.5× area) |
 
-**Next up (order 11) — Ministry for Culture and Heritage Te Ara Flickr** (Group B, ADD; `flickr`
-platform; rawItemCount 15,738). First collection of the **Flickr cluster** (orders 11–15). See the
-`flickr` recipe + Discovery Playbook: `object_url` is often already full-res; if on
-`*.staticflickr.com`, probe size suffixes toward `_o`/`_6k`/`_5k`/`_4k`/`_3k`/`_k`, or use
-`flickr.photos.getSizes` (needs a Flickr API key) for the true Original. No Recollect domain/strategy
-applies. This is the FIRST non-Recollect collection of the sweep — expect a new platform function
-(`flickrLargest`) + registry entry, and (Group B) a `collectionWeights` add.
+**Next up (order 12) — Alexander Turnbull Library Flickr** (Group A re-check; `flickr`; rawItemCount
+4,307). **Currently in the legacy `switch`** using `objectUrlDirect` (returns `result.objectUrl`). Per
+the flickr recipe: check whether `object_url` is populated and already a full-res original (Turnbull is
+expected to serve originals there) — if so likely no-improvement, or migrate to the registry
+`objectUrlDirect`. If `object_url` is null/capped, fall back to the new `flickrLargest` (swap → `_b`)
+and/or probe `object_url` size suffixes toward `_o`/`_k`. Sample the max-size distribution before
+concluding. Orders 13–15 (Dunedin CC, NSW, ANMM Flickr) follow.
 
-**Recollect cluster (orders 1–10) is now complete.** Legacy `switch` still holds: Tāmiro (sole
-recollect occupant, all-master, no fallback needed) + the non-recollect cases (Auckland Libraries,
-Auckland Museum, Kura, Canterbury/Culture Waitaki, Te Papa, passthrough group, TAPUHI, Hawke's Bay,
-Auckland Art Gallery, Alexander Turnbull, National Army Museum).
+**Recollect cluster (orders 1–10) complete; Flickr cluster (11–15) in progress (11 done).** New
+reusable `flickrLargest` is in the registry (swap size token → `_b`; safe — Flickr never upscales).
+Legacy `switch` still holds: Tāmiro (sole recollect occupant, all-master, no fallback needed) + the
+non-recollect cases (Auckland Libraries, Auckland Museum, Kura, Canterbury/Culture Waitaki, Te Papa,
+passthrough group, TAPUHI, Hawke's Bay, Auckland Art Gallery, **Alexander Turnbull (objectUrlDirect)**,
+National Army Museum).
 
 **Reusable strategies in `URLProcessor` (registry):** `recollectLargest` (HEAD-probe `downloadwiz`
 → master, else `-max`; for instances WITH masters), `recollectDisplayMax` (rip id → `-max`, no
