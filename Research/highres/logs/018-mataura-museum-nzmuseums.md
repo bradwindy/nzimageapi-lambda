@@ -115,4 +115,4 @@ the same to NZ Portrait Gallery (19, also eHive).
 
 ## Commit
 
-`de21e23` — Add Mataura Museum (eHive) via IIIF master TIFF (1.56x-36x over _l). User-approved 2026-06-07.
+`6f259d2` — Add Mataura Museum (eHive) via IIIF master TIFF (1.56x-36x over _l). User-approved 2026-06-07.
