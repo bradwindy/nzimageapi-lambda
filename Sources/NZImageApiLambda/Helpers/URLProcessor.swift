@@ -101,6 +101,12 @@ final class URLProcessor: Sendable {
             // master TIFF serves the full native (up to ~12 MP here) for every record. Pure URL build.
             ehiveIIIFLargest(result, url)
         },
+        "Howick Historical Village NZMuseums": { result, url in
+            // Re-opened (order 17 was wrongly closed as no-improvement): Howick's eHive account also
+            // exposes the master TIFF via iiif.ehive.com — up to ~12 MP for records with a real master
+            // (about half), and exactly the `_l` 800 px native for the rest (never a regression).
+            ehiveIIIFLargest(result, url)
+        },
     ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
@@ -226,7 +232,6 @@ final class URLProcessor: Sendable {
         case "Antarctica NZ Digital Asset Manager",
              "National Publicity Studios black and white file prints",
              "South Canterbury Museum",
-             "Howick Historical Village NZMuseums",
              "Waimate Museum and Archives PastPerfect",
              "Te Toi Uku, Crown Lynn and Clayworks Museum",
              "Te Hikoi Museum",

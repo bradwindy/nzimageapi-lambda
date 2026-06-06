@@ -30,7 +30,7 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 - [x] (16) Kura Heritage Collections Online — group A — platform iiif — committed
 
 ### ehiveIIIF
-- [x] (17) Howick Historical Village NZMuseums — group A — platform ehiveIIIF — no-improvement
+- [x] (17) Howick Historical Village NZMuseums — group A — platform ehiveIIIF — committed
 - [x] (18) Mataura Museum NZMuseums — group B — platform ehiveIIIF — committed
 - [ ] (19) New Zealand Portrait Gallery NZMuseums — group B — platform ehiveIIIF — todo
 

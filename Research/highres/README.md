@@ -4,10 +4,11 @@ This directory is the **single source of truth** for the high-res collection swe
 A fresh Claude Code session with zero prior context can resume the work using only
 these files.
 
-## Current resume state (updated 2026-06-06)
+## Current resume state (updated 2026-06-07)
 
-**Wellington removal: done.** Collections **1–17 terminal**; **NEXT → order 18: Mataura Museum
-NZMuseums** (eHive / NZMuseums, Group B add). `progress.json` is authoritative; this is a human summary.
+**Wellington removal: done.** Collections **1–18 terminal** (and **Howick 17 RE-DONE** — see below);
+**NEXT → order 19: New Zealand Portrait Gallery NZMuseums** (eHive, Group B add). `progress.json` is
+authoritative; this is a human summary.
 
 | # | collection | platform | outcome |
 |---|------------|----------|---------|
@@ -28,19 +29,26 @@ NZMuseums** (eHive / NZMuseums, Group B add). `progress.json` is authoritative; 
 | 15 | Australian National Maritime Museum Flickr | flickr | committed ADD — `object_url _o ?? flickrLandingLargest` (4–28 MP) |
 | 11↻ | Te Ara Flickr (retrofit) | flickr | committed — `_b`→`flickrLandingLargest` (scrape `_h`/`_k`/`_o`; fixes stale-secret 410s) |
 | 16 | Kura Heritage Collections Online | iiif (CONTENTdm) | committed — `/full/2048,/`(upscaled)→`/full/max/` honest native (≤2000px); migrated to registry |
-| 17 | Howick Historical Village NZMuseums | eHive | no-improvement — `_l` 800px is the ceiling for ALL users (verified login); original sign-in-gated/absent. User EMAILED museum (`collections@fencible.org.nz`) for originals |
+| 17 | Howick Historical Village NZMuseums | eHive | **RE-DONE** (was wrongly no-improvement) — migrated passthrough→`ehiveIIIFLargest`; `iiif.ehive.com` master TIFF serves up to ~14× (3000×2001) for ~85%, honest native for the rest. User still emailed museum for true TIFF originals |
+| 18 | Mataura Museum NZMuseums | eHive | committed ADD — new `ehiveIIIFLargest` (IIIF `/full/full/` master TIFF, 1.56×–36×; 28/28 win) |
 
-**Next up (order 18) — Mataura Museum NZMuseums** (Group B add; **eHive**; rawItemCount 3,422).
-Same platform as Howick (eHive `images.ehive.com`). Per the `ehiveIIIF` recipe: `_l` (800px) is the
-anonymous suffix max; the public ceiling is **per-account**, so DON'T assume Howick's 800px cap —
-measure `_l`, check the DigitalNZ **rights facet** (Public Domain records on a full-access account
-serve the original anonymously), and probe whether any record exceeds 800px before deciding
-no-improvement vs add. Then order 19 (NZ Portrait Gallery, also eHive).
+**Next up (order 19) — New Zealand Portrait Gallery NZMuseums** (Group B add; **eHive**; rawItemCount
+136). Apply `ehiveIIIFLargest` directly (the strategy from Mataura 18 / Howick 17): build the
+`iiif.ehive.com/iiif/2/accounts%2f<acct>%2fobjects%2fimages%2f<id>.tif/full/full/0/default.jpg` URL and
+verify it 200s + beats `_l` on a uniform sample. Still run the Discovery Playbook (confirm the account
+has the IIIF service wired and measure the win distribution + any honest-smaller upscale cases).
 
-**eHive lesson (Howick):** `_l` (800px) is the anonymous suffix max; `_xl`/`_o`/etc → HTTP 500; no
-public IIIF; REST API OAuth-gated; the original is sign-in-gated AND the per-account cap can apply to
-signed-in users too (Howick caps everyone at 800px). The "Public Domain → original" exception is an
-account setting, not guaranteed (Howick's 1 PD record is also capped).
+**★ eHive lesson (CORRECTED 2026-06-07 — the order-17 Howick conclusion was WRONG):** the `_l` (800px)
+suffix is NOT the ceiling. eHive runs a **public IIIF Image API 2.0 service over the master TIFF** at
+**`iiif.ehive.com`** (a *separate host* from `images.ehive.com`), wired to each object page's
+**OpenSeadragon** viewer. Grep the landing-page HTML for `iiif`/`openseadragon`/`tileSources` to find
+`info: "https://iiif.ehive.com/iiif/2/accounts%2f<acct>%2fobjects%2fimages%2f<id>.tif/info.json"`.
+`/full/full/0/default.jpg` returns the full native master as JPEG **for every record regardless of
+rights** (NOT rights-gated, unlike the `_xl`/`_o` suffixes which 500). The Swift strategy
+`ehiveIIIFLargest` builds this URL purely from the `_l` URL (drop the last `_<size>` segment, `.jpg`→
+`.tif`, `/`→`%2f`). Edge case (~11% of Howick): eHive sometimes **upscales `_l` to 800px** from a
+smaller real master — IIIF then returns the honest (smaller) native; user chose honest-native-always
+(consistent with Kura 16).
 
 **IIIF note (Kura):** for any IIIF service NEVER hardcode a width — `sizeAboveFull` makes a fixed
 width > native UPSCALE (fake pixels). Read `info.json`; request `/full/max/`. (Kura's native is capped
@@ -56,15 +64,17 @@ Ara 11). Reusable registry helpers: `flickrLargest` (`_b` swap), `flickrLandingL
 collections (each migrates to the registry as it's processed): Tāmiro (sole recollect occupant,
 no-improvement), Auckland Libraries Heritage (thumbnailer), Auckland Museum (cloudimg),
 Canterbury/Culture Waitaki (large→xlarge), Te Papa (weserv), passthrough group (Antarctica, National
-Publicity, South Canterbury, Howick, Waimate, Te Toi Uku, Te Hikoi, V.C. Browne), TAPUHI
+Publicity, South Canterbury, Waimate, Te Toi Uku, Te Hikoi, V.C. Browne), TAPUHI
 (fetchTapuhiHighResUrl), Hawke's Bay (weserv), Auckland Art Gallery (medium→xlarge), National Army
 Museum (og:image→downloadwiz). Migrated to the registry so far: all Recollect (1–10), all Flickr
-(11–15), Kura (16).
+(11–15), Kura (16), **eHive (Howick 17, Mataura 18) via `ehiveIIIFLargest`**.
 
 **Reusable strategies in `URLProcessor` (registry):** `recollectLargest` (HEAD-probe `downloadwiz`
 → master, else `-max`; for instances WITH masters), `recollectDisplayMax` (rip id → `-max`, no
 probe; for instances where the thumb `downloadwiz` is uniformly 404 but `-max` > `-600`, e.g.
-Hocken). Recollect domains live in `recollectDomainMap`.
+Hocken). Recollect domains live in `recollectDomainMap`. **`ehiveIIIFLargest`** (eHive): rewrite the
+`images.ehive.com/.../<id>_l.jpg` URL to `iiif.ehive.com/iiif/2/<enc>.tif/full/full/0/default.jpg`
+(honest native master; pure string build, no fetch).
 
 **Provisional weights pending final renormalization:** Hastings 0.004, Lower Hutt 0.002, Hocken
 0.05 (added); Presbyterian 0.014 (removed). Weights currently sum < 1.0 — expected; the final pass

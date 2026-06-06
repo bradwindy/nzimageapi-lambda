@@ -92,3 +92,56 @@ higher-res access is granted.
 
 `41bbcce` — Investigate Howick Historical Village (eHive): 800px is the ceiling for all users
 (no code change). User-confirmed no-improvement 2026-06-06.
+
+---
+
+## ★ RE-OPENED & RE-DONE 2026-06-07 — the no-improvement conclusion was WRONG
+
+While investigating **Mataura (order 18)** I discovered eHive runs a **public IIIF Image API 2.0
+service over the master TIFF** at **`iiif.ehive.com`** — a *separate host* from `images.ehive.com`,
+wired to each object page's **OpenSeadragon** viewer. The order-17 investigation above probed the eHive
+UI (user login), the `_xl`/`_o`/… suffixes, and `images.ehive.com` IIIF/DZI (all 500/404) — but **never
+checked `iiif.ehive.com`**. That host serves Howick's masters publicly, bypassing the eHive UI cap.
+
+**Discovery:** the landing page HTML contains
+`info: "https://iiif.ehive.com/iiif/2/accounts%2f3000%2fobjects%2fimages%2f<id>.tif/info.json"`.
+Requesting `/full/full/0/default.jpg` returns the full native master as `image/jpeg`, regardless of
+rights and without sign-in.
+
+**Uniform sample (28 records across pages 1/67/134):**
+
+| outcome | count | example |
+|---------|------:|---------|
+| win (IIIF native > `_l`) | 24 | `84b358a8…` `_l` 800×533 → **3000×2001** (14.1×); `1vpsggm_jgm` → 2816×2112 (12.4×) |
+| equal (true 800px master) | 1 | `11gb623_v5u` 800×565 → 800×565 |
+| honest-smaller | 3 | `d2fa0bfa…` `_l` 800×766 (**upscaled**) → IIIF 567×543 (honest native; info.json native 567×543) |
+
+0 IIIF non-200. Ratios on wins 1.6×–14×.
+
+**The 3 "honest-smaller" records:** eHive **upscaled** their `_l` to 800px from a genuinely small
+(~550px) master (info.json confirms native ~550; `_m` is a clean downscale of that). So `_l` has fake
+interpolated pixels while IIIF `/full/full/` gives the honest ~550px master. This is the **inverse of
+the Kura (16) fork** (there `/full/2048,/` was the fake upscale and `/full/max/` the honest native).
+
+**User decision (2026-06-07): honest-native-always** — serve IIIF `/full/full/` for every record
+(consistent with the Kura choice). The 3 records get the real ~550px master instead of the upscaled-fake
+800px. No per-request fetch; pure URL construction.
+
+### Implementation (re-do)
+- `URLProcessor.swift`: removed `"Howick Historical Village NZMuseums"` from the legacy `switch`
+  passthrough group; added a registry entry → shared `ehiveIIIFLargest` (same function as Mataura 18).
+- `collectionWeights`: unchanged (Group A, 0.015).
+
+### Verification (re-do)
+- `swift build` → exit 0.
+- `swift run CollectionTester "Howick Historical Village NZMuseums"` ×3 → all HTTP 200, `image/jpeg`,
+  JPEG; URLs e.g.
+  `https://iiif.ehive.com/iiif/2/accounts%2f3000%2fobjects%2fimages%2f1abudtd_406e.tif/full/full/0/default.jpg`.
+
+**Follow-up still valid:** the user's email to the museum (`collections@fencible.org.nz`) for true
+preservation TIFF originals remains worthwhile — IIIF native is the best *public* route but may be below
+the institution's master for some records.
+
+### Commit (re-do)
+
+`41bbcce` was the original no-improvement; the re-do is committed separately (see progress.json).
