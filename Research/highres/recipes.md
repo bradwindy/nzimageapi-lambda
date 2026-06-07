@@ -307,6 +307,24 @@ hard-coded per collection.
   `&output=webp` to force WebP.
 - **Collections:** Te Papa, Hawke's Bay.
 
+### Verified findings (Te Papa, order 21, 2026-06-07) — `tePapaLargest`
+- **`media.tepapa.govt.nz/collection/<id>/{thumb|preview|full}`** (303-redirects to S3
+  `co3-api-mediastorage`). Harvested `large_thumbnail_url` = `/preview` (≤1000 px). **`/full` is the
+  master** (21–97 MP) but is served **ONLY for open-access records**; in-copyright ("All Rights
+  Reserved"/"Copyright Te Papa", ~38% of 388k) return **HTTP 500** on `/full`. Rights facet: ~62%
+  open-access (CC BY 147k + No Known Copyright 69k + CC BY-NC-ND 23k + small CC).
+- **`/full` cannot be HEAD-probed (403) and weserv CANNOT proxy it (404)** — but it **embeds directly**
+  (no hotlink protection) and a **1-byte ranged GET** (`Range: bytes=0-0`, follow redirects) cleanly
+  distinguishes availability: open-access → **206** (1 byte), in-copyright → **500**. ⇒ added
+  `NetworkRequestManager.rangeStatusFollowingRedirects` (works where HEAD is blocked) and
+  `URLProcessor.tePapaLargest`: probe `/full`; serve it **directly** on 206/200, else
+  `weservProxy(/preview)` (unchanged → no regression). **`/full` can exceed weserv's 71 MP cap** (a
+  tester record was 97 MP) → must serve direct, not proxied.
+- **Tester quirk:** `CollectionTester` validates with **HEAD**, which Te Papa blocks on `/full` (403) —
+  shows a false "❌ 403". Verify `/full` with **GET** (what browsers do): all 200 `image/jpeg`.
+- **Lesson for other "preview/derivative" media servers:** when HEAD is blocked and the proxy 404s, a
+  bounded **ranged GET** is the robust per-request availability probe (never downloads the asset).
+
 ### cloudimgFullRes (cloudimg.io v7)
 - Native-res hotlink/format proxy. Use `org_if_sml=1`, **drop fixed `height=`**.
   `force_format=jpeg` to normalize. Good for JP2 (unlike weserv).

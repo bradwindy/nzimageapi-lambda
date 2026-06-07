@@ -110,6 +110,27 @@ final class NetworkRequestManager: ValidatedRequestManager {
         return response.response?.statusCode ?? 0
     }
 
+    /// Returns the final HTTP status code of a **1-byte ranged GET** (`Range: bytes=0-0`) following
+    /// redirects, or 0 on failure. Unlike `headStatusFollowingRedirects`, this works for endpoints
+    /// that reject HEAD: e.g. Te Papa's `media.tepapa.govt.nz/collection/<id>/full` returns 403 to a
+    /// HEAD but 206/200 to a ranged GET when the high-res asset exists, and 500 when it does not
+    /// (in-copyright records). The `Range` header keeps the transfer to a single byte, so it never
+    /// downloads the full image at request time (the endpoint must honour Range — Te Papa/S3 does).
+    /// Browser User-Agent + short timeout.
+    func rangeStatusFollowingRedirects(endpoint: String) async -> Int {
+        let configuration = URLSessionConfiguration.default
+        configuration.httpAdditionalHeaders = [
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+            "Range": "bytes=0-0",
+        ]
+        configuration.timeoutIntervalForRequest = 15
+
+        let session = Session(configuration: configuration)
+        let response = await session.request(endpoint, method: .get).serializingData().response
+
+        return response.response?.statusCode ?? 0
+    }
+
     func headRequest(endpoint: String) async throws -> (contentType: String, contentLength: Int64) {
         let configuration = URLSessionConfiguration.default
         configuration.httpAdditionalHeaders = [

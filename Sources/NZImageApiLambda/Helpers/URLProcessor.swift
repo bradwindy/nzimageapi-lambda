@@ -111,6 +111,9 @@ final class URLProcessor: Sendable {
             // eHive account 3272 — same IIIF master-TIFF route as Mataura/Howick.
             ehiveIIIFLargest(result, url)
         },
+        "Te Papa Collections Online": { result, url in
+            await tePapaLargest(result, url)
+        },
     ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
@@ -218,18 +221,6 @@ final class URLProcessor: Sendable {
                         from: url,
                         collection: collection
                     )
-                }
-            )
-
-        case "Te Papa Collections Online":
-            return try await handleUrl(
-                result: result,
-                urlModifier: { url in
-                    // Use images.weserv.nl proxy to bypass hotlinking protection
-                    guard let escapedUrl = url.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else {
-                        return url.absoluteString
-                    }
-                    return "https://images.weserv.nl/?url=\(escapedUrl)"
                 }
             )
 
@@ -500,6 +491,34 @@ final class URLProcessor: Sendable {
         let encoded = identifier.replacingOccurrences(of: "/", with: "%2f")
 
         return "https://iiif.ehive.com/iiif/2/\(encoded)/full/full/0/default.jpg"
+    }
+
+    /// Te Papa Collections Online (`media.tepapa.govt.nz/collection/<id>/<size>`). The harvested
+    /// `large_thumbnail_url` is the `/preview` (≤ 1000 px long side). Te Papa also serves a much larger
+    /// `/full` (commonly 2400–7200 px, up to ~29 MP) — but ONLY for open-access records; in-copyright
+    /// ("All Rights Reserved") records return HTTP 500 for `/full`. `/full` can't be HEAD-probed (403)
+    /// and weserv can't proxy it (404), but it embeds directly (no hotlink protection) and a 1-byte
+    /// ranged GET cleanly distinguishes availability (206/200 vs 500) without downloading the image.
+    ///
+    /// So: probe `/full` with a ranged GET; serve it directly when present (always ≥ `/preview` for the
+    /// records that have it); otherwise fall back to the weserv-proxied `/preview` (the prior behaviour,
+    /// which also normalises any hotlink/format issues for in-copyright records). Falls back to weserv
+    /// `/preview` on any unexpected URL shape or probe failure.
+    private static func tePapaLargest(_ result: NZRecordsResult, _ url: URL) async -> String {
+        let preview = url.absoluteString
+
+        guard preview.contains("media.tepapa.govt.nz"), preview.hasSuffix("/preview") else {
+            return weservProxy(result, url)
+        }
+
+        let full = String(preview.dropLast("/preview".count)) + "/full"
+        let status = await NetworkRequestManager().rangeStatusFollowingRedirects(endpoint: full)
+
+        if status == 200 || status == 206 {
+            return full
+        }
+
+        return weservProxy(result, url)
     }
 
     /// Proxy through images.weserv.nl at native resolution (bypasses hotlink

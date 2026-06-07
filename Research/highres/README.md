@@ -6,8 +6,8 @@ these files.
 
 ## Current resume state (updated 2026-06-07)
 
-**Wellington removal: done.** Collections **1–20 terminal** (and **Howick 17 RE-DONE** — see below);
-**NEXT → order 21: Te Papa Collections Online** (weserv proxy, Group A re-check).
+**Wellington removal: done.** Collections **1–21 terminal** (and **Howick 17 RE-DONE** — see below);
+**NEXT → order 22: Auckland Museum Collections** (cloudimg, Group A re-check).
 `progress.json` is authoritative; this is a human summary.
 
 | # | collection | platform | outcome |
@@ -33,14 +33,14 @@ these files.
 | 18 | Mataura Museum NZMuseums | eHive | committed ADD — new `ehiveIIIFLargest` (IIIF `/full/full/` master TIFF, 1.56×–36×; 28/28 win) |
 | 19 | New Zealand Portrait Gallery NZMuseums | eHive | committed ADD — `ehiveIIIFLargest` (24/24 win, 1.27×–49.3×, up to 21 MP; no anomalies) |
 | 20 | Waimate Museum and Archives PastPerfect | pastPerfect | no-improvement — PPO display capped at 950px; true originals exist as 403-locked S3 upload zips (`imageuploads2/0000001110/`). User to seek access |
+| 21 | Te Papa Collections Online | tepapa media | committed — new `tePapaLargest`: ranged-GET probe → `/full` direct for ~62% open-access (21–97 MP), weserv `/preview` unchanged for in-copyright |
 
-**Next up (order 21) — Te Papa Collections Online** (Group A re-check; **weserv proxy**; rawItemCount
-365,674; currently `case "Te Papa Collections Online"` in the legacy switch → weserv proxy of
-`large_thumbnail_url`). Per the Discovery Playbook: check whether Te Papa's source (collections.tepapa
-/ the `*.tepapa.govt.nz` image host or its IIIF/`/preview`→`/full`) yields more than the weserv-proxied
-harvested URL; measure decoded area of the current weserv output vs any larger native. The eHive cluster
-(17–19) is COMPLETE; Waimate (20, PastPerfect) is no-improvement (950px PPO cap; true originals are
-403-locked S3 upload zips at `imageuploads2/0000001110/` — re-check only if access is granted).
+**Next up (order 22) — Auckland Museum Collections** (Group A re-check; **cloudimg**; rawItemCount
+257,891; legacy switch: calls `collection-publicapi.aucklandmuseum.com/api/v3/opacobjects/<landingId>`,
+extracts `object_av_link`, serves via cloudimg with `height=1000`). Hypothesis (from the plan): **drop
+the `height=1000` cap and add `org_if_sml=1`** for native resolution. Run the Discovery Playbook: check
+the publicapi for a native/original AV link, measure cloudimg native vs the current 1000px-tall output.
+Te Papa (21) is done: `/full` 21–97 MP for open-access via a ranged-GET probe (see recipes `tePapaLargest`).
 
 **★ eHive lesson (CORRECTED 2026-06-07 — the order-17 Howick conclusion was WRONG):** the `_l` (800px)
 suffix is NOT the ceiling. eHive runs a **public IIIF Image API 2.0 service over the master TIFF** at
@@ -67,11 +67,12 @@ Ara 11). Reusable registry helpers: `flickrLargest` (`_b` swap), `flickrLandingL
 **Legacy `switch` remaining (NOT yet migrated to the registry)** — these are the still-untouched
 collections (each migrates to the registry as it's processed): Tāmiro (sole recollect occupant,
 no-improvement), Auckland Libraries Heritage (thumbnailer), Auckland Museum (cloudimg),
-Canterbury/Culture Waitaki (large→xlarge), Te Papa (weserv), passthrough group (Antarctica, National
+Canterbury/Culture Waitaki (large→xlarge), passthrough group (Antarctica, National
 Publicity, South Canterbury, Waimate, Te Toi Uku, Te Hikoi, V.C. Browne), TAPUHI
 (fetchTapuhiHighResUrl), Hawke's Bay (weserv), Auckland Art Gallery (medium→xlarge), National Army
 Museum (og:image→downloadwiz). Migrated to the registry so far: all Recollect (1–10), all Flickr
-(11–15), Kura (16), **eHive (Howick 17, Mataura 18, NZ Portrait Gallery 19) via `ehiveIIIFLargest`**.
+(11–15), Kura (16), **eHive (Howick 17, Mataura 18, NZ Portrait Gallery 19) via `ehiveIIIFLargest`**,
+**Te Papa (21) via `tePapaLargest`**.
 
 **Reusable strategies in `URLProcessor` (registry):** `recollectLargest` (HEAD-probe `downloadwiz`
 → master, else `-max`; for instances WITH masters), `recollectDisplayMax` (rip id → `-max`, no
