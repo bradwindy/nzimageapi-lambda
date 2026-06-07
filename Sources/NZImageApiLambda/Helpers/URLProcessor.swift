@@ -138,29 +138,6 @@ final class URLProcessor: Sendable {
         }
 
         switch collection {
-        case "Auckland Libraries Heritage Images Collection":
-            return try await handleUrl(
-                result: result,
-                urlModifier: { url in
-                    guard let escapedUrlString = url
-                        .absoluteString
-                        .addingPercentEncoding(
-                            withAllowedCharacters: .urlHostAllowed
-                        )
-                    else {
-                        throw URLProcessorError(
-                            kind: .unableToEscapeUrl,
-                            data: ["result": result.customDescription()]
-                        )
-                    }
-
-                    let baseUrlString = "https://thumbnailer.digitalnz.org/?format=jpeg&src="
-                    let finalUrlString = baseUrlString + escapedUrlString
-
-                    return finalUrlString
-                }
-            )
-
         case "Canterbury Museum",
              "Culture Waitaki":
             return try await handleUrl(

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-07T01:40:00Z",
+  "lastUpdated": "2026-06-07T02:30:00Z",
   "removal": {
     "collection": "Wellington City Recollect",
     "status": "done"
@@ -498,21 +498,22 @@
       "slug": "auckland-libraries-heritage-images-collection",
       "group": "A",
       "platform": "thumbnailerProxy",
-      "rawItemCount": 36228,
+      "rawItemCount": 17787,
       "weight": null,
-      "status": "todo",
+      "status": "blocked",
+      "removedFromLambda": true,
       "baseline": {
-        "method": "thumbnailer.digitalnz.org jpeg",
-        "px": null
+        "method": "BROKEN: thumbnailer proxy of large_thumbnail_url, but the harvest is fully degraded (large_thumbnail_url null for ALL records) -> checkHasTitleAndLargeImage throws -> hard failure on every request",
+        "px": "n/a (no image URL harvested)"
       },
       "chosen": {
-        "method": null,
+        "method": "blocked + REMOVED from Lambda (user decision 2026-06-07). DigitalNZ harvest degraded to zombies (null image URLs, generic landing); content already served at higher res by Kura Heritage Collections Online (order 16).",
         "px": null,
         "urlPattern": null
       },
       "commit": null,
       "log": "logs/023-auckland-libraries-heritage-images-collection.md",
-      "notes": ""
+      "notes": "0/700 sampled records (pages 1/2/5/20/50/100/150) have any image URL; all share the generic landing kura.aucklandlibraries.govt.nz/digital/collection/photos; only a legacy dc_identifier remains. Old aucklandcity/Matapihi harvest, migrated to Kura CONTENTdm 'photos' collection = 'Kura Heritage Collections Online' (order 16, content_partner Auckland Libraries, 390k records, working IIIF /full/max/ 2000px). Was weight 0.182 (LARGEST entry) -> ~18% of traffic hard-failing (checkHasTitleAndLargeImage throws on nil largeThumbnailUrl; no retry loop). USER DECISION: REMOVED (collectionWeights + legacy switch case). thumbnailerProxy helper left (seeded, unreferenced). WEIGHT NOTE: removing 0.182 leaves sum ~0.818 until the final renormalization pass. swift build 0; regression CollectionTester 'Canterbury Museum' (switch path) HTTP 200. FOLLOW-UP: re-add only if DigitalNZ re-harvests live image URLs, but it would duplicate order 16."
     },
     {
       "order": 24,

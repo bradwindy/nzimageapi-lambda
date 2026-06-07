@@ -331,7 +331,15 @@ hard-coded per collection.
 
 ### thumbnailerProxy (thumbnailer.digitalnz.org)
 - `https://thumbnailer.digitalnz.org/?format=jpeg&src=<urlenc>`.
-- **Collection:** Auckland Libraries Heritage.
+- **Collection:** ~~Auckland Libraries Heritage~~ — REMOVED (order 23, 2026-06-07): its DigitalNZ
+  harvest is fully degraded (every record has a null `large_thumbnail_url` + a generic landing URL), so
+  it hard-failed on every request; the same Auckland Libraries photos are served at higher resolution by
+  **Kura Heritage Collections Online (order 16)** (the live Kura CONTENTdm `photos` collection). The
+  `thumbnailerProxy` helper remains as a seeded reusable recipe (currently unreferenced).
+- **General lesson:** when a Group A collection's harvest has gone all-null (`large_thumbnail_url` null
+  across a uniform multi-page sample), it is unservable (`checkHasTitleAndLargeImage` throws, no retry)
+  and should be removed unless its content isn't already covered elsewhere. Check whether the source
+  migrated to a platform already served (here: Matapihi/aucklandcity → Kura CONTENTdm).
 
 ### objectUrlDirect
 - Use `result.objectUrl` directly when it is the full-res original.

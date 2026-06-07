@@ -28,7 +28,6 @@ public struct NZImageApi: Sendable {
 
     // Collection weights are not yet final
     public static let collectionWeights: OrderedDictionary = [
-        "Auckland Libraries Heritage Images Collection": 0.182,
         "Auckland Museum Collections": 0.162,
         "Te Papa Collections Online": 0.119,
         "Kura Heritage Collections Online": 0.116,
