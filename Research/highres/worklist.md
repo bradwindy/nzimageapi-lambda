@@ -47,7 +47,7 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 - [x] (23) Auckland Libraries Heritage Images Collection — group A — platform thumbnailerProxy — blocked
 
 ### tapuhi
-- [ ] (25) TAPUHI — group A — platform tapuhi — todo
+- [ ] (25) TAPUHI — group A — platform tapuhi — held-for-converter
 
 ### stringSwap
 - [ ] (26) Canterbury Museum — group A — platform stringSwap — todo

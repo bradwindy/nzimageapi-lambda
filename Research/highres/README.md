@@ -6,8 +6,9 @@ these files.
 
 ## Current resume state (updated 2026-06-07)
 
-**Wellington removal: done.** Collections **1–21 terminal** (and **Howick 17 RE-DONE** — see below);
-**NEXT → order 22: Auckland Museum Collections** (cloudimg, Group A re-check).
+**Wellington removal: done.** Collections **1–24 terminal** (Howick 17 RE-DONE). **Order 25 (TAPUHI) is
+HELD** pending a self-hosted JP2→JPEG converter the user is building in a **fork** — the per-collection
+sweep is **PAUSED here per the user; do NOT auto-proceed to order 26, and do NOT re-investigate TAPUHI.**
 `progress.json` is authoritative; this is a human summary.
 
 | # | collection | platform | outcome |
@@ -34,13 +35,24 @@ these files.
 | 19 | New Zealand Portrait Gallery NZMuseums | eHive | committed ADD — `ehiveIIIFLargest` (24/24 win, 1.27×–49.3×, up to 21 MP; no anomalies) |
 | 20 | Waimate Museum and Archives PastPerfect | pastPerfect | no-improvement — PPO display capped at 950px; true originals exist as 403-locked S3 upload zips (`imageuploads2/0000001110/`). User to seek access |
 | 21 | Te Papa Collections Online | tepapa media | committed — new `tePapaLargest`: ranged-GET probe → `/full` direct for ~62% open-access (21–97 MP), weserv `/preview` unchanged for in-copyright |
+| 22 | Auckland Museum Collections | aklMuseumCloudimg | committed — **fixed broken pipeline** (J: prefix + unencoded path → 404 for all); `aklMuseumCloudimg` strips drive prefix + percent-encodes the `object_av_link`, `org_if_sml=1` native master (0.36–71 MP) |
+| 23 | Auckland Libraries Heritage Images | thumbnailer | **blocked + REMOVED** — DigitalNZ harvest fully degraded (0/700 have any image URL; hard-fails every request; was weight 0.182 = largest). Content already served by Kura Heritage (order 16) at full IIIF res |
+| 24 | Hawke's Bay Knowledge Bank | knowledgeBankMaster | committed — **fixed broken weserv** (weserv 404s on its CDN); new `knowledgeBankMaster` scrapes landing for the honest `/master/` original (up to 76 MP), direct; honest harvested fallback (never the upscaled `/images/<base>.jpg` rendition) |
+| 25 | TAPUHI | ndha (Rosetta JP2) | **HELD-FOR-CONVERTER** — current strategy BROKEN (weserv can't decode the 8 MP JP2 master → 404); JP2 unsupported by ~98% of browsers; no free JP2→JPEG proxy exists; Pillow proven to convert. User forking to build a Python+Pillow converter Lambda. See `logs/025-tapuhi.md` |
 
-**Next up (order 22) — Auckland Museum Collections** (Group A re-check; **cloudimg**; rawItemCount
-257,891; legacy switch: calls `collection-publicapi.aucklandmuseum.com/api/v3/opacobjects/<landingId>`,
-extracts `object_av_link`, serves via cloudimg with `height=1000`). Hypothesis (from the plan): **drop
-the `height=1000` cap and add `org_if_sml=1`** for native resolution. Run the Discovery Playbook: check
-the publicapi for a native/original AV link, measure cloudimg native vs the current 1000px-tall output.
-Te Papa (21) is done: `/full` 21–97 MP for open-access via a ranged-GET probe (see recipes `tePapaLargest`).
+**⛔ Order 25 (TAPUHI) is HELD — sweep PAUSED here.** The shipped TAPUHI strategy is broken (it resolves
+the 8 MP JP2 preservation master, then weserv-proxies it, but **weserv cannot decode JP2 → HTTP 404**).
+JP2 is unsupported by ~98% of browsers (Chrome/FF/Edge never; Safari removed it in v18+), so the master
+can't be served raw, and **no free/keyless JP2→JPEG proxy exists** (weserv no-JP2; thumbnailer.digitalnz.org
+is DEAD/NXDOMAIN; cloudimg account-locked; Cloudinary demo disabled; Photon/imagecdn/statically fail; no
+natlib IIIF; Rosetta ignores scaling). **Pillow is proven to decode the NDHA JP2 → full 8 MP JPEG**, so the
+user is **forking this conversation to build a self-hosted Python+Pillow converter Lambda** (Function URL;
+browser hits it; main API stays a URL-builder). Full architecture + wiring steps in `logs/025-tapuhi.md`.
+**Do not auto-proceed to order 26 and do not re-investigate TAPUHI** until the user resumes. If the
+converter is abandoned, the fallback is passthrough of the 700 px `NLNZStreamGate` access copy.
+
+**Also learned (order 25):** `thumbnailer.digitalnz.org` is **decommissioned (NXDOMAIN)** — the
+`thumbnailerProxy` recipe/helper is dead (helper is unreferenced; remove in the final cleanup).
 
 **★ eHive lesson (CORRECTED 2026-06-07 — the order-17 Howick conclusion was WRONG):** the `_l` (800px)
 suffix is NOT the ceiling. eHive runs a **public IIIF Image API 2.0 service over the master TIFF** at
