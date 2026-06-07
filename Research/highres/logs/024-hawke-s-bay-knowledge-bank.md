@@ -88,7 +88,8 @@ honest native original (often multi-MP, up to 76 MP). Honest pixels throughout (
 
 ## Commit
 
-(pending)
+`e905b72` — Hawke's Bay: serve honest /master/ original (up to 76 MP), fix broken weserv.
+User-approved 2026-06-07.
 
 ## Follow-up
 
