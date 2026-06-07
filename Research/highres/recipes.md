@@ -356,8 +356,35 @@ hard-coded per collection.
   extract `object_av_link` first value, split on `|`, replace `\`→`/`, serve via
   cloudimg. **Hypothesis:** drop `height=1000`, add `org_if_sml=1` for native res.
 
-### Verified findings (aklMuseumCloudimg)
-- _(append here)_
+### Verified findings (aklMuseumCloudimg, order 22, 2026-06-07)
+- **The shipped pipeline was BROKEN (404 for every record).** The old code built
+  `…/v7/_collectionsecure_/J:/Dir/…/X.jpg?c=11?ci_url_encoded=1&force_format=jpeg&height=1000`,
+  keeping the **`J:` drive prefix** and leaving the path **unencoded** while passing
+  `ci_url_encoded=1`. Every form 404s. The hypothesised `height=1000` upscale never even
+  reached a valid image.
+- **Harvested `large_thumbnail_url` changed** to
+  `collection-api.aucklandmuseum.com/records/images/medium/<id>/<hash>.jpg` = **400 px**.
+  Size tokens on that host: `small` 150, `medium` 400; `large`/`xlarge`/`full`/`original`/
+  `master`/`raw` → **403** (signed/private). So the harvested host caps the public image at 400 px.
+- **The working master route** (verified, what the landing page uses): take `object_av_link`
+  first value (e.g. `J:\DocumentaryHeritage\…\full\X.jpg|20||…`), `\`→`/`, **strip the leading
+  drive prefix `J:`** (the `_collectionsecure_` alias root maps to it), **percent-encode** the
+  path (`/`→`%2F`, space→`%20`), then:
+  `https://ajrctguoxo.cloudimg.io/v7/_collectionsecure_%2F<encoded>?ci_url_encoded=1&force_format=jpeg&org_if_sml=1`.
+- **`org_if_sml=1` + NO width/height = honest native master, no upscaling.** Verified across 22
+  records: native 0.36 MP → **71 MP** (7105×10015), 1.6×–471× the 400 px `medium`; `512 px`
+  masters stay 512 px (no fake upscale). cloudimg processed a 71 MP master fine (no obvious cap
+  hit, unlike weserv's 71 MP limit). The `?c=<cachebuster>` the site appends to the origin is
+  NOT required (omitted).
+- **No larger public source:** `media.aspx?id=…&hash=…` on the landing page → 404;
+  `collection-api` `large`/`full` tokens → 403. The cloudimg `_collectionsecure_` master (the
+  museum's own `full/` access master) is the ceiling.
+- **Per-request cost:** one bounded JSON GET to the public API (unchanged); never downloads the
+  image. Fall back to the harvested 400 px `medium` on nil landing id / API error / missing
+  `object_av_link` so output is always a valid 200.
+- **Tester artifact:** CollectionTester's 10 s HEAD times out on cloudimg's *cold* processing of
+  a large master → reports "HTTP 0"; a warm HEAD returns 200 in ~2.5 s and every GET is 200
+  image/jpeg. Treat slow large-master HEADs as PASS when GET confirms (per the plan).
 
 ---
 

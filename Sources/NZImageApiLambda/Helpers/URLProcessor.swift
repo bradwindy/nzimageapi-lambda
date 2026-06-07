@@ -114,6 +114,12 @@ final class URLProcessor: Sendable {
         "Te Papa Collections Online": { result, url in
             await tePapaLargest(result, url)
         },
+        "Auckland Museum Collections": { result, url in
+            // The harvested `large_thumbnail_url` is only the 400 px `medium` derivative. The object's
+            // master lives on the museum file server behind the cloudimg `_collectionsecure_` alias; the
+            // path comes from the public API's `object_av_link`. Serve it at native resolution.
+            await aklMuseumCloudimg(result, url)
+        },
     ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
@@ -152,51 +158,6 @@ final class URLProcessor: Sendable {
                     let finalUrlString = baseUrlString + escapedUrlString
 
                     return finalUrlString
-                }
-            )
-
-        case "Auckland Museum Collections":
-            return try await handleUrl(
-                result: result,
-                urlModifier: { url in
-                    var urlString = url.absoluteString
-
-                    if let tailRange = urlString.range(of: "?rendering=standard.jpg") {
-                        urlString.removeSubrange(tailRange)
-                    }
-
-                    guard let landingUrlString = result.landingUrl?.absoluteString,
-                          let landingId = landingUrlString.components(separatedBy: "/").last
-                    else {
-                        return urlString
-                    }
-
-                    let requestManager = NetworkRequestManager()
-
-                    let museumResponse: AKLMuseumResponse = try await requestManager.makeRequest(
-                        endpoint: "https://collection-publicapi.aucklandmuseum.com/api/v3/opacobjects/\(landingId)"
-                    )
-
-                    guard let unprocessedUrlStub = museumResponse
-                        .opacObjectFieldSets?
-                        .first(
-                            where: { fieldSet in
-                                fieldSet.identifier == "object_av_link"
-                            }
-                        )?
-                        .opacObjectFields?
-                        .first?
-                        .value,
-
-                        let processedUrlStub = unprocessedUrlStub
-                        .components(separatedBy: "|")
-                        .first?
-                        .replacingOccurrences(of: "\\", with: "/")
-                    else {
-                        return urlString
-                    }
-
-                    return "https://ajrctguoxo.cloudimg.io/v7/_collectionsecure_/\(processedUrlStub)?c=11?ci_url_encoded=1&force_format=jpeg&height=1000"
                 }
             )
 
@@ -519,6 +480,78 @@ final class URLProcessor: Sendable {
         }
 
         return weservProxy(result, url)
+    }
+
+    /// Auckland Museum Collections. The harvested `large_thumbnail_url` is only the 400 px `medium`
+    /// derivative (`collection-api.aucklandmuseum.com/records/images/medium/...`; the `large`/`full`
+    /// tokens 403). The object's master is on the museum file server, exposed publicly only through the
+    /// cloudimg `_collectionsecure_` storage alias (`ajrctguoxo.cloudimg.io`). The relative file path
+    /// comes from the public API's `object_av_link` field (e.g. `J:\DocumentaryHeritage\...\full\X.jpg`).
+    ///
+    /// To reach the master we must (1) take the av_link's first value (before `|`), (2) turn `\`→`/`,
+    /// (3) strip the leading drive letter (`J:`) — the alias root maps to it — and (4) percent-encode the
+    /// path. Requesting it with `org_if_sml=1` and NO width/height returns the honest native master (no
+    /// upscaling): observed 512 px – 8688×5792 (50 MP), i.e. 1.6×–471× the 400 px `medium`.
+    ///
+    /// NB: this fixes a long-standing bug — the previous code left the `J:` prefix in and did not encode
+    /// the path, so cloudimg 404'd for EVERY record (the Lambda was serving a broken URL). On any failure
+    /// (nil landing id, API/network error, missing `object_av_link`) it falls back to the harvested
+    /// `large_thumbnail_url` (the 400 px medium) so the output is always a valid 200 image.
+    private static func aklMuseumCloudimg(_ result: NZRecordsResult, _ url: URL) async -> String {
+        let fallback = url.absoluteString
+
+        guard let landingId = result.landingUrl?.absoluteString
+            .split(separator: "/").last.map(String.init)
+        else {
+            return fallback
+        }
+
+        let avLinkFirstValue: String
+        do {
+            let museumResponse: AKLMuseumResponse = try await NetworkRequestManager().makeRequest(
+                endpoint: "https://collection-publicapi.aucklandmuseum.com/api/v3/opacobjects/\(landingId)"
+            )
+            guard let value = museumResponse
+                .opacObjectFieldSets?
+                .first(where: { $0.identifier == "object_av_link" })?
+                .opacObjectFields?
+                .first?
+                .value
+            else {
+                return fallback
+            }
+            avLinkFirstValue = value
+        } catch {
+            return fallback
+        }
+
+        // "J:\Dir\Sub\full\File.jpg|20||Rights..." -> "J:/Dir/Sub/full/File.jpg"
+        guard var path = avLinkFirstValue
+            .split(separator: "|").first.map(String.init)?
+            .replacingOccurrences(of: "\\", with: "/")
+        else {
+            return fallback
+        }
+
+        // Strip a leading drive prefix ("J:" / "J:/"); the alias root maps to it.
+        if path.count >= 2, path[path.index(path.startIndex, offsetBy: 1)] == ":" {
+            path = String(path.dropFirst(2))
+        }
+        while path.hasPrefix("/") {
+            path = String(path.dropFirst())
+        }
+        guard !path.isEmpty else { return fallback }
+
+        // Percent-encode the path (so "/" -> "%2F", spaces etc. encoded) for cloudimg's
+        // `ci_url_encoded=1` decode. Encode everything except RFC 3986 unreserved characters.
+        var allowed = CharacterSet.alphanumerics
+        allowed.insert(charactersIn: "-._~")
+        guard let encoded = path.addingPercentEncoding(withAllowedCharacters: allowed) else {
+            return fallback
+        }
+
+        return "https://ajrctguoxo.cloudimg.io/v7/_collectionsecure_%2F\(encoded)"
+            + "?ci_url_encoded=1&force_format=jpeg&org_if_sml=1"
     }
 
     /// Proxy through images.weserv.nl at native resolution (bypasses hotlink

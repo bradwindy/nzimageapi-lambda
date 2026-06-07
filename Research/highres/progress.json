@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-07T00:11:39Z",
+  "lastUpdated": "2026-06-07T01:40:00Z",
   "removal": {
     "collection": "Wellington City Recollect",
     "status": "done"
@@ -476,21 +476,21 @@
       "slug": "auckland-museum-collections",
       "group": "A",
       "platform": "aklMuseumCloudimg",
-      "rawItemCount": 257891,
+      "rawItemCount": 267102,
       "weight": null,
-      "status": "todo",
+      "status": "committed",
       "baseline": {
-        "method": "cloudimg height=1000 via publicapi",
-        "px": null
+        "method": "BROKEN: shipped cloudimg URL kept the J: drive prefix + left the path unencoded -> HTTP 404 for EVERY record (height=1000 upscale never reached)",
+        "px": "404 (broken); harvested large_thumbnail_url is the 400px 'medium' derivative"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "aklMuseumCloudimg: corrected cloudimg _collectionsecure_ master (strip J: drive prefix, percent-encode path) at native res via org_if_sml=1 (honest, no upscale). Migrated legacy switch -> registry.",
+        "px": "native master 0.36-71 MP (1.6x-471x the 400px medium; e.g. 8688x5792 = 50 MP, 7105x10015 = 71 MP). Falls back to the 400px medium on nil landing / API error / missing av_link.",
+        "urlPattern": "https://ajrctguoxo.cloudimg.io/v7/_collectionsecure_%2F<urlencoded av_link path, drive prefix stripped>?ci_url_encoded=1&force_format=jpeg&org_if_sml=1"
       },
       "commit": null,
       "log": "logs/022-auckland-museum-collections.md",
-      "notes": ""
+      "notes": "Re-investigation found the harvested large_thumbnail_url changed to collection-api.aucklandmuseum.com/records/images/medium/... (400px; large/full/original tokens 403). The shipped publicapi->cloudimg pipeline is BROKEN (J: prefix + unencoded path -> 404 for all). Landing page reveals the working format: strip J:, percent-encode path, _collectionsecure_ alias over the museum file server's full/ master. org_if_sml=1 + no width/height = honest native master. 18-record uniform sample 18/18 win (1.6x-471x); tester x4 GET-verified 200 image/jpeg (800x464, 7105x10015=71MP, 512x704, 5792x8688=50MP). Tester HEAD (10s) times out on cold cloudimg large-master processing -> HTTP 0 ARTIFACT (warm HEAD 200 in 2.5s); GET confirms 200. swift build 0. AWAITING USER APPROVAL."
     },
     {
       "order": 23,
