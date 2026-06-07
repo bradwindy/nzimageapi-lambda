@@ -69,7 +69,8 @@ resolution by order 16).
 
 ## Commit
 
-(pending)
+`6edb680` — Remove Auckland Libraries Heritage Images Collection (dead harvest, superseded by Kura).
+User-approved 2026-06-07.
 
 ## Follow-up
 

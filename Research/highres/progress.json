@@ -511,7 +511,7 @@
         "px": null,
         "urlPattern": null
       },
-      "commit": null,
+      "commit": "6edb680",
       "log": "logs/023-auckland-libraries-heritage-images-collection.md",
       "notes": "0/700 sampled records (pages 1/2/5/20/50/100/150) have any image URL; all share the generic landing kura.aucklandlibraries.govt.nz/digital/collection/photos; only a legacy dc_identifier remains. Old aucklandcity/Matapihi harvest, migrated to Kura CONTENTdm 'photos' collection = 'Kura Heritage Collections Online' (order 16, content_partner Auckland Libraries, 390k records, working IIIF /full/max/ 2000px). Was weight 0.182 (LARGEST entry) -> ~18% of traffic hard-failing (checkHasTitleAndLargeImage throws on nil largeThumbnailUrl; no retry loop). USER DECISION: REMOVED (collectionWeights + legacy switch case). thumbnailerProxy helper left (seeded, unreferenced). WEIGHT NOTE: removing 0.182 leaves sum ~0.818 until the final renormalization pass. swift build 0; regression CollectionTester 'Canterbury Museum' (switch path) HTTP 200. FOLLOW-UP: re-add only if DigitalNZ re-harvests live image URLs, but it would duplicate order 16."
     },
