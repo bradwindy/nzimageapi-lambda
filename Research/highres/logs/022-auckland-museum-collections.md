@@ -96,4 +96,5 @@ standing preference.
 
 ## Commit
 
-(pending user approval)
+`8544483` — Auckland Museum: fix broken cloudimg pipeline, serve native master (0.36-71 MP).
+User-approved 2026-06-07.
