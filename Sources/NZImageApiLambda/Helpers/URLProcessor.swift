@@ -120,6 +120,12 @@ final class URLProcessor: Sendable {
             // path comes from the public API's `object_av_link`. Serve it at native resolution.
             await aklMuseumCloudimg(result, url)
         },
+        "Hawke's Bay Knowledge Bank": { result, url in
+            // The harvested `…-800x525.jpg` is an 800 px derivative; the CDN also has a true `/master/`
+            // original (honest native). Scrape the landing page for it; fall back to the 800 px harvested
+            // URL when no master is published (never the upscaled fixed `/images/<base>.jpg` rendition).
+            await knowledgeBankMaster(result, url)
+        },
     ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
@@ -181,36 +187,6 @@ final class URLProcessor: Sendable {
                 result: result,
                 urlModifier: { url in
                     try await Self.fetchTapuhiHighResUrl(from: url)
-                }
-            )
-
-        case "Hawke's Bay Knowledge Bank":
-            return try await handleUrl(
-                result: result,
-                urlModifier: { url in
-                    var urlString = url.absoluteString
-
-                    if urlString.numberOfOccurrences(of: "-") > 1 {
-                        let dashPosition = urlString.count - 12
-
-                        let startIndex = urlString.index(
-                            urlString.startIndex,
-                            offsetBy: dashPosition
-                        )
-
-                        let endIndex = urlString.index(
-                            urlString.startIndex,
-                            offsetBy: dashPosition + 7
-                        )
-
-                        urlString.removeSubrange(startIndex ... endIndex)
-                    }
-
-                    // Use images.weserv.nl proxy to bypass hotlinking protection
-                    guard let escapedUrl = urlString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else {
-                        return urlString
-                    }
-                    return "https://images.weserv.nl/?url=\(escapedUrl)"
                 }
             )
 
@@ -529,6 +505,94 @@ final class URLProcessor: Sendable {
 
         return "https://ajrctguoxo.cloudimg.io/v7/_collectionsecure_%2F\(encoded)"
             + "?ci_url_encoded=1&force_format=jpeg&org_if_sml=1"
+    }
+
+    /// Hawke's Bay Knowledge Bank (`cdn.knowledgebank.org.nz/node/<id>/images/<base>-WxH.jpg`). The
+    /// harvested URL is an 800 px-bounded derivative. The CDN serves three tiers:
+    ///   - `…/images/<base>-WxH.jpg` — fixed-size derivatives (the harvest gives the 800 px one),
+    ///   - `…/images/<base>.jpg` — a fixed 1400/1800 px rendition that **upscales** small originals
+    ///     (fake interpolated pixels), and
+    ///   - `…/master/<OriginalCaseName>.jpg` — the **true original** (honest native, variable size).
+    ///
+    /// We serve the honest native master. Its filename can't be built by string-munging the harvest —
+    /// the `/images/` derivative is named either after a lowercased original name OR after the node id
+    /// (`46746-800x538.jpg`), while the master keeps the original upload casing/name — so it must be read
+    /// from the object page. Fetch the landing page (forced to the `www` host, which reliably lists the
+    /// CDN links) and collect the `/node/<id>/master/…` links: if there is exactly one (single-image
+    /// record), use it; if several (multi-image record), pick the one whose stem matches the harvested
+    /// base (case-insensitively; the `/images/` base may carry a trailing `-<n>` variant the master
+    /// lacks). Serve it directly (weserv 404s on this CDN; the CDN has no hotlink protection).
+    ///
+    /// Fallback (no landing URL / fetch fails / no published master / ambiguous multi-master with no
+    /// stem match): the harvested 800 px URL itself — honest and never upscaled (we deliberately do NOT
+    /// fall back to the fixed `/images/<base>.jpg` rendition, which is fake pixels for small originals;
+    /// note the 800 px derivative can itself be a mild upscale, but it is what the harvest provides). This
+    /// also fixes the prior shipped strategy, which weserv-proxied the URL and so returned HTTP 404 for
+    /// every record (weserv cannot fetch from this CDN).
+    private static func knowledgeBankMaster(_ result: NZRecordsResult, _ url: URL) async -> String {
+        let harvested = url.absoluteString
+
+        // Path shape: /node/<nodeId>/images/<file>
+        let parts = url.pathComponents.filter { $0 != "/" }   // [node, <id>, images, <file>]
+        guard harvested.contains("cdn.knowledgebank.org.nz"),
+              parts.count >= 4, parts[0] == "node", parts[2] == "images",
+              let landing = result.landingUrl
+        else {
+            return harvested
+        }
+        let nodeId = parts[1]
+        let filename = url.lastPathComponent
+
+        // Drop the .jpg/.jpeg extension (the harvest is always a JPEG derivative).
+        let stem = filename.replacingOccurrences(
+            of: #"\.jpe?g$"#, with: "", options: [.regularExpression, .caseInsensitive]
+        )
+        guard stem != filename else { return harvested }   // not a .jpg — unexpected shape
+        // base = stem minus any "-WxH[-n]" size suffix (the harvest may be `<base>-800x525`,
+        // `<base>-800x565-1`, or already the bare `<base>` with no size suffix).
+        let base = stem.replacingOccurrences(
+            of: #"-\d+x\d+(-\d+)?$"#, with: "", options: [.regularExpression, .caseInsensitive]
+        )
+        // Variant with any trailing "-<digits>" removed (the master often omits it).
+        let baseVariant = base.replacingOccurrences(
+            of: #"-\d+$"#, with: "", options: .regularExpression
+        )
+        let wanted = Set([base.lowercased(), baseVariant.lowercased()])
+
+        // The landing page reliably exposes the CDN links on the www host.
+        let landingURL = landing.absoluteString
+            .replacingOccurrences(of: "https://knowledgebank.org.nz", with: "https://www.knowledgebank.org.nz")
+        guard let html = try? await NetworkRequestManager().fetchHTML(endpoint: landingURL) else {
+            return harvested
+        }
+
+        let pattern = "https://cdn\\.knowledgebank\\.org\\.nz/node/\(nodeId)/master/([^\"' <>]+?)\\.(?:jpg|jpeg|png)"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+            return harvested
+        }
+
+        // Collect the distinct master links for this node (preserving order).
+        let nsString = html as NSString
+        var masters: [(url: String, stem: String)] = []
+        regex.enumerateMatches(in: html, range: NSRange(location: 0, length: nsString.length)) { match, _, _ in
+            guard let match else { return }
+            let full = nsString.substring(with: match.range)
+            guard !masters.contains(where: { $0.url == full }) else { return }
+            masters.append((full, nsString.substring(with: match.range(at: 1)).lowercased()))
+        }
+
+        if masters.count == 1 {
+            // Single-image record: the sole master is this record's original.
+            return masters[0].url
+        }
+        if masters.count > 1 {
+            // Multi-image record: disambiguate by stem.
+            if let hit = masters.first(where: { wanted.contains($0.stem) }) {
+                return hit.url
+            }
+        }
+
+        return harvested
     }
 
     /// Proxy through images.weserv.nl at native resolution (bypasses hotlink

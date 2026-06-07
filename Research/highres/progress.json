@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-07T02:30:00Z",
+  "lastUpdated": "2026-06-07T03:30:00Z",
   "removal": {
     "collection": "Wellington City Recollect",
     "status": "done"
@@ -520,22 +520,22 @@
       "name": "Hawke's Bay Knowledge Bank",
       "slug": "hawke-s-bay-knowledge-bank",
       "group": "A",
-      "platform": "weservProxy",
-      "rawItemCount": 29060,
+      "platform": "knowledgeBankMaster",
+      "rawItemCount": 29050,
       "weight": null,
-      "status": "todo",
+      "status": "committed",
       "baseline": {
-        "method": "weserv proxy (dash strip)",
-        "px": null
+        "method": "BROKEN: strip -WxH suffix then weserv proxy, but weserv 404s on cdn.knowledgebank.org.nz -> HTTP 404 for EVERY record",
+        "px": "404 (broken); harvested is the ~800px /images/<base>-WxH.jpg derivative"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "knowledgeBankMaster: scrape the www landing for the honest /master/ original, serve direct; fall back to the harvested URL (direct) when no master. NEVER the upscaled /images/<base>.jpg rendition. User chose 'master-first, 800px fallback' 2026-06-07. Migrated legacy switch -> registry.",
+        "px": "honest native master where published (~half of records; 648px..10575x7232=76.5MP observed); honest harvested ~800px otherwise. All served DIRECT (fixes broken weserv).",
+        "urlPattern": "https://cdn.knowledgebank.org.nz/node/<id>/master/<OrigCaseName>.jpg (scraped) OR harvested /images/<base>-WxH.jpg"
       },
       "commit": null,
       "log": "logs/024-hawke-s-bay-knowledge-bank.md",
-      "notes": ""
+      "notes": "CDN tiers: /images/<base>-WxH.jpg (harvest, ~800px); /images/<base>.jpg (FIXED 1400/1800px rendition that UPSCALES small originals = fake pixels, e.g. node 371784 1800x1689 fake vs master 648x608); /master/<OrigCaseName>.jpg (true honest native, variable). weserv 404s on this CDN (both deriv+orig) so the shipped strip+weserv strategy returned 404 for every record -> serve DIRECT (no hotlink). Master filename keeps original casing/name (the /images/ name is lowercased OR node-id-named e.g. 46746-800x538.jpg) so master URL must be SCRAPED from the www landing (bare host can omit links). Match: single /node/<id>/master link -> use it; multiple -> stem-match base (or -N-stripped variant). 20-sample: master published 11/20 (9 bigger than 800, 2 honest-smaller); 9/20 no master (spillerp/hillca batches) -> honest harvested fallback. swift build 0; CollectionTester ~19 runs all HTTP200 (master 76.5MP/1412x949/honest-800; fallback honest harvested). Group A weight 0.029 unchanged. FOLLOW-UP: master availability is batch-dependent; records auto-upgrade if KB publishes more masters."
     },
     {
       "order": 25,

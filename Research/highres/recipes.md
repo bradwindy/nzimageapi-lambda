@@ -305,7 +305,27 @@ hard-coded per collection.
   `output=webp|jpg`. **Cannot do JP2.** Hotlink bypass + format convert.
 - `https://images.weserv.nl/?url=<urlenc-without-scheme-ok>`; add
   `&output=webp` to force WebP.
-- **Collections:** Te Papa, Hawke's Bay.
+- **Collections:** Te Papa. ~~Hawke's Bay~~ — moved off weserv (see below; weserv 404s on its CDN).
+
+### Verified findings (Hawke's Bay Knowledge Bank, order 24, 2026-06-07) — `knowledgeBankMaster`
+- **The shipped `strip-suffix + weserv` strategy was BROKEN:** **weserv 404s on
+  `cdn.knowledgebank.org.nz`** (both the derivative and the original) → HTTP 404 for every record. The
+  CDN has **no hotlink protection** (direct GET, no referer → 200) ⇒ serve **direct**, not via weserv.
+- **Three CDN tiers** under `cdn.knowledgebank.org.nz/node/<id>/`: `images/<base>-WxH.jpg` (fixed
+  derivatives; harvest = ~800 px); `images/<base>.jpg` (a **fixed 1400/1800 px rendition that UPSCALES
+  small originals → fake pixels**, e.g. 1800×1689 from a 648×608 master); `master/<OrigCaseName>.jpg`
+  (the **true honest native** original, variable size — 648 px up to 10575×7232 = 76.5 MP; published for
+  ~half the records, batch-dependent).
+- **The master URL must be SCRAPED** from the landing page: its filename keeps the original upload
+  casing/name, while the `/images/` name is lowercased OR named after the **node id**
+  (`46746-800x538.jpg`) — neither lets you build the master by string-munging. Fetch the landing on the
+  **`www`** host (the bare host can return a page without the CDN links). Match: **exactly one
+  `/node/<id>/master/…` link → use it** (single-image record, handles the node-id-named case);
+  **several → stem-match** the harvested base (case-insensitive; the `/images/` base may carry a trailing
+  `-<n>` the master omits).
+- **User chose "master-first, 800 px fallback"** (purest honest-native): serve `/master/` when present,
+  else the harvested URL — **never** the upscaled `/images/<base>.jpg` rendition. Consistent with the
+  Kura 16 / eHive 17 honest-native decisions.
 
 ### Verified findings (Te Papa, order 21, 2026-06-07) — `tePapaLargest`
 - **`media.tepapa.govt.nz/collection/<id>/{thumb|preview|full}`** (303-redirects to S3

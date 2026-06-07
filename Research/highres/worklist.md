@@ -6,7 +6,7 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 ## Removal
 - [x] REMOVE Wellington City Recollect — done
 
-## Collections (23/52 terminal)
+## Collections (24/52 terminal)
 
 ### recollect
 - [x] (01) Tauranga City Libraries Other Collection — group A — platform recollect — committed
@@ -39,7 +39,6 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 
 ### weservProxy
 - [x] (21) Te Papa Collections Online — group A — platform weservProxy — committed
-- [ ] (24) Hawke's Bay Knowledge Bank — group A — platform weservProxy — todo
 
 ### aklMuseumCloudimg
 - [x] (22) Auckland Museum Collections — group A — platform aklMuseumCloudimg — committed
@@ -83,3 +82,6 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 
 ### ndha
 - [x] (03) National Publicity Studios black and white file prints — group A — platform ndha — no-improvement
+
+### knowledgeBankMaster
+- [x] (24) Hawke's Bay Knowledge Bank — group A — platform knowledgeBankMaster — committed
