@@ -466,7 +466,7 @@
         "px": "open-access (~62%): /full 21-97 MP (e.g. 11478x8478 = 97 MP, 131x; 7207x4075 = 29 MP); in-copyright (~38%): unchanged weserv(/preview) <=1MP. /full always >= /preview.",
         "urlPattern": "https://media.tepapa.govt.nz/collection/<id>/full (open-access) OR weserv(/preview)"
       },
-      "commit": null,
+      "commit": "2a60817",
       "log": "logs/021-te-papa-collections-online.md",
       "notes": "media.tepapa.govt.nz/collection/<id>/{thumb|preview|full}; 303->S3 co3-api-mediastorage. /full = the big master but ONLY for open-access records (rights facet: ~62% open = CC BY 147k + No Known Copyright 69k + CC BY-NC-ND 23k + small CC; ~38% All Rights Reserved 149k + Copyright Te Papa -> /full HTTP 500). /full can't be HEAD-probed (403) and weserv can't proxy it (404), but embeds directly (no hotlink) and a 1-byte ranged GET distinguishes availability (206 vs 500) without downloading -> new NetworkRequestManager.rangeStatusFollowingRedirects + tePapaLargest. /full can exceed weserv's 71MP cap (one tester record 97MP) so serve direct. In-copyright path unchanged (weserv/preview) = no regression. Sample 9/9 open-access had /full (1x-52x), 12/12 ARR had none. swift build 0; CollectionTester: in-copyright weserv/preview HEAD200; open-access /full shows tester HTTP403 (tester uses HEAD which Te Papa blocks -- ARTIFACT) but GET verified 200 image/jpeg JPEG (730370 97MP/131x, 779249 21MP/31x, 605976 21MP/31x). Per-request cost: 1 bounded ranged-GET probe."
     },

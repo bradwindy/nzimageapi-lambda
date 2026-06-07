@@ -96,4 +96,5 @@ serves a 500, no reliance on the rights field, never downloads the image).
 
 ## Commit
 
-(pending user approval)
+`2a60817` — Te Papa: serve /full master for open-access records (21-97 MP) via ranged-GET probe.
+User-approved 2026-06-07.
