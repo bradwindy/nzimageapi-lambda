@@ -457,6 +457,24 @@ hard-coded per collection.
 - **Verified live** (ap-southeast-2): canonical FL73782300 → JPEG 3737×2148 (8.0 MP), random FL73383211 →
   4000×3066 (downscale-capped); renders in **Chrome**; guards 400/403. Graceful fallback to the 700 px
   `NLNZStreamGate` access copy when the resolve throws or `JP2_CONVERTER_URL` is unset.
+- **Resolve the FL via the Rosetta METS, NOT the ieViewer HTML (2026-06-09 fix).** The ieViewer page is a
+  stateful JS viewer whose HTML omits the FL PIDs for most records → the original DVS+ieViewer scrape only
+  produced a converter URL for ~37% of records (rest fell back to 700 px). `…&dps_func=mets` is a
+  **stateless GET** listing every file in its own `<mets:amdSec ID="FL<n>-amd">` block with
+  `<key id="fileMIMEType">` + `<key id="fileSizeBytes">`. Pick the **largest `image/jp2`** (the `HIGH`
+  access rep in `access_storage`); **skip the TIFF preservation masters** in `permanent_storage` (100s of
+  MB — blow the converter budget). Over 15 IEs: ieViewer found FL for 1/15, METS had a jp2 for 15/15 →
+  deployed hit rate ~37% → **~93%**.
+- **Decode a REDUCED JP2 level for big masters.** A 23–60 MB JP2 (48–69 MP) decoded full → **~30 s →
+  Lambda timeout/502**. JP2 is wavelet-coded: set Pillow's `image.reduce = n` (a Jpeg2K property; verified
+  in Pillow 11.3.0 source) before `load()` to discard `n` resolution levels (each halves dims), sized so
+  the long side is still ≥ `MAX_DIM`. Result: same masters decode in **2–5 s**, ~274 MB peak. Pair with a
+  raised download cap (110 MB) and a roomier Lambda (2048 MB / 60 s). Memory is NOT the constraint; decode
+  is single-threaded so extra CPU is marginal — `reduce` is the real lever.
+- **On-demand latency (no caching):** instrumented split ≈ NDHA download + Pillow decode/encode; ~4 s for a
+  ~6 MB master, up to ~19 s for a ~64 MB master (download from NDHA's non-CDN Rosetta servlet is ~half of
+  it and not under our control). Acceptable for a random-image API (rarely re-serves the same record, so a
+  cache would seldom hit).
 
 ---
 

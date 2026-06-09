@@ -27,8 +27,8 @@ Resources:
       PackageType: Image
       Architectures:
         - arm64
-      MemorySize: 1024          # Lambda CPU scales with memory; ~1-2 s decode for 8 MP JP2
-      Timeout: 30
+      MemorySize: 2048          # Lambda CPU scales with memory; headroom for large JP2 masters
+      Timeout: 60               # large masters: download + reduced-level decode
       Environment:
         Variables:
           ALLOWED_HOST: ndhadeliver.natlib.govt.nz

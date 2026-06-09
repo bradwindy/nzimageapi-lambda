@@ -796,61 +796,60 @@ final class URLProcessor: Sendable {
             )
         }
 
-        // Step 2: Get DVS session from delivery manager
-        let deliveryURL = "\(baseURL)/delivery/DeliveryManagerServlet?dps_pid=\(iePID)"
-        let deliveryHTML = try await requestManager.fetchHTML(endpoint: deliveryURL)
+        // Step 2: Fetch the Rosetta METS for the IE. Unlike the ieViewer page (a stateful,
+        // JS-driven viewer whose HTML frequently omits the FL PIDs), the METS is a stateless
+        // GET that reliably enumerates every file with its MIME type and byte size — including
+        // the high-res JP2 access master the viewer hides. No DVS session needed.
+        let metsURL = "\(baseURL)/delivery/DeliveryManagerServlet?dps_pid=\(iePID)&dps_func=mets"
+        let metsXML = try await requestManager.fetchHTML(endpoint: metsURL)
 
-        guard let dvsMatch = deliveryHTML.range(of: #"dps_dvs=[\d~]+"#, options: .regularExpression) else {
-            throw URLProcessorError(
-                kind: .unableToExtractDVS,
-                data: ["url": urlString, "iePID": iePID]
-            )
-        }
-        let dvs = String(deliveryHTML[dvsMatch]).replacingOccurrences(of: "dps_dvs=", with: "")
-
-        // Step 3: Get viewer page with FL PIDs
-        let viewerURL = "\(baseURL)/view/action/ieViewer.do?dps_dvs=\(dvs)&dps_pid=\(iePID)"
-        let viewerHTML = try await requestManager.fetchHTML(endpoint: viewerURL)
-
-        // Extract all FL PIDs
-        var flPIDs: [String] = []
-        let flPattern = #"FL\d+"#
-        var searchRange = viewerHTML.startIndex ..< viewerHTML.endIndex
-
-        while let match = viewerHTML.range(of: flPattern, options: .regularExpression, range: searchRange) {
-            let flPID = String(viewerHTML[match])
-            if !flPIDs.contains(flPID) {
-                flPIDs.append(flPID)
-            }
-            searchRange = match.upperBound ..< viewerHTML.endIndex
-        }
-
-        guard !flPIDs.isEmpty else {
+        // Step 3: Choose the largest JP2 master the converter can handle. JP2 is the "HIGH"
+        // access representation; the TIFF preservation masters (often 100s of MB) are
+        // deliberately skipped — they exceed the converter's download/decode budget.
+        guard let flPID = largestTapuhiJP2PID(inMETS: metsXML, maxBytes: 100 * 1024 * 1024) else {
             throw URLProcessorError(
                 kind: .noFilesFound,
                 data: ["url": urlString, "iePID": iePID]
             )
         }
 
-        // Step 4: Get metadata for each file and find largest
-        var bestURL = urlString
-        var maxSize: Int64 = 0
+        // Step 4: Return the JP2 FL stream URL. Wrapping it for the browser (JP2 -> JPEG) is
+        // the converter's job (`tapuhiConverter`), not this resolver's.
+        return "\(baseURL)/delivery/DeliveryManagerServlet?dps_pid=\(flPID)&dps_func=stream"
+    }
 
-        for flPID in flPIDs {
-            let streamURL = "\(baseURL)/delivery/DeliveryManagerServlet?dps_pid=\(flPID)&dps_func=stream"
-            do {
-                let metadata = try await requestManager.headRequest(endpoint: streamURL)
-                if metadata.contentLength > maxSize {
-                    maxSize = metadata.contentLength
-                    bestURL = streamURL
-                }
-            } catch {
-                continue
-            }
+    /// Parse a Rosetta METS document and return the FL PID of the largest `image/jp2` file
+    /// no larger than `maxBytes`, or `nil` if there is none. Each file's technical metadata
+    /// lives in its own `<mets:amdSec ID="FL<n>-amd"> … </mets:amdSec>` block carrying
+    /// `<key id="fileMIMEType">` and `<key id="fileSizeBytes">` entries.
+    static func largestTapuhiJP2PID(inMETS metsXML: String, maxBytes: Int64) -> String? {
+        let blockPattern = #"<mets:amdSec ID="(FL\d+)-amd">(.*?)</mets:amdSec>"#
+        guard let regex = try? NSRegularExpression(pattern: blockPattern, options: [.dotMatchesLineSeparators]) else {
+            return nil
         }
 
-        // Return the best FL stream URL (the JP2 master). Wrapping it for the browser is the
-        // converter's job (`tapuhiConverter`), not this resolver's.
-        return bestURL
+        var bestPID: String?
+        var bestSize: Int64 = -1
+        let whole = NSRange(metsXML.startIndex..., in: metsXML)
+
+        for match in regex.matches(in: metsXML, range: whole) {
+            guard let pidRange = Range(match.range(at: 1), in: metsXML),
+                  let bodyRange = Range(match.range(at: 2), in: metsXML) else { continue }
+            let body = metsXML[bodyRange]
+
+            // Keep only JP2 files; preservation TIFFs and the small access JPEG are skipped.
+            guard body.contains(#"<key id="fileMIMEType">image/jp2</key>"#) else { continue }
+
+            guard let sizeRange = body.range(of: #"<key id="fileSizeBytes">\d+</key>"#, options: .regularExpression),
+                  let digitsRange = body[sizeRange].range(of: #"\d+"#, options: .regularExpression),
+                  let size = Int64(body[sizeRange][digitsRange])
+            else { continue }
+
+            if size <= maxBytes, size > bestSize {
+                bestSize = size
+                bestPID = String(metsXML[pidRange])
+            }
+        }
+        return bestPID
     }
 }

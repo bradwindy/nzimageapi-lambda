@@ -13,6 +13,7 @@ used as an open proxy / SSRF pivot.
 
 import base64
 import os
+import time
 from io import BytesIO
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
@@ -24,7 +25,7 @@ MAX_DIM = int(os.environ.get("MAX_DIM", "4000"))
 # Browser UA: the NDHA FL `dps_func=stream` endpoint is stateless (no cookies needed).
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
 DOWNLOAD_TIMEOUT = 20  # seconds
-MAX_DOWNLOAD_BYTES = 60 * 1024 * 1024  # 60 MB guard on the source JP2
+MAX_DOWNLOAD_BYTES = 110 * 1024 * 1024  # guard on the source download (largest JP2 masters ~60 MB)
 
 # Keep the *base64* response body under the Function URL 6 MB cap. base64 inflates by
 # ~4/3, so a ~4.0 MB JPEG -> ~5.4 MB base64, safely under 6 MB.
@@ -68,6 +69,20 @@ def convert_to_jpeg(data, max_dim=MAX_DIM):
     Image.MAX_IMAGE_PIXELS = None
 
     image = Image.open(BytesIO(data))
+
+    # JPEG 2000 is wavelet-coded: OpenJPEG can discard high-resolution levels at decode time
+    # (each discarded level halves the dimensions). Since the output is downscaled to max_dim
+    # anyway, decode the smallest level whose long side is still >= max_dim rather than the full
+    # master. This keeps a 100+ MP JP2 master fast and within the Lambda memory/timeout budget
+    # (decoding the full raster of a ~60 MB JP2 otherwise times out).
+    if image.format == "JPEG2000":
+        longest = max(image.size)
+        reduce_n = 0
+        while (longest >> (reduce_n + 1)) >= max_dim and reduce_n < 8:
+            reduce_n += 1
+        if reduce_n:
+            image.reduce = reduce_n
+
     image.load()
 
     if image.mode not in ("RGB", "L"):
@@ -99,15 +114,25 @@ def lambda_handler(event, context):
     if host != ALLOWED_HOST:
         return _text_response(403, f"host not allowed: {host}")
 
+    t0 = time.perf_counter()
     try:
         data = download_image(source_url)
     except Exception as error:  # noqa: BLE001 — surface a short reason, never crash
         return _text_response(502, f"download failed: {error}")
+    t_download = time.perf_counter() - t0
 
+    t1 = time.perf_counter()
     try:
         jpeg = convert_to_jpeg(data, MAX_DIM)
     except Exception as error:  # noqa: BLE001
         return _text_response(502, f"decode/convert failed: {error}")
+    t_convert = time.perf_counter() - t1
+
+    # Observability: download (NDHA -> Lambda) vs decode/encode split, plus byte sizes.
+    print(
+        f"timing download={t_download:.2f}s convert={t_convert:.2f}s "
+        f"src={len(data)}B out={len(jpeg)}B"
+    )
 
     return {
         "statusCode": 200,

@@ -146,3 +146,47 @@ unset. Added the `"TAPUHI"` registry entry; deleted the legacy `case "TAPUHI"` s
 did NOT adopt the old hand-made function/API. Repoint clients/DNS to the new `ImageApiEndpoint`, then
 decommission the old function. `scripts/*.sh` + the old function are kept as the rollback path until
 verified.
+
+---
+
+## Hit-rate fix: METS resolve + reduced JP2 decode (2026-06-09, follow-up)
+
+The first cut resolved FL PIDs by scraping the **ieViewer** HTML (after a DVS session). Live sampling of
+the deployed `/image?collection=TAPUHI` showed only **~37% (3/8)** of records produced a converter URL; the
+rest fell back to 700 px. Root cause: the ieViewer HTML **omits the FL PIDs** for most records (it's a
+stateful, JS-driven viewer). Proof: for `IE3712730` the ieViewer (even with a fresh DVS) lists **zero** FL
+PIDs, yet the masters plainly exist.
+
+**Discovery — the Rosetta METS is the reliable source.** `…DeliveryManagerServlet?dps_pid=IE<n>&dps_func=mets`
+is a **stateless GET** (no DVS session) that enumerates every file in its own
+`<mets:amdSec ID="FL<n>-amd">` block with `<key id="fileMIMEType">` and `<key id="fileSizeBytes">`. Each IE
+exposes: TIFF preservation master(s) in `permanent_storage` (often **100s of MB** — too big to convert), a
+**`HIGH` access JP2** in `access_storage` (the right target, ~0.4–60 MB), and a `LOW` access JPEG (~700 px).
+Quantified over 15 sampled IEs: old ieViewer found FL for **1/15**; METS had a usable jp2 for **15/15**.
+
+**Resolve change** (`URLProcessor.swift`): `resolveTapuhiFLStreamURL` now does IE → fetch METS → new
+`largestTapuhiJP2PID(inMETS:maxBytes:)` (regex the `FL…-amd` amdSec blocks, pick the largest `image/jp2`
+≤ 100 MB) → return its FL stream URL. The DVS + ieViewer + per-FL HEAD steps are gone (1 request, not 3+).
+Graceful 700 px fallback unchanged (thrown error when no jp2).
+
+**Converter change** (`app.py`): big JP2 masters (48–69 MP) decoded the full raster and **timed out**
+(warm hit on the 23 MB `FL13222808` = 29 s → a repeat = **502** at the 30 s limit). Fix: JP2 is wavelet-
+coded, so decode a **reduced resolution level** — set `image.reduce = n` (verified against Pillow 11.3.0
+source: a `reduce` property whose setter feeds `load()`) sized so the long side is still ≥ `MAX_DIM`,
+avoiding the full decode. Raised `MAX_DOWNLOAD_BYTES` 60→110 MB; SAM converter 1024→**2048 MB** / 30→**60 s**.
+
+**Verified LIVE after the fix** (stack `nzimageapi`):
+- In-container (arm64): `FL13222808` 8088×5956 → 4000×2946 in **2.1 s** (was ~28 s); `FL32545377`
+  9279×7487 (60.7 MB) → 4000×3228 in **4.8 s**; `FL73782300` unchanged 1.2 s.
+- Deployed converter: `FL13222808` **HTTP 200** 4000×2946 ~10 s; `FL32545377` **200** 4000×3228 ~21 s
+  (both well under the 60 s timeout; previously 502).
+- Deployed `/image?collection=TAPUHI` resample: **14/15 converter URLs** (~93%, up from ~37%). Recovered
+  records render in Chrome.
+
+**Latency (instrumented, per request — no caching):** ~6 MB master ≈ **4 s** (dl 1.3 s + convert 2.5 s);
+15 MB ≈ 10 s (dl 3 s + convert 6.5 s); 23 MB ≈ 8.5 s (dl 4 s + convert 4.5 s); 64 MB ≈ 19 s (dl 10–16 s +
+convert 9–10 s). Memory only 274 MB used. The cost is split between the NDHA download (not under our
+control; NDHA's Rosetta servlet is not a CDN) and the Pillow reduced decode/encode (already optimised;
+single-threaded so more CPU is marginal). **User declined caching** (a random-image API rarely re-serves
+the same record, so a cache would seldom hit) and accepted the on-demand latency. Most masters are small
+(~5 MB → ~4 s); only the rarer 15–64 MB masters are slow.

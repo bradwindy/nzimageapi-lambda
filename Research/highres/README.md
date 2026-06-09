@@ -46,7 +46,10 @@ Swift `tapuhiConverter` strategy returns `<JP2_CONVERTER_URL>/?url=<encoded FL J
 host-allowlists `ndhadeliver.natlib.govt.nz`, keeps grayscale, downscales the long side ≤4000px under the
 6 MB Function URL cap, and falls back to the 700 px `NLNZStreamGate` access copy if the resolve throws or the
 env var is unset. **Verified live on AWS** (renders in Chrome; canonical FL73782300 → 3737×2148, random
-FL73383211 → 4000×3066). **Cutover pending:** SAM created a NEW HTTP API endpoint
+FL73383211 → 4000×3066). **Follow-up fix (2026-06-09):** the resolve now reads the stateless **Rosetta METS**
+(`&dps_func=mets`) instead of scraping the ieViewer HTML — which omitted FL PIDs for most records — lifting
+the deployed converter hit rate **~37% → ~93%**; and the converter decodes a **reduced JP2 level**
+(`image.reduce`) so 48–69 MP masters that used to time out now convert in seconds (2048 MB / 60 s). **Cutover pending:** SAM created a NEW HTTP API endpoint
 (`…/image`) + the converter Function URL and did NOT adopt the old hand-made function/API — repoint
 clients/DNS to the new `ImageApiEndpoint`, then retire the old function (rollback path kept). Full detail in
 `logs/025-tapuhi.md`. **Next: order 26 (Canterbury Museum).**
