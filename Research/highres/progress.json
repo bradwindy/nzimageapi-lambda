@@ -555,7 +555,7 @@
         "px": "8 MP JP2 master -> JPEG via converter; verified LIVE 3737x2148 (FL73782300) and 4000x3066 (FL73383211, downscale-capped); 700px NLNZStreamGate fallback",
         "urlPattern": "<Jp2ConverterFnUrl>/?url=<encoded https://ndhadeliver.natlib.govt.nz/delivery/DeliveryManagerServlet?dps_pid=FL<n>&dps_func=stream>"
       },
-      "commit": null,
+      "commit": "748ca34",
       "log": "logs/025-tapuhi.md",
       "notes": "DONE: self-hosted Python+Pillow JP2->JPEG converter Lambda built + deployed with the Swift Lambda under one AWS SAM stack (template.yaml, Makefile, converter/{app.py,Dockerfile,requirements.txt}). Build-time HARD-ASSERT features.check('jpg_2000'). Swift wired via tapuhiConverter strategy in URLProcessor.swift (legacy switch case removed; fetchTapuhiHighResUrl renamed resolveTapuhiFLStreamURL with the weserv tail deleted; registry entry added). Verified LIVE on AWS (stack 'nzimageapi', ap-southeast-2): converter returns image/jpeg (3737x2148 canonical FL73782300; 4000x3066 random FL73383211), RENDERS IN CHROME, guards 400 (no url) / 403 (bad host); CollectionTester TAPUHI -> HTTP 200 image/jpeg through the deployed Function URL. CUTOVER PENDING: SAM created a NEW HTTP API endpoint (ImageApiEndpoint) + converter Function URL; old hand-made function + scripts/*.sh kept as rollback until clients repointed. thumbnailer.digitalnz.org still DEAD (NXDOMAIN) -> thumbnailerProxy helper still unreferenced (final-cleanup note). Sweep resumes at order 26 (Canterbury Museum)."
     },
