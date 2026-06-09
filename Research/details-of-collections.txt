@@ -279,8 +279,9 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Te Ūaka The Lyttelton Museum": 18,588
-- Status: 🔎
+- Status: ✅
 - Review: Provided I can get a large image, these are good
+- Review [2026-05-16 21:55]: needs larger images
 
 
 "Auckland Art Gallery Toi o Tāmaki": 18,192
@@ -299,6 +300,7 @@ Filtered to collections with images, that have more than 100 items
 - Review: Recollect, good images
 
 
+- Review [2026-05-16 22:02]: recollect
 "Tauranga City Libraries Photograph Collection": 16,654
 - Status: 🔎
 - Thumbnail URL: Large
@@ -307,15 +309,18 @@ Filtered to collections with images, that have more than 100 items
 - object_url: No
 - Evaluated: 2025-11-22
 
+- Review [2026-05-16 22:02]: recollect
 
 "Presbyterian Research Centre": 16,122
 - Status: ✅
 - Thumbnail URL: Large
 - Implementation: Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
+- Review [2026-05-16 22:06]: flickr
 
 
 "Ministry for Culture and Heritage Te Ara Flickr": 15,738
-- Status: 🔎
+- Status: ✅
+- Review [2026-05-16 22:07]: recollect
 
 
 "National Army Museum": 14,035
@@ -329,6 +334,7 @@ Filtered to collections with images, that have more than 100 items
 - Status: ✅
 - Thumbnail URL: Large
 - Implementation: Just use large thumbnail URL, images aren't very large, but are interesting enough to include
+- Review [2026-05-16 22:25]: y
 
 
 "Tairāwhiti Museum Te Whare Taonga o Tairāwhiti": 12,625
@@ -341,6 +347,7 @@ Filtered to collections with images, that have more than 100 items
 - Review: Similar website to tairawhiti, good images
 
 
+- Review [2026-05-16 22:29]: landing page format similar to others
 "Becker Fraser Earthquake Photographs": 12,564
 - Status: ❌
 - Review: Too many repetitive quake photos. Similar website again to tairawhiti, hamilton
@@ -353,6 +360,7 @@ Filtered to collections with images, that have more than 100 items
 - Quality: Medium resolution (600+ pixels)
 - object_url: No
 - Evaluated: 2025-11-22
+- Review [2026-05-16 22:32]: similar format to others, sure we can get a large image from this
 
 
 "Te Awamutu Museum": 12,325
@@ -363,12 +371,14 @@ Filtered to collections with images, that have more than 100 items
 - object_url: No
 - Evaluated: 2025-11-22
 - Review: This software is called vernon https://vernonsystems.com/products/vernon-cms/add-ons-modules/browser/client-browser-websites/
+- Review [2026-05-16 22:48]: dunedin festival photos
 
 
 "He Purapura Marara Scattered Seeds": 10,686
 - Status: ✅
 - Thumbnail URL: Large
 - Implementation: Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
+- Review [2026-05-16 23:16]: some great art, but also some random photos of museum items
 
 
 "Digital Public Library of America": 10,663
@@ -376,14 +386,16 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Waikato Museum Te Whare Taonga o Waikato": 9,787
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 724x603
 - Quality: Medium resolution (600+ pixels)
 - object_url: No
 - Evaluated: 2025-11-22
 - Review: Vernon again, looks to be art n stuff
+- Review [2026-05-16 23:21]: just items
 
+- Review [2026-05-17 14:07]: art, site is similar to others
 
 "Thames Museum": 9,631
 - Status: 🔎
@@ -392,6 +404,7 @@ Filtered to collections with images, that have more than 100 items
 - Quality: Medium resolution (600+ pixels)
 - object_url: No
 - Evaluated: 2025-11-22
+- Review [2026-05-17 15:03]: links still do not work
 
 
 "The Arts House Trust": 9,236
@@ -406,6 +419,7 @@ Filtered to collections with images, that have more than 100 items
 "NZFUNGI": 8,674
 - Status: ❌
 - Review: Links don't work
+- Review [2026-05-17 21:41]: recollect
 
 
 "Waimate Museum and Archives PastPerfect": 8,667
@@ -419,10 +433,11 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Wellington City Recollect": 8,320
-- Status: ✅
+- Status: ❌
 - Thumbnail URL: Large
 - Implementation: Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
 - Review: Might be tricky to get hi res images from, looks like fancy site
+- Review [2026-05-17 21:45]: deciding no for this, lots of pics are uninteresting
 
 
 "Culture Waitaki": 8,309
@@ -432,11 +447,13 @@ Filtered to collections with images, that have more than 100 items
 - Review: Look at more pictures, explore website first
 
 
+- Review [2026-05-17 21:48]: no images
 "Te Toi Uku, Crown Lynn and Clayworks Museum": 8,106
 - Status: ✅
 - Thumbnail URL: Large
 
 
+- Review [2026-05-17 21:51]: just items, NOT vernon too
 "Christchurch Art Gallery Te Puna o Waiwhetū": 7,650
 - Status: 🔎
 - Thumbnail URL: Large
@@ -446,6 +463,7 @@ Filtered to collections with images, that have more than 100 items
 - Evaluated: 2025-11-22
 
 
+- Review [2026-05-17 22:03]: links are inconsistent, images not good
 "Archives Central": 7,254
 - Status: 🔎
 - object_url: No
@@ -460,6 +478,7 @@ Filtered to collections with images, that have more than 100 items
 - object_url: No
 - Evaluated: 2025-11-22
 - Review: Vernon again
+- Review [2026-05-17 22:04]: familiar tool, possibly vernon
 
 
 "Christchurch City Libraries Heritage Images Collection": 6,668
@@ -484,6 +503,7 @@ Filtered to collections with images, that have more than 100 items
 - Quality: Medium resolution (600+ pixels)
 - object_url: No
 - Evaluated: 2025-11-22
+- Review [2026-05-17 22:14]: images are low resolution, some links broken
 
 
 "Te Whare o Rehua Sarjeant Gallery": 5,833
@@ -493,11 +513,13 @@ Filtered to collections with images, that have more than 100 items
 - Quality: Medium resolution (600+ pixels)
 - object_url: No
 - Evaluated: 2025-11-22
+- Review [2026-05-17 22:22]: massey u construction pics
 
 
 "Archives New Zealand Te Rua Mahara o te Kāwanatanga Flickr": 5,668
 - Status: ❌
 - Review: Links don't work. Hi res images available on site
+- Review [2026-06-01 15:51]: just old document/book scans
 
 
 "NZHistory": 5,614
@@ -515,6 +537,7 @@ Filtered to collections with images, that have more than 100 items
 - Thumbnail URL: Large
 - Implementation: Recollect. Get ID from https://<DOMAIN>/assets/display/<ID>-600 and put into URL as such: https://<DOMAIN>/assets/downloadwiz/<ID>
 - Review: Recollect, double check its not all newspapers
+- Review [2026-06-01 15:53]: newspapers mostly
 
 
 "Otago University Research Heritage": 5,218
@@ -524,6 +547,7 @@ Filtered to collections with images, that have more than 100 items
 - Quality: Medium resolution (600+ pixels)
 - object_url: No
 - Evaluated: 2025-11-22
+- Review [2026-06-01 15:53]: just stone scratches
 
 
 "Tapuaka - Heritage and Archive Collections": 4,777
@@ -533,8 +557,10 @@ Filtered to collections with images, that have more than 100 items
 - Quality: Good resolution (1000+ pixels)
 - object_url: No
 - Evaluated: 2025-11-22
+- Review [2026-06-01 15:54]: beautiful images
 
 
+- Review [2026-06-01 15:55]: not images
 "Whangarei Libraries": 4,491
 - Status: 🔎
 - Thumbnail URL: Large
@@ -552,6 +578,7 @@ Filtered to collections with images, that have more than 100 items
 - object_url: No
 - Evaluated: 2025-11-22
 - Review: If can get hi res
+- Review [2026-06-01 15:55]: n
 
 
 "Alexander Turnbull Library Flickr": 4,307
@@ -584,7 +611,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "New Zealand Cricket Museum": 4,010
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 540x800
 - Quality: Medium resolution (600+ pixels)
@@ -594,7 +621,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Wyndham & Districts Historical Museum": 3,937
-- Status: 🔎
+- Status: ✅
 
 
 "Cromwell Museum": 3,853
@@ -607,7 +634,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "28th Māori Battalion Te Ope Taua 28": 3,712
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 348x510
 - Quality: Low resolution (<600 pixels)
@@ -616,7 +643,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Hastings Recollect": 3,636
-- Status: 🔎
+- Status: ✅
 - Thumbnail URL: Large
 - Average Resolution: 999x696
 - Quality: Medium resolution (600+ pixels)
@@ -625,7 +652,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Mangawhai Museum": 3,619
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 800x592
 - Quality: Medium resolution (600+ pixels)
@@ -634,11 +661,11 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Feilding Library": 3,585
-- Status: 🔎
+- Status: ✅
 
 
 "Mataura Museum NZMuseums": 3,422
-- Status: 🔎
+- Status: ✅
 - Thumbnail URL: Large
 - Average Resolution: 769x630
 - Quality: Medium resolution (600+ pixels)
@@ -653,11 +680,11 @@ Filtered to collections with images, that have more than 100 items
 
 
 "LIANZA": 3,198
-- Status: 🔎
+- Status: ❌
 
 
 "Charlotte Museum": 3,086
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 534x800
 - Quality: Medium resolution (600+ pixels)
@@ -666,11 +693,11 @@ Filtered to collections with images, that have more than 100 items
 
 
 "The British Library Flickr": 2,819
-- Status: 🔎
+- Status: ❌
 
 
 "Clutha Heritage": 2,754
-- Status: 🔎
+- Status: ✅
 - Thumbnail URL: Large
 - Average Resolution: 999x738
 - Quality: Medium resolution (600+ pixels)
@@ -679,25 +706,25 @@ Filtered to collections with images, that have more than 100 items
 
 
 "John Kinder Theological Library": 2,714
-- Status: 🔎
+- Status: ✅
 
 
 "Tasman Heritage": 2,668
-- Status: 🔎
+- Status: ✅
 
 
 "NZEI Heritage": 2,656
-- Status: 🔎
+- Status: ❌
 - object_url: No
 - Evaluated: 2025-11-22
 
 
 "Aotearoa People's Network Kaharoa Flickr": 2,640
-- Status: 🔎
+- Status: ❌
 
 
 "OMSAA Historical Artefacts": 2,517
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 800x600
 - Quality: Medium resolution (600+ pixels)
@@ -707,42 +734,42 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Western Bay Community Archives": 2,420
-- Status: 🔎
+- Status: ✅
 
 
 "Museums Victoria": 2,353
-- Status: 🔎
+- Status: ❌
 
 
 "Ministry for Culture and Heritage Manatū Taonga Flickr": 2,332
-- Status: 🔎
+- Status: ❌
 
 
 "Dictionary of New Zealand Biography": 2,176
-- Status: 🔎
+- Status: ❌
 - object_url: No
 - Evaluated: 2025-11-22
 
 
 "New Zealand Fashion Museum": 2,079
-- Status: 🔎
+- Status: ❌
 
 
 "FigShare": 2,062
-- Status: 🔎
+- Status: ❌
 
 
 "Lower Hutt MyRecollect": 1,960
-- Status: 🔎
+- Status: ✅
 
 
 "Dunedin City Council Archives Flickr": 1,768
-- Status: 🔎
+- Status: ✅
 - Review: Recollect
 
 
 "Digital Collections (Pictures)": 1,762
-- Status: 🔎
+- Status: ❌
 - object_url: Yes (760x652)
 - Evaluated: 2025-11-22
 
@@ -751,22 +778,23 @@ Filtered to collections with images, that have more than 100 items
 - Status: ❌
 - object_url: No
 - Evaluated: 2025-11-22
+- Review [2026-06-01 18:00]: images dont load
 
 
 "Flora of New Zealand": 1,478
-- Status: 🔎
+- Status: ❌
 
 
 "War Art Online": 1,477
-- Status: 🔎
+- Status: ✅
 
 
 "Far North District Libraries Rediscovery": 1,435
-- Status: 🔎
+- Status: ✅
 
 
 "Katherine Mansfield House and Garden": 1,408
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 600x800
 - Quality: Medium resolution (600+ pixels)
@@ -775,7 +803,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Pakiaka Rotorua Heritage Online": 1,374
-- Status: 🔎
+- Status: ✅
 - Thumbnail URL: Large
 - Average Resolution: 499x513
 - Quality: Low resolution (<600 pixels)
@@ -784,7 +812,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "New Zealand Outdoor Art": 1,341
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 1008x565
 - Quality: Good resolution (1000+ pixels)
@@ -794,7 +822,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Pahiatua Museum": 1,191
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 682x688
 - Quality: Medium resolution (600+ pixels)
@@ -803,7 +831,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Western Bay Museum": 1,148
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 620x736
 - Quality: Medium resolution (600+ pixels)
@@ -812,11 +840,11 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Tauranga City Libraries Map Collection": 1,120
-- Status: 🔎
+- Status: ❌
 
 
 "Central Otago Memory Bank": 1,047
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 333x428
 - Quality: Low resolution (<600 pixels)
@@ -826,7 +854,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Deutsche Digitale Bibliothek": 1,019
-- Status: 🔎
+- Status: ❌
 
 
 "Teviot District Museum": 931
@@ -839,7 +867,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Brain-Watkins House Museum": 910
-- Status: 🛠️
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 710x620
 - Quality: Medium resolution (600+ pixels)
@@ -849,12 +877,12 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Nga Manu Nature Reserve Flickr": 851
-- Status: 🔎
+- Status: ❌
 - Review: Use obj url
 
 
 "VietnamWar.govt.nz": 845
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 599x574
 - Quality: Low resolution (<600 pixels)
@@ -864,11 +892,11 @@ Filtered to collections with images, that have more than 100 items
 
 
 "State Library of Victoria": 822
-- Status: 🔎
+- Status: ❌
 
 
 "Aotea Utanganui Museum of South Taranaki": 798
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 322x366
 - Quality: Low resolution (<600 pixels)
@@ -878,7 +906,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "The Dowse Art Museum": 772
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 325x371
 - Quality: Low resolution (<600 pixels)
@@ -888,7 +916,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Auckland War Memorial Museum Tāmaki Paenga Hira Flickr": 756
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 640x427
 - Quality: Medium resolution (600+ pixels)
@@ -898,7 +926,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "SignDNA": 642
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 575x551
 - Quality: Low resolution (<600 pixels)
@@ -907,11 +935,11 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Historical Photos of the Waikato and New Zealand": 618
-- Status: 🔎
+- Status: ❌
 
 
 "Victoria and Albert Museum": 549
-- Status: 🔎
+- Status: ✅
 - Thumbnail URL: Large
 - Average Resolution: 511x768
 - Quality: Medium resolution (600+ pixels)
@@ -920,7 +948,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Aoraki Heritage Collection": 547
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 499x439
 - Quality: Low resolution (<600 pixels)
@@ -929,13 +957,13 @@ Filtered to collections with images, that have more than 100 items
 
 
 "The University of Waikato Art Collection": 540
-- Status: 🔎
+- Status: ✅
 - object_url: No
 - Evaluated: 2025-11-22
 
 
 "Driving Creek Pottery": 520
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 738x673
 - Quality: Medium resolution (600+ pixels)
@@ -944,7 +972,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Te Ahu Museum": 504
-- Status: 🔎
+- Status: ✅
 - Thumbnail URL: Large
 - Average Resolution: 699x680
 - Quality: Medium resolution (600+ pixels)
@@ -953,11 +981,11 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Central and Western Murihiku Southland Archive": 501
-- Status: 🔎
+- Status: ❌
 
 
 "Ngā Puhipuhi o Te Herenga Waka—Victoria University of Wellington Art Collection": 488
-- Status: 🔎
+- Status: ✅
 - Thumbnail URL: Large
 - Average Resolution: 623x677
 - Quality: Medium resolution (600+ pixels)
@@ -966,7 +994,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Cambridge Museum": 296
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 725x621
 - Quality: Medium resolution (600+ pixels)
@@ -975,7 +1003,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Reserve Bank of New Zealand NZMuseums": 289
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 800x718
 - Quality: Medium resolution (600+ pixels)
@@ -984,7 +1012,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Whanganui Collegiate School Museum": 288
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 677x676
 - Quality: Medium resolution (600+ pixels)
@@ -993,7 +1021,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Rotorua Museum of Art & History Te Whare Taonga o Te Arawa NZMuseums": 286
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 579x800
 - Quality: Medium resolution (600+ pixels)
@@ -1002,7 +1030,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Navy Museum Medal Collection": 269
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 2692x2007
 - Quality: High resolution (2000+ pixels)
@@ -1011,15 +1039,15 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Nursing Education and Research Foundation - Nursing Oral Histories in NZ": 249
-- Status: 🔎
+- Status: ❌
 
 
 "Historical Maps of the Waikato Region": 242
-- Status: 🔎
+- Status: ❌
 
 
 "Raglan and District Museum NZMuseums": 209
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 701x666
 - Quality: Medium resolution (600+ pixels)
@@ -1028,27 +1056,27 @@ Filtered to collections with images, that have more than 100 items
 
 
 "State Library of New South Wales Flickr": 179
-- Status: 🔎
+- Status: ✅
 
 
 "Waimate Museum and Archives NZMuseums": 179
-- Status: 🔎
+- Status: ❌
 
 
 "WRD Laurie World War One Photographs": 163
-- Status: 🔎
+- Status: ❌
 
 
 "Māori Postcards ca. 1890-1940": 157
-- Status: 🔎
+- Status: ❌
 
 
 "Waikato Region Postcards": 157
-- Status: 🔎
+- Status: ❌
 
 
 "Toitū Otago Settlers Museum NZMuseums": 150
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 592x800
 - Quality: Medium resolution (600+ pixels)
@@ -1057,7 +1085,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "florascales.com": 150
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 400x436
 - Quality: Low resolution (<600 pixels)
@@ -1066,7 +1094,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "New Zealand Portrait Gallery NZMuseums": 136
-- Status: 🔎
+- Status: ✅
 - Thumbnail URL: Large
 - Average Resolution: 646x639
 - Quality: Medium resolution (600+ pixels)
@@ -1075,15 +1103,15 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Australian National Maritime Museum Flickr": 126
-- Status: 🔎
+- Status: ✅
 
 
 "Illumination & Commemoration": 123
-- Status: 🔎
+- Status: ❌
 
 
 "National Library of New Zealand Catalogue": 111
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 324x700
 - Quality: Medium resolution (600+ pixels)
@@ -1092,7 +1120,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Paekakariki Station Museum": 109
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 619x800
 - Quality: Medium resolution (600+ pixels)
@@ -1101,7 +1129,7 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Lincoln and Districts Historical Society": 102
-- Status: 🔎
+- Status: ❌
 - Thumbnail URL: Large
 - Average Resolution: 800x548
 - Quality: Medium resolution (600+ pixels)
@@ -1110,4 +1138,4 @@ Filtered to collections with images, that have more than 100 items
 
 
 "Waikato University Campus Photos": 100
-- Status: 🔎
+- Status: ❌

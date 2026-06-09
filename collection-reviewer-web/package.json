@@ -1,0 +1,26 @@
+{
+  "name": "collection-reviewer-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:clean": "LAMBDA_CLEAN_BUILD=1 node scripts/dev.mjs",
+    "dev:reuse": "LAMBDA_SKIP_BUILD=1 node scripts/dev.mjs",
+    "next-only": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "update-collections": "tsx scripts/update-collections.ts"
+  },
+  "dependencies": {
+    "next": "^15.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0"
+  }
+}
