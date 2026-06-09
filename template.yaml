@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  NZ Image API stack: the DigitalNZ random-image Swift Lambda (HTTP API) plus a
+  self-hosted Python + Pillow JP2->JPEG converter Lambda (Function URL), deployed
+  together as one stack. The Swift Lambda stays a pure URL builder; for TAPUHI it
+  emits <converter Function URL>/?url=<encoded NDHA FL JP2 stream> and the browser
+  loads the converter, which decodes the JP2 to a displayable JPEG.
+
+Parameters:
+  DigitalNzApiKey:
+    Type: String
+    NoEcho: true
+    Description: >
+      DigitalNZ API key (sent as the Authentication-Token header). Pass at deploy time
+      via --parameter-overrides or the gitignored samconfig.toml. NEVER commit it.
+  ApiSecret:
+    Type: String
+    NoEcho: true
+    Description: Shared secret the Swift Lambda requires in the `secret` request header.
+
+Resources:
+  # --- JP2 -> JPEG converter (container image + public Function URL) ------------------
+  Jp2ConverterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Architectures:
+        - arm64
+      MemorySize: 1024          # Lambda CPU scales with memory; ~1-2 s decode for 8 MP JP2
+      Timeout: 30
+      Environment:
+        Variables:
+          ALLOWED_HOST: ndhadeliver.natlib.govt.nz
+          MAX_DIM: "4000"
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins:
+            - "*"
+          AllowMethods:
+            - GET
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./converter
+      DockerTag: latest
+
+  # --- Swift NZ Image API (provided.al2 custom runtime, built via the Makefile) -------
+  NZImageApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: bootstrap
+      Runtime: provided.al2
+      Architectures:
+        - arm64
+      MemorySize: 512
+      Timeout: 60
+      Environment:
+        Variables:
+          DIGITALNZ_API_KEY: !Ref DigitalNzApiKey
+          SECRET: !Ref ApiSecret
+          LOG_LEVEL: info
+          # Injected from the converter's Function URL (no hardcoding / chicken-and-egg).
+          # SAM auto-creates AWS::Lambda::Url with logical id <FunctionLogicalId>Url.
+          JP2_CONVERTER_URL: !GetAtt Jp2ConverterFunctionUrl.FunctionUrl
+      Events:
+        Image:
+          Type: HttpApi
+          Properties:
+            Path: /image
+            Method: GET
+    Metadata:
+      BuildMethod: makefile
+
+Outputs:
+  ImageApiEndpoint:
+    Description: Random-image endpoint (send the `secret` header) — the new SAM HTTP API URL.
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/image"
+  Jp2ConverterUrl:
+    Description: JP2->JPEG converter Function URL (wired into the Swift Lambda's JP2_CONVERTER_URL).
+    Value: !GetAtt Jp2ConverterFunctionUrl.FunctionUrl

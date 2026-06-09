@@ -4,9 +4,10 @@
 - **Platform:** NDHA / Rosetta 8.3 (`ndhadeliver.natlib.govt.nz`), National Library NZ
 - **DigitalNZ result_count:** 301,618 (live, 2026-06-07)
 - **Timestamp:** 2026-06-07
-- **Status:** **HELD — investigation complete, NOT committed.** User is **forking this conversation to
-  build a self-hosted JP2→JPEG converter**. Do **NOT** re-investigate; do **NOT** auto-proceed to order
-  26. No Swift code was changed (the legacy switch case is untouched and currently **broken**, see below).
+- **Status:** **COMMITTED (2026-06-09).** The self-hosted JP2→JPEG converter was built, deployed under a
+  SAM stack with the Swift Lambda, wired into TAPUHI, and **verified live on AWS** (renders in Chrome).
+  See "Converter built + wired + verified live" at the foot of this log. (Original investigation below is
+  retained for context.)
 
 ## Raw record sample (key redacted)
 
@@ -102,3 +103,46 @@ is applied. Group A weight 0.011 unchanged.
 ## Commit
 
 (research notes only; no Swift change — TAPUHI implementation deferred to the converter fork)
+
+---
+
+## Converter built + wired + verified live (2026-06-09)
+
+The deferred converter was built and shipped. TAPUHI is now COMMITTED.
+
+**What was built**
+- `converter/` — a Python + Pillow JP2→JPEG Lambda (container image, arm64). `Dockerfile` HARD-ASSERTS
+  `features.check('jpg_2000')` at build time (build fails if JP2 decode is unavailable). `app.py` is a
+  Function-URL handler: reads `?url=`, host-allowlists `ndhadeliver.natlib.govt.nz` (403 else; 400 if no
+  url), downloads the JP2 (20s timeout, 60 MB guard), Pillow-decodes, **keeps grayscale mode L** else
+  converts RGB, downscales long side ≤ `MAX_DIM` (4000) via `thumbnail`, encodes JPEG q85 with a guard
+  loop (q75 → ≤3000px) to stay under the 6 MB Function URL base64 cap, returns `image/jpeg` base64 +
+  `Cache-Control: public, max-age=31536000, immutable`.
+- `template.yaml` + `Makefile` — one **AWS SAM** stack with BOTH functions: `Jp2ConverterFunction`
+  (image, arm64, 1024 MB, Function URL, CORS GET) and `NZImageApiFunction` (provided.al2, arm64, makefile
+  build, HTTP API `GET /image`). `JP2_CONVERTER_URL` is injected into the Swift function via
+  `!GetAtt Jp2ConverterFunctionUrl.FunctionUrl`. Secrets are `NoEcho` params (`DigitalNzApiKey`,
+  `ApiSecret`). `scripts/build.sh` pinned to `--platform linux/arm64`.
+
+**Swift wiring** (`URLProcessor.swift`): `fetchTapuhiHighResUrl` → renamed `resolveTapuhiFLStreamURL`
+(returns the best FL JP2 stream URL; the weserv tail deleted). New non-throwing `tapuhiConverter` strategy
+returns `<JP2_CONVERTER_URL>/?url=<FL stream percent-encoded with .alphanumerics>`, with a graceful
+fallback to the harvested 700 px `NLNZStreamGate` access copy if the resolve throws or the env var is
+unset. Added the `"TAPUHI"` registry entry; deleted the legacy `case "TAPUHI"` switch block and the unused
+`tapuhi()` wrapper.
+
+**Verified LIVE** (AWS account 686865771242, stack `nzimageapi`, ap-southeast-2):
+- `sam build` — converter image built (Pillow 11.3.0 cp313 aarch64; JP2 assert passed); Swift arm64
+  cross-compile succeeded.
+- Converter Function URL `https://rpssr7pwlyvmpoinol3dbrx3ma0pcjaw.lambda-url.ap-southeast-2.on.aws/`:
+  canonical FL73782300 → **HTTP 200 image/jpeg 3737×2148 (8.0 MP, grayscale, 2,448,852 B)** — byte-for-byte
+  identical to the local Pillow test. **Renders in Chrome** (the whole point). Guards: missing url → 400,
+  disallowed host → 403.
+- `CollectionTester "TAPUHI"` against the deployed converter → random record 22333777 (FL73383211) →
+  **HTTP 200 image/jpeg**; direct convert of that master → **4000×3066 (12.3 MP, downscale-capped, 1.43 MB)**.
+
+**Cutover (pending):** SAM created a NEW HTTP API endpoint
+(`https://zk9rlj3um2.execute-api.ap-southeast-2.amazonaws.com/image`) and the converter Function URL — it
+did NOT adopt the old hand-made function/API. Repoint clients/DNS to the new `ImageApiEndpoint`, then
+decommission the old function. `scripts/*.sh` + the old function are kept as the rollback path until
+verified.

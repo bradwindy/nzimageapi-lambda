@@ -437,6 +437,27 @@ hard-coded per collection.
   NZ** (`collections.archives.govt.nz`, Axiell Arena/Liferay) but delivered via natlib NDHA. The
   Arena SPA embeds the same ndhadeliver streams; no separate public hi-res download.
 
+#### Resolution (TAPUHI order 25, COMMITTED 2026-06-09) — self-hosted JP2→JPEG converter Lambda
+- **The master is JP2 and nothing free converts it.** The TAPUHI 5-step resolves to a multi-MP
+  JPEG-2000 FL stream (`DeliveryManagerServlet?dps_pid=FL<n>&dps_func=stream`, `image/jp2`). **weserv
+  cannot decode JP2** (404), JP2 is unsupported by ~98% of browsers, and every free/keyless proxy was
+  exhausted (thumbnailer DEAD/NXDOMAIN, cloudimg account-locked, Cloudinary demo 401, Photon/imagecdn/
+  statically fail; no natlib IIIF; Rosetta ignores scaling). **G's hotlink toolbox does not cover JP2.**
+- **Recipe that works:** run a **self-hosted Python + Pillow converter Lambda** (Pillow's manylinux wheel
+  bundles OpenJPEG; assert `features.check('jpg_2000')` at image-build time). Container image, arm64,
+  behind a **Lambda Function URL**; the Swift Lambda stays a URL-builder and emits
+  `<JP2_CONVERTER_URL>/?url=<FL stream percent-encoded with .alphanumerics>`. The converter
+  host-allowlists `ndhadeliver.natlib.govt.nz` (SSRF guard; GET only), downloads the JP2, decodes with
+  Pillow, **keeps grayscale mode L**, downscales the long side ≤4000px (q85, guard loop q75→≤3000) to
+  stay under the **6 MB Function URL base64 cap**, returns `image/jpeg` + `Cache-Control: 1y`.
+- **Deploy both functions under one AWS SAM stack** (`template.yaml`): inject the converter URL into the
+  Swift function via `!GetAtt Jp2ConverterFunctionUrl.FunctionUrl` (SAM auto-names the URL resource
+  `<FunctionLogicalId>Url`). `.alphanumerics` percent-encoding round-trips cleanly through the Function
+  URL's URL-decoded `queryStringParameters`.
+- **Verified live** (ap-southeast-2): canonical FL73782300 → JPEG 3737×2148 (8.0 MP), random FL73383211 →
+  4000×3066 (downscale-capped); renders in **Chrome**; guards 400/403. Graceful fallback to the 700 px
+  `NLNZStreamGate` access copy when the resolve throws or `JP2_CONVERTER_URL` is unset.
+
 ---
 
 # Discovery Playbook (mandatory in Step 2 for EVERY collection)

@@ -6,7 +6,7 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 ## Removal
 - [x] REMOVE Wellington City Recollect — done
 
-## Collections (24/52 terminal)
+## Collections (25/52 terminal)
 
 ### recollect
 - [x] (01) Tauranga City Libraries Other Collection — group A — platform recollect — committed
@@ -47,7 +47,7 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 - [x] (23) Auckland Libraries Heritage Images Collection — group A — platform thumbnailerProxy — blocked
 
 ### tapuhi
-- [ ] (25) TAPUHI — group A — platform tapuhi — held-for-converter
+- [x] (25) TAPUHI — group A — platform tapuhi — committed
 
 ### stringSwap
 - [ ] (26) Canterbury Museum — group A — platform stringSwap — todo

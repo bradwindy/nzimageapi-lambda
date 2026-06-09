@@ -4,12 +4,11 @@ This directory is the **single source of truth** for the high-res collection swe
 A fresh Claude Code session with zero prior context can resume the work using only
 these files.
 
-## Current resume state (updated 2026-06-07)
+## Current resume state (updated 2026-06-09)
 
-**Wellington removal: done.** Collections **1–24 terminal** (Howick 17 RE-DONE). **Order 25 (TAPUHI) is
-HELD** pending a self-hosted JP2→JPEG converter the user is building in a **fork** — the per-collection
-sweep is **PAUSED here per the user; do NOT auto-proceed to order 26, and do NOT re-investigate TAPUHI.**
-`progress.json` is authoritative; this is a human summary.
+**Wellington removal: done.** Collections **1–25 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+self-hosted JP2→JPEG converter). The per-collection sweep is **UNPAUSED — next is order 26 (Canterbury
+Museum).** `progress.json` is authoritative; this is a human summary.
 
 | # | collection | platform | outcome |
 |---|------------|----------|---------|
@@ -38,18 +37,19 @@ sweep is **PAUSED here per the user; do NOT auto-proceed to order 26, and do NOT
 | 22 | Auckland Museum Collections | aklMuseumCloudimg | committed — **fixed broken pipeline** (J: prefix + unencoded path → 404 for all); `aklMuseumCloudimg` strips drive prefix + percent-encodes the `object_av_link`, `org_if_sml=1` native master (0.36–71 MP) |
 | 23 | Auckland Libraries Heritage Images | thumbnailer | **blocked + REMOVED** — DigitalNZ harvest fully degraded (0/700 have any image URL; hard-fails every request; was weight 0.182 = largest). Content already served by Kura Heritage (order 16) at full IIIF res |
 | 24 | Hawke's Bay Knowledge Bank | knowledgeBankMaster | committed — **fixed broken weserv** (weserv 404s on its CDN); new `knowledgeBankMaster` scrapes landing for the honest `/master/` original (up to 76 MP), direct; honest harvested fallback (never the upscaled `/images/<base>.jpg` rendition) |
-| 25 | TAPUHI | ndha (Rosetta JP2) | **HELD-FOR-CONVERTER** — current strategy BROKEN (weserv can't decode the 8 MP JP2 master → 404); JP2 unsupported by ~98% of browsers; no free JP2→JPEG proxy exists; Pillow proven to convert. User forking to build a Python+Pillow converter Lambda. See `logs/025-tapuhi.md` |
+| 25 | TAPUHI | ndha (Rosetta JP2) | committed — self-hosted Python+Pillow **JP2→JPEG converter Lambda** (SAM stack, Function URL) + `tapuhiConverter` strategy; verified live (3737×2148 / 4000×3066, renders in Chrome); 700px `NLNZStreamGate` fallback. See `logs/025-tapuhi.md` |
 
-**⛔ Order 25 (TAPUHI) is HELD — sweep PAUSED here.** The shipped TAPUHI strategy is broken (it resolves
-the 8 MP JP2 preservation master, then weserv-proxies it, but **weserv cannot decode JP2 → HTTP 404**).
-JP2 is unsupported by ~98% of browsers (Chrome/FF/Edge never; Safari removed it in v18+), so the master
-can't be served raw, and **no free/keyless JP2→JPEG proxy exists** (weserv no-JP2; thumbnailer.digitalnz.org
-is DEAD/NXDOMAIN; cloudimg account-locked; Cloudinary demo disabled; Photon/imagecdn/statically fail; no
-natlib IIIF; Rosetta ignores scaling). **Pillow is proven to decode the NDHA JP2 → full 8 MP JPEG**, so the
-user is **forking this conversation to build a self-hosted Python+Pillow converter Lambda** (Function URL;
-browser hits it; main API stays a URL-builder). Full architecture + wiring steps in `logs/025-tapuhi.md`.
-**Do not auto-proceed to order 26 and do not re-investigate TAPUHI** until the user resumes. If the
-converter is abandoned, the fallback is passthrough of the 700 px `NLNZStreamGate` access copy.
+**✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
+**cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
+deployed with the Swift Lambda under one **AWS SAM stack** (`template.yaml`, `Makefile`, `converter/`). The
+Swift `tapuhiConverter` strategy returns `<JP2_CONVERTER_URL>/?url=<encoded FL JP2 stream>`; the converter
+host-allowlists `ndhadeliver.natlib.govt.nz`, keeps grayscale, downscales the long side ≤4000px under the
+6 MB Function URL cap, and falls back to the 700 px `NLNZStreamGate` access copy if the resolve throws or the
+env var is unset. **Verified live on AWS** (renders in Chrome; canonical FL73782300 → 3737×2148, random
+FL73383211 → 4000×3066). **Cutover pending:** SAM created a NEW HTTP API endpoint
+(`…/image`) + the converter Function URL and did NOT adopt the old hand-made function/API — repoint
+clients/DNS to the new `ImageApiEndpoint`, then retire the old function (rollback path kept). Full detail in
+`logs/025-tapuhi.md`. **Next: order 26 (Canterbury Museum).**
 
 **Also learned (order 25):** `thumbnailer.digitalnz.org` is **decommissioned (NXDOMAIN)** — the
 `thumbnailerProxy` recipe/helper is dead (helper is unreferenced; remove in the final cleanup).

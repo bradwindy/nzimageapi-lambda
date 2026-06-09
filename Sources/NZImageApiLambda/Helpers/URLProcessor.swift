@@ -126,6 +126,14 @@ final class URLProcessor: Sendable {
             // URL when no master is published (never the upscaled fixed `/images/<base>.jpg` rendition).
             await knowledgeBankMaster(result, url)
         },
+        "TAPUHI": { result, url in
+            // NDHA/Rosetta: the 5-step resolve reaches an 8 MP JP2 preservation master, but JP2 is
+            // undecodable by ~98% of browsers (and by weserv). Resolve the FL JP2 stream URL, then emit
+            // `<JP2_CONVERTER_URL>/?url=<encoded FL stream>` so the browser loads our self-hosted
+            // Pillow converter (which decodes the JP2 to a displayable JPEG). Falls back to the 700 px
+            // NLNZStreamGate access copy if the resolve fails or the converter URL is unset.
+            await tapuhiConverter(result, url)
+        },
     ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
@@ -179,14 +187,6 @@ final class URLProcessor: Sendable {
                 result: result,
                 urlModifier: { url in
                     url.absoluteString
-                }
-            )
-
-        case "TAPUHI":
-            return try await handleUrl(
-                result: result,
-                urlModifier: { url in
-                    try await Self.fetchTapuhiHighResUrl(from: url)
                 }
             )
 
@@ -617,9 +617,31 @@ final class URLProcessor: Sendable {
         { _, url in url.absoluteString.replacingOccurrences(of: from, with: to) }
     }
 
-    /// TAPUHI / NDHA: resolve the largest FL stream and serve it via the weserv proxy.
-    private static func tapuhi(_ result: NZRecordsResult, _ url: URL) async throws -> String {
-        try await fetchTapuhiHighResUrl(from: url)
+    /// TAPUHI / NDHA: resolve the FL JP2 preservation master stream, then hand it to our self-hosted
+    /// Pillow JP2→JPEG converter Lambda (its Function URL is injected as `JP2_CONVERTER_URL`). The
+    /// browser loads `<converter>/?url=<encoded FL stream>` and receives a displayable JPEG.
+    ///
+    /// Graceful, non-throwing: any failure degrades to the harvested `url` — the 700 px `NLNZStreamGate`
+    /// access copy, a normal JPEG that renders everywhere — so TAPUHI never serves a broken image even if
+    /// the resolve fails or the converter is unconfigured (it is NEVER weserv, never a raw JP2). The whole
+    /// FL URL is percent-encoded with `.alphanumerics` (matching the prior weserv encoding convention) so
+    /// it travels as a single `url` query-param value.
+    private static func tapuhiConverter(_ result: NZRecordsResult, _ url: URL) async -> String {
+        let flStreamURL: String
+        do {
+            flStreamURL = try await resolveTapuhiFLStreamURL(from: url)
+        } catch {
+            return url.absoluteString
+        }
+
+        guard let base = ProcessInfo.processInfo.environment["JP2_CONVERTER_URL"], !base.isEmpty,
+              let encoded = flStreamURL.addingPercentEncoding(withAllowedCharacters: .alphanumerics)
+        else {
+            return url.absoluteString
+        }
+
+        let trimmed = base.hasSuffix("/") ? String(base.dropLast()) : base
+        return "\(trimmed)/?url=\(encoded)"
     }
 
     /// Recollect (Axiell): prefer the full-resolution master at
@@ -751,7 +773,10 @@ final class URLProcessor: Sendable {
         return modifiableResult
     }
 
-    private static func fetchTapuhiHighResUrl(from url: URL) async throws -> String {
+    /// NDHA/Rosetta 5-step resolve (IE→DVS→ieViewer→FL→HEAD-largest): returns the best FL preservation
+    /// master stream URL (`…/DeliveryManagerServlet?dps_pid=FL<n>&dps_func=stream`, a JPEG 2000). The
+    /// caller (`tapuhiConverter`) wraps it in the JP2→JPEG converter URL — this function does NOT proxy.
+    private static func resolveTapuhiFLStreamURL(from url: URL) async throws -> String {
         let urlString = url.absoluteString
         let baseURL = "https://ndhadeliver.natlib.govt.nz"
         let requestManager = NetworkRequestManager()
@@ -824,10 +849,8 @@ final class URLProcessor: Sendable {
             }
         }
 
-        // Use weserv.nl proxy to convert JP2 to WebP for browser compatibility
-        guard let encoded = bestURL.addingPercentEncoding(withAllowedCharacters: .alphanumerics) else {
-            return bestURL
-        }
-        return "https://images.weserv.nl/?url=\(encoded)&output=webp"
+        // Return the best FL stream URL (the JP2 master). Wrapping it for the browser is the
+        // converter's job (`tapuhiConverter`), not this resolver's.
+        return bestURL
     }
 }

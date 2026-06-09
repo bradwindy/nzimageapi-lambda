@@ -16,3 +16,13 @@ DerivedData/
 response.json
 .claude/settings.local.json
 .vscode/launch.json
+
+# AWS SAM (samconfig.toml may hold NoEcho parameter values; .aws-sam is build output)
+samconfig.toml
+.aws-sam/
+
+# Python (converter/) bytecode + local venvs
+__pycache__/
+*.pyc
+.venv/
+venv/

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-07T04:30:00Z",
+  "lastUpdated": "2026-06-09T09:26:37Z",
   "removal": {
     "collection": "Wellington City Recollect",
     "status": "done"
@@ -545,20 +545,19 @@
       "platform": "tapuhi",
       "rawItemCount": 301618,
       "weight": null,
-      "status": "held-for-converter",
-      "heldForConverter": true,
+      "status": "committed",
       "baseline": {
         "method": "BROKEN: 5-step NDHA resolve -> weserv proxy of the FL stream, but the FL stream is JP2 and weserv can't decode JP2 -> HTTP 404 for every record",
         "px": "404 (broken); harvested NLNZStreamGate IE access copy is ~700px JPEG"
       },
       "chosen": {
-        "method": "HELD pending a self-hosted JP2->JPEG converter (user forking to build it 2026-06-07). The master is an 8 MP JP2 (3737x2148, 28x) but JP2 is unsupported by ~98% of browsers (Chrome/FF/Edge never; Safari removed in 18+) so it can't be served raw, and NO free/keyless JP2->JPEG proxy exists (weserv no-JP2, thumbnailer DEAD/NXDOMAIN, cloudimg account-locked, Cloudinary demo 401, Photon/imagecdn/statically fail, no natlib IIIF, Rosetta ignores scaling). Pillow PROVEN to decode the NDHA JP2 -> full 8MP JPEG.",
-        "px": "target 8 MP via converter; fallback 700px passthrough if converter abandoned",
-        "urlPattern": "TBD: https://<python-pillow-converter-lambda-fn-url>/?fl=<FLPID> (or ?ie=<IEPID>)"
+        "method": "tapuhiConverter strategy: existing 5-step NDHA resolve -> FL JP2 stream URL, then return <Jp2ConverterFnUrl>/?url=<encoded FL stream>. Converter is a self-hosted Python+Pillow JP2->JPEG Lambda (container image, arm64, Function URL, host-allowlisted to ndhadeliver.natlib.govt.nz) deployed with the Swift Lambda under one AWS SAM stack (template.yaml + Makefile + converter/); JP2_CONVERTER_URL injected via !GetAtt Jp2ConverterFunctionUrl.FunctionUrl. Pillow decodes the NDHA JP2 -> JPEG, keeps grayscale L, downscales long side <=4000 (q85, guard loop) under the 6 MB Function URL base64 cap. Graceful fallback to the 700px NLNZStreamGate access copy if the resolve throws or JP2_CONVERTER_URL is unset (never weserv, never raw JP2).",
+        "px": "8 MP JP2 master -> JPEG via converter; verified LIVE 3737x2148 (FL73782300) and 4000x3066 (FL73383211, downscale-capped); 700px NLNZStreamGate fallback",
+        "urlPattern": "<Jp2ConverterFnUrl>/?url=<encoded https://ndhadeliver.natlib.govt.nz/delivery/DeliveryManagerServlet?dps_pid=FL<n>&dps_func=stream>"
       },
       "commit": null,
       "log": "logs/025-tapuhi.md",
-      "notes": "DO NOT re-investigate (investigation COMPLETE) and DO NOT auto-proceed to order 26 -- user said 'hold here'. NO Swift code changed this session; legacy switch case untouched and currently BROKEN in production (weserv 404 on JP2). User is FORKING this conversation to build a Python+Pillow JP2->JPEG converter Lambda (behind a Function URL, browser hits it; main API stays a URL-builder). Full architecture + proven-feasibility + wiring steps in logs/025-tapuhi.md. When the proxy Function URL exists: add a tapuhiConverter strategy returning the proxy URL for the resolved FL/IE PID, migrate legacy switch->registry, verify 8MP in Chrome, user-approve, commit. NDHA 5-step already implemented in fetchTapuhiHighResUrl. ALSO LEARNED: thumbnailer.digitalnz.org is DEAD (NXDOMAIN) -> the thumbnailerProxy recipe/helper is now useless (helper is unreferenced; note for final cleanup)."
+      "notes": "DONE: self-hosted Python+Pillow JP2->JPEG converter Lambda built + deployed with the Swift Lambda under one AWS SAM stack (template.yaml, Makefile, converter/{app.py,Dockerfile,requirements.txt}). Build-time HARD-ASSERT features.check('jpg_2000'). Swift wired via tapuhiConverter strategy in URLProcessor.swift (legacy switch case removed; fetchTapuhiHighResUrl renamed resolveTapuhiFLStreamURL with the weserv tail deleted; registry entry added). Verified LIVE on AWS (stack 'nzimageapi', ap-southeast-2): converter returns image/jpeg (3737x2148 canonical FL73782300; 4000x3066 random FL73383211), RENDERS IN CHROME, guards 400 (no url) / 403 (bad host); CollectionTester TAPUHI -> HTTP 200 image/jpeg through the deployed Function URL. CUTOVER PENDING: SAM created a NEW HTTP API endpoint (ImageApiEndpoint) + converter Function URL; old hand-made function + scripts/*.sh kept as rollback until clients repointed. thumbnailer.digitalnz.org still DEAD (NXDOMAIN) -> thumbnailerProxy helper still unreferenced (final-cleanup note). Sweep resumes at order 26 (Canterbury Museum)."
     },
     {
       "order": 26,

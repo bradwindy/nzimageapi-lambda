@@ -10,6 +10,7 @@ rm -rf .build/checkouts .build/repositories .build/workspace-state.json
 echo "Building Lambda for Amazon Linux 2..."
 docker run \
     --rm \
+    --platform linux/arm64 \
     --volume "$(pwd)/:/src" \
     --workdir "/src/" \
     swift:6.0-amazonlinux2 \
