@@ -4,11 +4,12 @@ This directory is the **single source of truth** for the high-res collection swe
 A fresh Claude Code session with zero prior context can resume the work using only
 these files.
 
-## Current resume state (updated 2026-06-09)
+## Current resume state (updated 2026-06-10)
 
-**Wellington removal: done.** Collections **1–25 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
-self-hosted JP2→JPEG converter). The per-collection sweep is **UNPAUSED — next is order 26 (Canterbury
-Museum).** `progress.json` is authoritative; this is a human summary.
+**Wellington removal: done.** Collections **1–26 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+self-hosted JP2→JPEG converter; Canterbury 26 no-improvement). The per-collection sweep is **UNPAUSED —
+next is order 27 (Auckland Art Gallery Toi o Tāmaki).** `progress.json` is authoritative; this is a human
+summary.
 
 | # | collection | platform | outcome |
 |---|------------|----------|---------|
@@ -38,6 +39,7 @@ Museum).** `progress.json` is authoritative; this is a human summary.
 | 23 | Auckland Libraries Heritage Images | thumbnailer | **blocked + REMOVED** — DigitalNZ harvest fully degraded (0/700 have any image URL; hard-fails every request; was weight 0.182 = largest). Content already served by Kura Heritage (order 16) at full IIIF res |
 | 24 | Hawke's Bay Knowledge Bank | knowledgeBankMaster | committed — **fixed broken weserv** (weserv 404s on its CDN); new `knowledgeBankMaster` scrapes landing for the honest `/master/` original (up to 76 MP), direct; honest harvested fallback (never the upscaled `/images/<base>.jpg` rendition) |
 | 25 | TAPUHI | ndha (Rosetta JP2) | committed — self-hosted Python+Pillow **JP2→JPEG converter Lambda** (SAM stack, Function URL) + `tapuhiConverter` strategy; verified live (3737×2148 / 4000×3066, renders in Chrome); 700px `NLNZStreamGate` fallback. See `logs/025-tapuhi.md` |
+| 26 | Canterbury Museum | vernon (Vernon CMS) | no-improvement — shipped `large→xlarge` swap already serves the public ceiling. `xlarge` (~1000–1200px box) is the max public derivative; `display`/`original`/`master`/`full`/`xxlarge` all S3 403; no public IIIF/zoom; object pages AWS-WAF-walled; the site's own "download" serves `xlarge` (user-confirmed). NOT eMuseum — Vernon (detected via the 404 page's `vernon-*.min.js`). Left in legacy `switch` (shared with Culture Waitaki) |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -52,7 +54,20 @@ the deployed converter hit rate **~37% → ~93%**; and the converter decodes a *
 (`image.reduce`) so 48–69 MP masters that used to time out now convert in seconds (2048 MB / 60 s). **Cutover pending:** SAM created a NEW HTTP API endpoint
 (`…/image`) + the converter Function URL and did NOT adopt the old hand-made function/API — repoint
 clients/DNS to the new `ImageApiEndpoint`, then retire the old function (rollback path kept). Full detail in
-`logs/025-tapuhi.md`. **Next: order 26 (Canterbury Museum).**
+`logs/025-tapuhi.md`. **Next: order 27 (Auckland Art Gallery Toi o Tāmaki).**
+
+**✅ Order 26 (Canterbury Museum) no-improvement (2026-06-10).** Platform is **Vernon CMS** (Vernon
+Systems — the eHive vendor), NOT eMuseum; detected via the 404 page's `vernon-common.min.js` /
+`vernon-shortlist.min.js` because the object pages are **AWS-WAF-challenged** (HTTP 202
+`x-amzn-waf-action: challenge`, uncrawlable by curl/Lambda/Wayback). Images on S3+CloudFront
+`/records/images/<size>/<dir>/<sha1>.jpg`. The shipped `large→xlarge` swap already serves the public
+ceiling: the Vernon token ladder caps at **`xlarge` (~1000–1200 px box)** and
+`display`/`original`/`master`/`full`/`xxlarge` all S3-403 (uniform, not rights-gated); no public IIIF
+(`/apis/iiif` + `/iiif` 404), no reachable zoom, `object_url` null, Wayback empty. `xlarge` is honest
+(== `large` for sub-800px originals, 1.5–2.25× for bigger). The object page's "download from Collections
+Online" serves `xlarge` (user-confirmed in-browser). An earlier "paid-only originals" claim was a
+subagent inference — **withdrawn** (the Image Service page publishes no price). No code change; left in
+the legacy `switch` (precedent: other no-improvement Group-A collections). See `logs/026-canterbury-museum.md`.
 
 **Also learned (order 25):** `thumbnailer.digitalnz.org` is **decommissioned (NXDOMAIN)** — the
 `thumbnailerProxy` recipe/helper is dead (helper is unreferenced; remove in the final cleanup).
@@ -82,7 +97,8 @@ Ara 11). Reusable registry helpers: `flickrLargest` (`_b` swap), `flickrLandingL
 **Legacy `switch` remaining (NOT yet migrated to the registry)** — these are the still-untouched
 collections (each migrates to the registry as it's processed): Tāmiro (sole recollect occupant,
 no-improvement), Auckland Libraries Heritage (thumbnailer), Auckland Museum (cloudimg),
-Canterbury/Culture Waitaki (large→xlarge), passthrough group (Antarctica, National
+Culture Waitaki (large→xlarge; Canterbury 26 shares this `case` — **verified no-improvement
+2026-06-10, intentionally left in the switch**), passthrough group (Antarctica, National
 Publicity, South Canterbury, Waimate, Te Toi Uku, Te Hikoi, V.C. Browne), TAPUHI
 (fetchTapuhiHighResUrl), Hawke's Bay (weserv), Auckland Art Gallery (medium→xlarge), National Army
 Museum (og:image→downloadwiz). Migrated to the registry so far: all Recollect (1–10), all Flickr

@@ -294,7 +294,32 @@ hard-coded per collection.
   vcms-help.vernonsystems.com. Verify at investigation time (ignore stale tags).
 
 ### Verified findings (vernon)
-- _(append here)_
+- **Canterbury Museum (order 26, 2026-06-10): `collection.canterburymuseum.com` is Vernon CMS**
+  (Vernon Systems — the NZ vendor behind eHive; NOT eMuseum, despite the `/objects/<id>` +
+  `/records/images/<size>/...` shape resembling it). **Detection trick:** the object landing pages are
+  behind an **AWS WAF JavaScript challenge** (HTTP **202**, header `x-amzn-waf-action: challenge`,
+  empty body) so the HTML is uncrawlable by curl / the Lambda / the Wayback crawler — but the site's
+  **404 page** (any unknown path; not challenged) loads `vernon-common.min.js` + `vernon-shortlist.min.js`
+  ⇒ Vernon. Image host is S3+CloudFront: `/records/images/<size>/<numericdir>/<sha1>.jpg`.
+- **Token ladder (decoded px on one record):** nano 35 · tiny 75 · small 150 · medium 400 · large 800 ·
+  **xlarge ~1000–1200** (200); `display`/`thumbnail`/`original`/`master`/`full`/`zoom`/`xxlarge` →
+  **S3 `403 AccessDenied`** (the 403 body is S3 error XML, NOT a real `.dzi`). Uniform across records ⇒
+  the cap is **not rights-dependent**. `large` = an 800 px bounding box; `xlarge` = ~1000–1200 px box.
+  `xlarge` is **honest** (no upscaling): == `large` when the original ≤ 800 px (~60% of the sample),
+  1.5–2.25× area when the original is bigger (~40%).
+- **No anonymous route beats `xlarge`:** no public IIIF (`/apis/iiif/*` + `/iiif/*` → uniform Vernon
+  404; `/apis/` root 404 — it's Vernon, not eMuseum, so no `/apis/iiif` services), no reachable
+  OpenSeadragon/zoom, `object_url` null, Wayback CDX empty (WAF blocks it). The object page's
+  "download from Collections Online" control **serves `xlarge`** (user-confirmed in-browser). Originals
+  are handled by the museum **Image Service** on request (no price published — an earlier "paid-only"
+  inference was withdrawn after checking the page). ⇒ **no-improvement**: the shipped `large→xlarge`
+  swap already serves the ceiling.
+- **Lesson:** for Vernon CMS instances, `xlarge` is the public ceiling and everything above it 403s;
+  detect via the **404 page** Vernon JS bundles when the object pages are WAF-challenged. The naive
+  `replacingOccurrences(of:"large",to:"xlarge")` is safe only because the harvested token is always
+  `large` (exactly one occurrence; hex SHA-1 path; fixed host) — a token already containing `large`
+  (e.g. an input `…/xlarge/…`) would corrupt to `xxlarge`; a segment-scoped `vernonLargest` would be
+  more robust if/when these are migrated to the registry (e.g. with Culture Waitaki, order 28).
 
 ---
 

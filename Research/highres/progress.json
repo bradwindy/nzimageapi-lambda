@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-09T11:30:00Z",
+  "lastUpdated": "2026-06-10T00:00:00Z",
   "removal": {
     "collection": "Wellington City Recollect",
     "status": "done"
@@ -567,19 +567,19 @@
       "platform": "stringSwap",
       "rawItemCount": 229481,
       "weight": null,
-      "status": "todo",
+      "status": "no-improvement",
       "baseline": {
-        "method": "swap large->xlarge",
-        "px": null
+        "method": "shipped strategy already swaps the harvested `large` (800px box) -> `xlarge` (Vernon CMS legacy switch, shared with Culture Waitaki)",
+        "px": "xlarge ~1000-1200px box (e.g. 1000x640, 800x1200, 1067x1127); honest native for sub-800px originals"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "no-improvement (current `large->xlarge` swap already serves the Vernon public ceiling; no anonymous route beats xlarge)",
+        "px": "xlarge ~1000-1200px box (unchanged); 1.5-2.25x area over the harvested `large` for ~40% with >800px originals, honest-native (==large) for the rest",
+        "urlPattern": "https://collection.canterburymuseum.com/records/images/xlarge/<dir>/<sha1>.jpg (unchanged)"
       },
       "commit": null,
       "log": "logs/026-canterbury-museum.md",
-      "notes": ""
+      "notes": "PLATFORM CORRECTED: Vernon CMS (Vernon Systems, the eHive vendor) -- NOT eMuseum. Detected via the 404 page's vernon-common.min.js/vernon-shortlist.min.js (object pages are AWS-WAF-challenged, HTTP 202 x-amzn-waf-action=challenge -> uncrawlable by curl/Lambda/Wayback). Images on S3+CloudFront /records/images/<size>/<dir>/<sha1>.jpg. Full Vernon token ladder probed: nano(35)/tiny(75)/small(150)/medium(400)/large(800)/xlarge(~1000-1200) return 200; display/thumbnail/original/master/full/zoom/xxlarge all S3 403 AccessDenied (uniform across 5 records -> NOT rights-dependent). No public IIIF (/apis/iiif + /iiif 404 uniform), no OpenSeadragon/zoom reachable, no alternate hi-res host (object_url null), Wayback CDX empty (WAF blocks the crawler). CORRECTION: an earlier 'paid-only originals' claim (from a web-research subagent) is WITHDRAWN -- the museum image-service page (verified directly) says copies can be ORDERED from the Image Service and that photos 'can be downloaded from Collections Online'; it publishes NO fee/charge/price wording. RESOLVED GAP: user confirmed in-browser (2026-06-10) the WAF-walled object page's 'download from Collections Online' control serves xlarge as the highest -> xlarge is the genuine public ceiling. Harvested large_thumbnail_url is uniformly the /large/ form (10/10) so the swap always applies; xlarge is honest (no upscaling -> ==large for sub-800px originals, 1.5-2.25x for bigger). CONCLUSION: current shipped large->xlarge is already optimal = no-improvement. Left in legacy switch (precedent: Tamiro/Antarctica no-improvement collections stay in the switch); replacingOccurrences(of:large,to:xlarge) is safe for Canterbury (one occurrence, hex hash, fixed host). Optional later: migrate to a registry vernonLargest segment-swap when Culture Waitaki (28, shared case) is processed."
     },
     {
       "order": 27,
