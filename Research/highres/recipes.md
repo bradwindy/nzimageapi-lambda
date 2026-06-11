@@ -285,6 +285,15 @@ hard-coded per collection.
   live eHive — always check `images.ehive.com` → route via `ehiveIIIFLargest`, never passthrough.** And
   per-account IIIF ceilings vary wildly (some accounts cap public IIIF at 1000 px; the true ≤20 MB original
   stays sign-in-only).
+- **Te Toi Uku, Crown Lynn and Clayworks Museum (2026-06-12, order 32): MOVE passthrough→`ehiveIIIFLargest`.**
+  account 3384; 8,106 records. **2nd `boutique`-mislabel-actually-eHive in a row** (cf. Te Hikoi 31). Public
+  master **capped at 1200 px** (higher than Te Hikoi's 1000): 70-record spread min 793 / max 1200 / median
+  1200; **66/70 → 1200 (×2.25 area), 2 → 1000, 2 → ≤800; 68/70 (97%) gain**. Parity: `_l` 200 70/70, IIIF
+  200 70/70, **bigger 68 / equal 1 / honest-smaller 1 / failures 0**. The one honest-smaller (`2bfc22a5`,
+  793 vs fake-800 `_l`) is the **upscaled-`_l` anomaly** — IIIF serves the real 793 px native
+  (honest-native-always). Weight 0.006. Committed (see log 032 / progress.json). ⇒ **eHive accounts each
+  set their own public IIIF cap (800 / 1000 / 1200 / full native up to ~21 MP) — always sample the actual
+  distribution per account; the transform is identical.**
 
 ---
 

@@ -118,6 +118,14 @@ final class URLProcessor: Sendable {
             // and return their native size (never a regression; 70/70 IIIF ≥ `_l`, 0 worse). Pure URL build.
             ehiveIIIFLargest(result, url)
         },
+        "Te Toi Uku, Crown Lynn and Clayworks Museum": { result, url in
+            // eHive account 3384 — same IIIF master-TIFF route as Te Hikoi/Mataura/Howick/Portrait Gallery.
+            // Public master capped at 1200 px: a 70-record spread showed ~97% gain 800→1200 (×2.25 area),
+            // a couple at 1000, and one upscaled-`_l` anomaly (honest native 793 px vs the fake-800 `_l`) —
+            // honest-native-always, consistent with orders 17/18. 68 bigger / 1 equal / 1 honest-smaller /
+            // 0 failures. Pure URL build.
+            ehiveIIIFLargest(result, url)
+        },
         "Te Papa Collections Online": { result, url in
             await tePapaLargest(result, url)
         },
@@ -187,7 +195,6 @@ final class URLProcessor: Sendable {
              "National Publicity Studios black and white file prints",
              "South Canterbury Museum",
              "Waimate Museum and Archives PastPerfect",
-             "Te Toi Uku, Crown Lynn and Clayworks Museum",
              "V.C. Browne & Son NZ Aerial Photograph Collection":
             return try await handleUrl(
                 result: result,
