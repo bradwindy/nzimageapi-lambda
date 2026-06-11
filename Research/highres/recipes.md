@@ -442,6 +442,17 @@ hard-coded per collection.
 - No known platform: GET landing page for a larger `<img>`/`og:image`/downloadable
   original; try size-token swaps; fall back to thumbnailer/weserv; else passthrough.
 
+### Verified findings (boutique)
+- **V.C. Browne & Son (order 30, 2026-06-11): commercial sales site — the public image is WATERMARKED.**
+  Own ASP.NET WebForms site (`www.vcbrowne.com`, `Detailprom.aspx?RID=<roll>&PID=<photo>`); harvested
+  `large_thumbnail_url` = `…/Images/<album>/<file>.jpg` is the only free image, uniformly **~700–756 px**
+  and **watermarked** ("Copyright V.C. Browne & Son", baked into the JPEG — *view the image to check*).
+  No-improvement: larger suffixes/dirs/handlers/resize-params all 404 or ignored; `/Images/` not listable;
+  `Detail.aspx` (non-`prom`) is an error page; detail page CAPTCHA-gated; Wayback has only `-TH` thumbs;
+  clean high-res is the **paid product**. **Lesson:** for a commercial-sales source, *visually inspect* the
+  display for a watermark, and don't be fooled by ASP.NET `TextBoxWatermarkBehavior` form-hint strings in
+  the HTML (a "watermark" that is *not* an image watermark).
+
 ---
 
 ## aklMuseumCloudimg (Auckland Museum)

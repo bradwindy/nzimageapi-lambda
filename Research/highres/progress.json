@@ -655,19 +655,19 @@
       "platform": "boutique",
       "rawItemCount": 31506,
       "weight": null,
-      "status": "todo",
+      "status": "no-improvement",
       "baseline": {
-        "method": "passthrough (large_thumbnail_url)",
-        "px": null
+        "method": "passthrough (large_thumbnail_url = the on-site display image http://www.vcbrowne.com/Images/<album>/<file>.jpg)",
+        "px": "~700-756px long side, WATERMARKED (tiled 'Copyright V.C. Browne & Son')"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "no-improvement (passthrough unchanged): the ~700px watermarked display is the only freely-available image; clean high-res is the company's paid product, no anonymous route to anything larger/un-watermarked",
+        "px": "~700-756px long side, watermarked (baseline already at the only available version)",
+        "urlPattern": "http://www.vcbrowne.com/Images/<album>/<file>.jpg (unchanged)"
       },
-      "commit": null,
+      "commit": "PENDING",
       "log": "logs/030-v-c-browne-son-nz-aerial-photograph-collection.md",
-      "notes": ""
+      "notes": "PLATFORM: V.C. Browne & Son's OWN commercial ASP.NET WebForms site (www.vcbrowne.com), a NZ aerial-photo firm that SELLS prints/digital copies. Harvested large_thumbnail_url = the on-site display /Images/<album>/<file>.jpg, uniformly ~700-756px long side AND WATERMARKED (tiled 'Copyright V.C. Browne & Son', baked into the JPEG; viewed to confirm). -TH.jpg = smaller thumb. Landing Detailprom.aspx?RID=<roll>&PID=<photo> ('prom'=promotional/public). FULL SCRAPE (user asked) found NO anonymous route to anything larger/clean: larger suffixes -HR/-L/-XL/-FULL/-ORIG/_large/-2000 all 404; resize params ?w=/?width=/?size ignored (stays 739x700); /Images/ + album folders not directory-listable (403); no parallel hi-res dir (/HiRes//Originals//Large//Master/ all 404); Detail.aspx (non-prom) is an ERROR page, Order/Basket stubs; detail page CAPTCHA-gated; no .ashx image handler; robots/sitemap 404; Wayback CDX has only the -TH THUMBNAILS (5-9KB), not a live route anyway. The page's 'watermark' strings are an ASP.NET TextBoxWatermarkBehavior (form hint), NOT an image watermark (red herring). Clean full-res scans = the paid product. CONCLUSION (user-approved 2026-06-11): no-improvement, passthrough already serves the only free image; resolution can't be improved and the watermark can't be removed anonymously; no code change; stays in legacy switch passthrough group. User considered but DECLINED removal (images are genuine if watermarked). HEALTH: ~5% dead at source (2/40 404), minor, unfixable anonymously (cf. South Canterbury 29). FOLLOW-UP: re-check only if vcbrowne.com ever serves un-watermarked/higher-res publicly (commercial model -> unlikely) or DigitalNZ re-harvests from a higher-res source."
     },
     {
       "order": 31,

@@ -6,10 +6,10 @@ these files.
 
 ## Current resume state (updated 2026-06-11)
 
-**Wellington removal: done.** Collections **1–29 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+**Wellington removal: done.** Collections **1–30 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
 self-hosted JP2→JPEG converter; Canterbury 26, Auckland Art Gallery 27, Culture Waitaki 28, South
-Canterbury Museum 29 all no-improvement). The per-collection sweep is **UNPAUSED — next is order 30 (V.C.
-Browne & Son NZ Aerial Photograph Collection).** `progress.json` is authoritative; this is a human summary.
+Canterbury Museum 29, V.C. Browne 30 all no-improvement). The per-collection sweep is **UNPAUSED — next is
+order 31.** `progress.json` is authoritative; this is a human summary.
 
 | # | collection | platform | outcome |
 |---|------------|----------|---------|
@@ -43,6 +43,7 @@ Browne & Son NZ Aerial Photograph Collection).** `progress.json` is authoritativ
 | 27 | Auckland Art Gallery Toi o Tāmaki | vernon (Vernon CMS) | no-improvement — shipped `medium→xlarge` swap already serves the reliable public ceiling (`xlarge` 1600px box; above → 403, 18/18; = the gallery's own `zoom_image`). Ruled out: live `-api` CDN `original` (3000px) is a ~4% edge-cache lottery, **not derivable** from the harvested URL (stable SHA-1 but non-linear dir remap), needs a per-request artwork-page fetch, not gallery-surfaced; eHive (account 3236) masters only 800px; no public IIIF/zoom. Left in legacy `switch` |
 | 28 | Culture Waitaki | vernon (Vernon CMS) | no-improvement — clean Canterbury clone; shipped `large→xlarge` already serves `xlarge` (1200px box, 2.25× area over harvested `large`; above → 403, 14/14). No `-api` host (all candidates fail to resolve), no public IIIF (WAF-blocked), object pages WAF-walled; eHive (account 3011) **migrated to this Vernon site** (only a profile image left). Shares the legacy `switch` `case` with Canterbury 26 — **both occupants now verified no-improvement** |
 | 29 | South Canterbury Museum | pastPerfect (was `boutique`) | no-improvement — **PastPerfect Online** (`museum_58`), same as Waimate 20: passthrough `large_thumbnail_url` is the 950px display ceiling; larger s3 variants 404, true originals 403-locked upload zips (`imageuploads2/0000000058/`), `/Media/<GUID>` is an HTML viewer, no IIIF, eHive 3359 migrated. **~9% of records dead at source** (s3+landing+Media all imageless; unfixable) — left as-is (no HEAD-check/retry; would only hard-fail). Stays in passthrough group |
+| 30 | V.C. Browne & Son NZ Aerial Photograph Collection | boutique (commercial site) | no-improvement — company's own ASP.NET sales site; passthrough `large_thumbnail_url` is the only free image, ~700–756px and **watermarked** ("Copyright V.C. Browne & Son"). Full scrape found no anonymous larger/clean route (larger suffixes/dirs/handlers/resize all 404/ignored; `/Images/` not listable; `Detail.aspx` is an error page; CAPTCHA-gated; Wayback has only thumbs); clean high-res is **paid**. User declined removal. ~5% dead at source. Stays in passthrough group |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -120,6 +121,21 @@ removed from PastPerfect (zombie records), unfixable anonymously. The Lambda val
 South Canterbury picks return a broken image; **left as-is** (user decision — a HEAD-probe would only turn a
 broken image into a hard error with no alternate to serve, cf. Tauranga 01 CAT3 / He Purapura 10). User will
 **not** pursue the museum's paid repro service. See `logs/029-south-canterbury-museum.md`.
+
+**✅ Order 30 (V.C. Browne & Son) no-improvement (2026-06-11).** A commercial aerial-photography **sales
+site** (the firm's own ASP.NET WebForms site, `www.vcbrowne.com`, `Detailprom.aspx`). The passthrough
+`large_thumbnail_url` (`…/Images/<album>/<file>.jpg`) is the **only freely-available image** — uniformly
+**~700–756 px and WATERMARKED** ("Copyright V.C. Browne & Son", baked into the JPEG; *viewed to confirm*).
+A **full site scrape** (user-requested) found **no anonymous route** to anything larger or un-watermarked:
+larger suffixes (`-HR/-L/-XL/-ORIG/_large/-2000`) and parallel hi-res dirs (`/HiRes//Originals//Large/…`)
+all 404; resize params (`?w=/?width=/?size`) ignored; `/Images/` not directory-listable (403);
+`Detail.aspx` (non-`prom`) is an **error page**, `Order/Basket` are stubs; the detail page is
+**CAPTCHA-gated**; no `.ashx` image handler; `robots.txt`/`sitemap.xml` 404; Wayback has **only the `-TH`
+thumbnails**. Clean full-resolution scans are the company's **paid product**. (The HTML's "watermark"
+strings are an ASP.NET `TextBoxWatermarkBehavior` form-hint — a red herring, not an image watermark.) User
+**considered but declined removal** (images are genuine, if watermarked). ~5 % of records are dead at
+source (404). No code change; stays in the passthrough group. See
+`logs/030-v-c-browne-son-nz-aerial-photograph-collection.md`.
 
 **Also learned (order 25):** `thumbnailer.digitalnz.org` is **decommissioned (NXDOMAIN)** — the
 `thumbnailerProxy` recipe/helper is dead (helper is unreferenced; remove in the final cleanup).
