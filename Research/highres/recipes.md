@@ -320,6 +320,21 @@ hard-coded per collection.
   `large` (exactly one occurrence; hex SHA-1 path; fixed host) — a token already containing `large`
   (e.g. an input `…/xlarge/…`) would corrupt to `xxlarge`; a segment-scoped `vernonLargest` would be
   more robust if/when these are migrated to the registry (e.g. with Culture Waitaki, order 28).
+- **Auckland Art Gallery Toi o Tāmaki (order 27, 2026-06-11): also Vernon CMS**
+  (`artgallery-collection.cdn.aucklandunlimited.com/records/images/<size>/<dir>/<sha1>.jpg`), harvested at
+  the **`medium`** (400px) token. Shipped `medium→xlarge` already serves **`xlarge` = 1600 px box** (200 for
+  18/18; above `xlarge` → 403 uniformly) = the ceiling the gallery's own page displays (its artwork-page
+  `zoom_image` is `xlarge`). ⇒ **no-improvement.** Two Vernon-specific lessons here that Canterbury didn't
+  show: (1) **AAG runs a *second* CDN host** `artgallery-collection-**api**.cdn…` (the live website's host)
+  that exposes an extra **`original` = 3000 px** token — but it is a **disjoint** record set (the SHA-1
+  hash is **stable** across hosts, yet the `<dir>` bucket remaps **non-linearly** — 12457→13856 = +1399 but
+  646→7620 = +6974 — and the harvested dir+hash 403s on `-api`), `original` is an **unreliable ~4%
+  edge-cache lottery** (cold = 403; the gallery never requests it), and it's **not derivable** from the
+  harvested URL (would need a per-request artwork-page remap). Not worth it. (2) **eHive ≠ the high-res
+  source here:** AAG is on eHive (account 3236, `iiif.ehive.com` live) but its eHive masters are only
+  **800×608** — *worse* than the Vernon `xlarge`. So a museum can keep high-res in Vernon CMS while pushing
+  only thumbnails to eHive — always measure both. The artwork **id is stable** across the site restructure
+  (`/artwork/4166` ↔ `/artwork/4166/<title-slug>`; slug = slugified title, required).
 
 ---
 

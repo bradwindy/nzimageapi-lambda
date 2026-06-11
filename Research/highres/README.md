@@ -4,12 +4,12 @@ This directory is the **single source of truth** for the high-res collection swe
 A fresh Claude Code session with zero prior context can resume the work using only
 these files.
 
-## Current resume state (updated 2026-06-10)
+## Current resume state (updated 2026-06-11)
 
-**Wellington removal: done.** Collections **1–26 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
-self-hosted JP2→JPEG converter; Canterbury 26 no-improvement). The per-collection sweep is **UNPAUSED —
-next is order 27 (Auckland Art Gallery Toi o Tāmaki).** `progress.json` is authoritative; this is a human
-summary.
+**Wellington removal: done.** Collections **1–27 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+self-hosted JP2→JPEG converter; Canterbury 26 no-improvement; Auckland Art Gallery 27 no-improvement). The
+per-collection sweep is **UNPAUSED — next is order 28 (Culture Waitaki).** `progress.json` is authoritative;
+this is a human summary.
 
 | # | collection | platform | outcome |
 |---|------------|----------|---------|
@@ -40,6 +40,7 @@ summary.
 | 24 | Hawke's Bay Knowledge Bank | knowledgeBankMaster | committed — **fixed broken weserv** (weserv 404s on its CDN); new `knowledgeBankMaster` scrapes landing for the honest `/master/` original (up to 76 MP), direct; honest harvested fallback (never the upscaled `/images/<base>.jpg` rendition) |
 | 25 | TAPUHI | ndha (Rosetta JP2) | committed — self-hosted Python+Pillow **JP2→JPEG converter Lambda** (SAM stack, Function URL) + `tapuhiConverter` strategy; verified live (3737×2148 / 4000×3066, renders in Chrome); 700px `NLNZStreamGate` fallback. See `logs/025-tapuhi.md` |
 | 26 | Canterbury Museum | vernon (Vernon CMS) | no-improvement — shipped `large→xlarge` swap already serves the public ceiling. `xlarge` (~1000–1200px box) is the max public derivative; `display`/`original`/`master`/`full`/`xxlarge` all S3 403; no public IIIF/zoom; object pages AWS-WAF-walled; the site's own "download" serves `xlarge` (user-confirmed). NOT eMuseum — Vernon (detected via the 404 page's `vernon-*.min.js`). Left in legacy `switch` (shared with Culture Waitaki) |
+| 27 | Auckland Art Gallery Toi o Tāmaki | vernon (Vernon CMS) | no-improvement — shipped `medium→xlarge` swap already serves the reliable public ceiling (`xlarge` 1600px box; above → 403, 18/18; = the gallery's own `zoom_image`). Ruled out: live `-api` CDN `original` (3000px) is a ~4% edge-cache lottery, **not derivable** from the harvested URL (stable SHA-1 but non-linear dir remap), needs a per-request artwork-page fetch, not gallery-surfaced; eHive (account 3236) masters only 800px; no public IIIF/zoom. Left in legacy `switch` |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -68,6 +69,26 @@ ceiling: the Vernon token ladder caps at **`xlarge` (~1000–1200 px box)** and
 Online" serves `xlarge` (user-confirmed in-browser). An earlier "paid-only originals" claim was a
 subagent inference — **withdrawn** (the Image Service page publishes no price). No code change; left in
 the legacy `switch` (precedent: other no-improvement Group-A collections). See `logs/026-canterbury-museum.md`.
+
+**✅ Order 27 (Auckland Art Gallery Toi o Tāmaki) no-improvement (2026-06-11).** Also **Vernon CMS**
+(`artgallery-collection.cdn.aucklandunlimited.com/records/images/<size>/<dir>/<sha1>.jpg`), harvested at the
+**`medium`** (400px) token. Shipped `medium→xlarge` already serves **`xlarge` = 1600 px box** (200 for 18/18;
+everything above `xlarge` → 403, uniform) — the same ceiling the gallery's own artwork page displays (its
+`zoom_image` field is `xlarge`; no `download`/IIIF/OpenSeadragon on the AAG page). **Two Vernon lessons
+Canterbury didn't surface:** (1) **a second CDN host** `artgallery-collection-**api**.cdn…` (the live
+website's host) exposes an extra **`original` = 3000 px** token — but it's a **disjoint** record set (SHA-1
+hash **stable** across hosts, yet the `<dir>` bucket remaps **non-linearly**: 12457→13856 = +1399 but
+646→7620 = +6974; the harvested dir+hash 403s on `-api`), `original` is an **unreliable ~4% edge-cache
+lottery** (`0/21` + `0/70` + `0/7`-gentle-with-a-200-control all 403; only ~4 records ever 200, flipping —
+ruled out rate-limiting), it's **not derivable** from the harvested URL (would need a per-request
+artwork-page remap: id stable from harvested landing + slug from title), and the gallery never surfaces it.
+(2) **eHive ≠ the high-res source:** AAG is on eHive (account **3236**, `iiif.ehive.com` master service live)
+but its eHive masters are only **800×608** — *worse* than the Vernon `xlarge`; a museum can keep high-res in
+Vernon CMS while pushing only thumbnails to eHive (always measure both). **Stale-harvest:** the harvested
+`landing_url` + DigitalNZ `source` redirect both 404 (AAG restructured), but the artwork **id is stable**
+(`/artwork/4166` ↔ `/artwork/4166/totaranui-i`) and the harvested image CDN still serves `medium`/`large`/
+`xlarge` (200), so the shipped strategy is unaffected. No code change; left in the legacy `switch`. See
+`logs/027-auckland-art-gallery-toi-o-tamaki.md`.
 
 **Also learned (order 25):** `thumbnailer.digitalnz.org` is **decommissioned (NXDOMAIN)** — the
 `thumbnailerProxy` recipe/helper is dead (helper is unreferenced; remove in the final cleanup).
@@ -100,8 +121,9 @@ no-improvement), Auckland Libraries Heritage (thumbnailer), Auckland Museum (clo
 Culture Waitaki (large→xlarge; Canterbury 26 shares this `case` — **verified no-improvement
 2026-06-10, intentionally left in the switch**), passthrough group (Antarctica, National
 Publicity, South Canterbury, Waimate, Te Toi Uku, Te Hikoi, V.C. Browne), TAPUHI
-(fetchTapuhiHighResUrl), Hawke's Bay (weserv), Auckland Art Gallery (medium→xlarge), National Army
-Museum (og:image→downloadwiz). Migrated to the registry so far: all Recollect (1–10), all Flickr
+(fetchTapuhiHighResUrl), Hawke's Bay (weserv), Auckland Art Gallery (medium→xlarge; **verified
+no-improvement 2026-06-11, intentionally left in the switch** — Vernon CMS, `xlarge` is the public
+ceiling), National Army Museum (og:image→downloadwiz). Migrated to the registry so far: all Recollect (1–10), all Flickr
 (11–15), Kura (16), **eHive (Howick 17, Mataura 18, NZ Portrait Gallery 19) via `ehiveIIIFLargest`**,
 **Te Papa (21) via `tePapaLargest`**.
 

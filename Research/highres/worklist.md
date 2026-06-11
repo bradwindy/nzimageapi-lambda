@@ -6,7 +6,7 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 ## Removal
 - [x] REMOVE Wellington City Recollect — done
 
-## Collections (26/52 terminal)
+## Collections (27/52 terminal)
 
 ### recollect
 - [x] (01) Tauranga City Libraries Other Collection — group A — platform recollect — committed
@@ -51,7 +51,7 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 
 ### stringSwap
 - [x] (26) Canterbury Museum — group A — platform stringSwap — no-improvement
-- [ ] (27) Auckland Art Gallery Toi o Tāmaki — group A — platform stringSwap — todo
+- [x] (27) Auckland Art Gallery Toi o Tāmaki — group A — platform stringSwap — no-improvement
 - [ ] (28) Culture Waitaki — group A — platform stringSwap — todo
 
 ### boutique
