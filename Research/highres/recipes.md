@@ -335,6 +335,16 @@ hard-coded per collection.
   **800×608** — *worse* than the Vernon `xlarge`. So a museum can keep high-res in Vernon CMS while pushing
   only thumbnails to eHive — always measure both. The artwork **id is stable** across the site restructure
   (`/artwork/4166` ↔ `/artwork/4166/<title-slug>`; slug = slugified title, required).
+- **Culture Waitaki (order 28, 2026-06-11): also Vernon CMS, a clean clone of Canterbury (26)** —
+  `collection.culturewaitaki.org.nz/records/images/<size>/<dir>/<sha1>.jpg` (image host == landing host),
+  harvested at **`large`**, object pages `/objects/<id>` **WAF-walled** (202 empty / 403 CloudFront). Ladder
+  caps at **`xlarge` = 1200 px box** (above → 403, 14/14); shipped `large→xlarge` already serves it = a real
+  **2.25× area** win, honest (masters ≥1200 px). ⇒ **no-improvement.** Unlike AAG (27) there is **no `-api`
+  host** (`collection-api…`/`collection.cdn…`/`collection-api.cdn…` all fail to resolve) so no `original`
+  route; no public IIIF (`/apis/iiif`+`/iiif` 403 WAF-blocked). **eHive 3011 is dead/migrated:** the Kōtuia
+  aggregator org-page-3011 carries only the account *profile* image and links back to this Vernon site — the
+  museum moved its collection off eHive onto Vernon, so `ehiveaccountid:3011` is a stale harvest id. Shares
+  the legacy `switch` `case` with Canterbury — **both occupants now verified no-improvement**.
 
 ---
 

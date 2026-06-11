@@ -611,19 +611,19 @@
       "platform": "stringSwap",
       "rawItemCount": 8309,
       "weight": null,
-      "status": "todo",
+      "status": "no-improvement",
       "baseline": {
-        "method": "swap large->xlarge",
-        "px": null
+        "method": "shipped strategy swaps the harvested `large` (800px box) -> `xlarge` (Vernon CMS legacy switch, shared with Canterbury 26). Verified 14/14 xlarge HTTP 200, honest (masters >=1200px)",
+        "px": "xlarge 1200px box (e.g. 1200x857, 1007x1200); 2.25x area over the harvested large 800px"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "no-improvement (current `large->xlarge` swap already serves the Vernon public ceiling; nothing beats xlarge)",
+        "px": "xlarge 1200px box (unchanged); 2.25x area over harvested large",
+        "urlPattern": "https://collection.culturewaitaki.org.nz/records/images/xlarge/<dir>/<sha1>.jpg (unchanged)"
       },
-      "commit": null,
+      "commit": "PENDING",
       "log": "logs/028-culture-waitaki.md",
-      "notes": ""
+      "notes": "PLATFORM: Vernon CMS (Vernon Systems) -- a structural CLONE of Canterbury (26). Image host == landing host collection.culturewaitaki.org.nz (S3+CloudFront), /records/images/<size>/<dir>/<sha1>.jpg, harvested token `large`. Object pages /objects/<id> are AWS-WAF-walled (HTTP 202 empty / 403 CloudFront, uncrawlable). Token ladder: nano(35)/tiny(75)/small(150)/medium(400)/large(800)/xlarge(1200) return 200; xxlarge/display/thumbnail/original/master/full/zoom/raw all 403 (uniform across 14 records -> NOT rights-dependent). Shipped `large->xlarge` already serves xlarge (1200px) = the public ceiling, a genuine 2.25x area win over harvested large (verified 14/14, all masters >=1200px so xlarge is honest, not upscaled). RULED OUT bigger routes: (1) NO second -api CDN host (unlike AAG 27) -- collection-api.culturewaitaki.org.nz / collection.cdn... / collection-api.cdn... all fail to resolve (000), so no `original` route. (2) NO public IIIF/zoom (/apis/iiif + /iiif 403 WAF-blocked). (3) eHive account 3011 is DEAD/MIGRATED: the Kotuia aggregator org-page-3011 carries only the account profile image (images.ehive.com/accounts/3011/profiles/...) and links to the Vernon site collection.culturewaitaki.org.nz/explore -- no eHive object pages/masters; Culture Waitaki migrated from eHive to Vernon CMS, ehiveaccountid:3011 is a legacy harvest id (even live, a district-museum eHive master <=800px is worse than 1200px, and unmappable from WAF-walled Vernon records). CONCLUSION (user-approved 2026-06-11): no-improvement, no code change. SHARED CASE NOW FULLY RESOLVED: both occupants of case \"Canterbury Museum\",\"Culture Waitaki\" verified no-improvement. replacingOccurrences(of:large,with:xlarge) is safe for both (one occurrence; numeric dir; hex hash cannot contain l/r/g). Left in legacy switch (precedent: Canterbury 26 / Tamiro / Antarctica). Optional later: segment-scoped vernonLargest registry strategy shared with Canterbury (26) + AAG (27). FOLLOW-UP: re-open if a public IIIF/zoom or an -api host appears, or the >xlarge 403 cap is lifted."
     },
     {
       "order": 29,
