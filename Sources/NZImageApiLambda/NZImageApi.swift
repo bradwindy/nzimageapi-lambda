@@ -58,6 +58,7 @@ public struct NZImageApi: Sendable {
         "Australian National Maritime Museum Flickr": 0.001,
         "Mataura Museum NZMuseums": 0.003,
         "New Zealand Portrait Gallery NZMuseums": 0.001,
+        "Te Ūaka The Lyttelton Museum": 0.009,
     ]
 
     public func image(collection: String?, logger: @Sendable (String) -> Void = { _ in }) async -> NZRecordsResult? {

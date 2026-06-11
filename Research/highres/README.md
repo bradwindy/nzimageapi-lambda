@@ -6,12 +6,12 @@ these files.
 
 ## Current resume state (updated 2026-06-12)
 
-**Wellington removal: done.** Collections **1–32 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+**Wellington removal: done.** Collections **1–33 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
 self-hosted JP2→JPEG converter; Canterbury 26, Auckland Art Gallery 27, Culture Waitaki 28, South
 Canterbury Museum 29, V.C. Browne 30 all no-improvement; **Te Hikoi 31 + Te Toi Uku 32 committed
-IMPROVEMENTS** — both `boutique`-mislabel-actually-eHive, passthrough→`ehiveIIIFLargest`, 800→1000/1200px).
-The per-collection sweep is **UNPAUSED — next is order 33.** `progress.json` is authoritative; this is a
-human summary.
+IMPROVEMENTS**, **Te Ūaka 33 committed Group B ADD** — all three `boutique`-mislabel-actually-eHive,
+`ehiveIIIFLargest`, 800→1000/1200/up-to-4000px). The per-collection sweep is **UNPAUSED — next is order 34.**
+`progress.json` is authoritative; this is a human summary.
 
 | # | collection | platform | outcome |
 |---|------------|----------|---------|
@@ -48,6 +48,7 @@ human summary.
 | 30 | V.C. Browne & Son NZ Aerial Photograph Collection | boutique (commercial site) | no-improvement — company's own ASP.NET sales site; passthrough `large_thumbnail_url` is the only free image, ~700–756px and **watermarked** ("Copyright V.C. Browne & Son"). Full scrape found no anonymous larger/clean route (larger suffixes/dirs/handlers/resize all 404/ignored; `/Images/` not listable; `Detail.aspx` is an error page; CAPTCHA-gated; Wayback has only thumbs); clean high-res is **paid**. User declined removal. ~5% dead at source. Stays in passthrough group |
 | 31 | Te Hikoi Museum | ehiveIIIF (was `boutique`) | **committed IMPROVEMENT** — **live eHive** (account 3278), was mis-placed in the passthrough group serving the `_l` 800px derivative. Moved to the existing proven `ehiveIIIFLargest` (same as Mataura 18 / Howick 17 / Portrait Gallery 19) → IIIF `full/full` master. Te Hikoi's public master is **capped at exactly 1000px** (bimodal exact-800/1000 = server-side cap; true ≤20MB original is sign-in-only). **80% of records 800→1000 (×1.56 area), 20% already ≤800 → native, 0/70 worse or failed.** `swift build` 0; CollectionTester ×3 HTTP 200 |
 | 32 | Te Toi Uku, Crown Lynn and Clayworks Museum | ehiveIIIF (was `boutique`) | **committed IMPROVEMENT** — **live eHive** (account 3384), 2nd `boutique`-mislabel-actually-eHive in a row. Same fix → `ehiveIIIFLargest` IIIF `full/full` master. Public master **capped at 1200px** (higher than Te Hikoi's 1000): **66/70 → 1200 (×2.25 area), 2 → 1000, 2 → ≤800; 68/70 (97%) gain.** Health: `_l` 200 70/70, IIIF 200 70/70, bigger 68 / equal 1 / honest-smaller 1 (de-faked 793 vs upscaled-800 `_l`) / 0 failures. `swift build` 0; CollectionTester ×3 HTTP 200 (1200×1053 vs `_l` 800×702) |
+| 33 | Te Ūaka The Lyttelton Museum | ehiveIIIF (was `boutique`) | **committed Group B ADD** — **live eHive** (account 5362), 3rd `boutique`-mislabel-actually-eHive in a row; was **NOT in the Lambda** (no weight → never served; recent Lyttelton Museum rebrand). **Added** `ehiveIIIFLargest` + `collectionWeights` 0.009 (provisional). **MIXED masters** (120-rec full sample): ≤800: 48 (40%, parity), 1000: 54 (45%, ×1.56), **4000/12 MP: 18 (15%, ×25 area)** → 60% gain, 0 worse, 0 failures. 4000px batch (`cpa*` ids) is real native (info.json pyramid + `full/max`). Sampling trap noted (hex-only regex hid the 4000px non-hex ids). `swift build` 0; CollectionTester ×4 HTTP 200 |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -172,6 +173,21 @@ accounts each set their own public IIIF cap (800 / 1000 / 1200 / full native up 
 distribution per account; the `ehiveIIIFLargest` transform is identical.** See
 `logs/032-te-toi-uku-crown-lynn-and-clayworks-museum.md`.
 
+**✅ Order 33 (Te Ūaka The Lyttelton Museum) committed Group B ADD (2026-06-12).** **3rd
+`boutique`-mislabel-actually-eHive in a row** — live eHive account **5362** (~18,588 records). **Was NOT in
+the Lambda:** no `collectionWeights` entry, so `weightedRandomPick()` never selected it (`Te Ūaka` is a
+recent rebrand of Lyttelton Museum, post-dating the 2024 weights snapshot). **Added** a `strategies` entry →
+the existing proven **`ehiveIIIFLargest`** AND `collectionWeights` **0.009** (provisional rawItemCount-share,
+renormalized in the final pass). Te Ūaka's masters are **MIXED** (unlike Te Hikoi's 1000 / Te Toi Uku's 1200
+single caps): a 120-record sample across the FULL collection = min 800 / max 4000 / median 1000 — **≤800: 48
+(40%, parity), 1000: 54 (45%, ×1.56), 4000 px / 12 MP: 18 (15%, ×25 area)** → **72/120 (60%) gain, 0 worse, 0
+failures**. The 4000 px batch (the older `cpa*`-token ids) is a **real native master** (info.json pyramid
+125→4000, 6 scaleFactors; `full/full`==`full/max`; `full/6000,` upscales-fake). **★ Sampling trap recorded:**
+an initial hex-only id regex BIASED the sample to the 1000 px newer uploads and MISSED the 4000 px non-hex
+ids — classify eHive ids by the actual `ehiveIIIFLargest` rule (drop only the last `_<size>`). `swift build`
+0; CollectionTester ×4 HTTP 200 image/jpeg (972×1000; **800×600 non-hex parity record**; 1000×765; 997×1000;
+plus verified 4000×3000 `cpa` master). See `logs/033-te-uaka-the-lyttelton-museum.md`.
+
 **Also learned (order 25):** `thumbnailer.digitalnz.org` is **decommissioned (NXDOMAIN)** — the
 `thumbnailerProxy` recipe/helper is dead (helper is unreferenced; remove in the final cleanup).
 
@@ -219,8 +235,9 @@ Hocken). Recollect domains live in `recollectDomainMap`. **`ehiveIIIFLargest`** 
 (honest native master; pure string build, no fetch).
 
 **Provisional weights pending final renormalization:** Hastings 0.004, Lower Hutt 0.002, Hocken
-0.05 (added); Presbyterian 0.014 (removed). Weights currently sum < 1.0 — expected; the final pass
-recomputes all from `rawItemCount`.
+0.05 (added); Mataura 0.003, Portrait Gallery 0.001, **Te Ūaka 0.009 (added — Group B, order 33)**;
+Presbyterian 0.014 (removed). Weights currently sum < 1.0 — expected; the final pass recomputes all
+from `rawItemCount`.
 
 **Env gotchas:** `swift build`/`run` + DigitalNZ/asset hosts need the command sandbox OFF;
 `lsof -ti :7000 | xargs -r kill -9` between `CollectionTester` runs (stale-binary trap); git

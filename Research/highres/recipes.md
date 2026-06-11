@@ -294,6 +294,17 @@ hard-coded per collection.
   (honest-native-always). Weight 0.006. Committed (see log 032 / progress.json). ⇒ **eHive accounts each
   set their own public IIIF cap (800 / 1000 / 1200 / full native up to ~21 MP) — always sample the actual
   distribution per account; the transform is identical.**
+- **Te Ūaka The Lyttelton Museum (2026-06-12, order 33): Group B ADD via `ehiveIIIFLargest`.** account 5362;
+  18,588 records. **3rd `boutique`-mislabel-actually-eHive in a row.** Was **NOT in `collectionWeights`** (a
+  recent rebrand of Lyttelton Museum, post-dating the 2024 weights snapshot) → never served; **added** the
+  registry entry + a provisional weight **0.009**. **MIXED master distribution** (unlike Te Hikoi's 1000-cap
+  / Te Toi Uku's 1200-cap): 120-record full-collection sample = min 800 / max 4000 / median 1000;
+  **≤800: 48 (40%, parity), 1000: 54 (45%, ×1.56), 4000/12 MP: 18 (15%, ×25 area)** → 72/120 (60%) gain, 0
+  worse, 0 failures. The 4000 px batch (`cpa*` ids) is a **real native master** (info.json pyramid 125→4000,
+  `full/full`==`full/max`, `full/6000,` upscales-fake). ⇒ **★ SAMPLING TRAP: a hex-only id regex BIASED the
+  sample to the 1000 px newer uploads and MISSED the older non-hex ids (`ji3o28_cpap`, `13jcqnp_97mc`) that
+  carry the 4000 px masters.** Always classify eHive ids by the **actual `ehiveIIIFLargest` rule (drop only
+  the last `_<size>`)**, never assume a 32-hex id. Committed (see log 033 / progress.json).
 
 ---
 

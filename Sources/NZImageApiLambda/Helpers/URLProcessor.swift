@@ -126,6 +126,14 @@ final class URLProcessor: Sendable {
             // 0 failures. Pure URL build.
             ehiveIIIFLargest(result, url)
         },
+        "Te Ūaka The Lyttelton Museum": { result, url in
+            // eHive account 5362 — same IIIF master-TIFF route (ehiveIIIFLargest) as the rest of the eHive
+            // cluster. Group B ADD (new collection; also added to collectionWeights). Mixed masters across a
+            // 120-record full-collection sample: ~40% are 800 px native (parity), ~45% 1000 px (×1.56 area),
+            // ~15% are full 4000 px / 12 MP (×25 area) — 60% gain, 0 failures, 0 honest-smaller. Handles the
+            // older non-hex image ids (e.g. `ji3o28_cpap_l`) too (drop only the last `_<size>`). Pure URL build.
+            ehiveIIIFLargest(result, url)
+        },
         "Te Papa Collections Online": { result, url in
             await tePapaLargest(result, url)
         },
