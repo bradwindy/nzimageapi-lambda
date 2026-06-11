@@ -6,10 +6,10 @@ these files.
 
 ## Current resume state (updated 2026-06-11)
 
-**Wellington removal: done.** Collections **1–28 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
-self-hosted JP2→JPEG converter; Canterbury 26, Auckland Art Gallery 27, Culture Waitaki 28 all
-no-improvement). The per-collection sweep is **UNPAUSED — next is order 29.** `progress.json` is
-authoritative; this is a human summary.
+**Wellington removal: done.** Collections **1–29 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+self-hosted JP2→JPEG converter; Canterbury 26, Auckland Art Gallery 27, Culture Waitaki 28, South
+Canterbury Museum 29 all no-improvement). The per-collection sweep is **UNPAUSED — next is order 30 (V.C.
+Browne & Son NZ Aerial Photograph Collection).** `progress.json` is authoritative; this is a human summary.
 
 | # | collection | platform | outcome |
 |---|------------|----------|---------|
@@ -42,6 +42,7 @@ authoritative; this is a human summary.
 | 26 | Canterbury Museum | vernon (Vernon CMS) | no-improvement — shipped `large→xlarge` swap already serves the public ceiling. `xlarge` (~1000–1200px box) is the max public derivative; `display`/`original`/`master`/`full`/`xxlarge` all S3 403; no public IIIF/zoom; object pages AWS-WAF-walled; the site's own "download" serves `xlarge` (user-confirmed). NOT eMuseum — Vernon (detected via the 404 page's `vernon-*.min.js`). Left in legacy `switch` (shared with Culture Waitaki) |
 | 27 | Auckland Art Gallery Toi o Tāmaki | vernon (Vernon CMS) | no-improvement — shipped `medium→xlarge` swap already serves the reliable public ceiling (`xlarge` 1600px box; above → 403, 18/18; = the gallery's own `zoom_image`). Ruled out: live `-api` CDN `original` (3000px) is a ~4% edge-cache lottery, **not derivable** from the harvested URL (stable SHA-1 but non-linear dir remap), needs a per-request artwork-page fetch, not gallery-surfaced; eHive (account 3236) masters only 800px; no public IIIF/zoom. Left in legacy `switch` |
 | 28 | Culture Waitaki | vernon (Vernon CMS) | no-improvement — clean Canterbury clone; shipped `large→xlarge` already serves `xlarge` (1200px box, 2.25× area over harvested `large`; above → 403, 14/14). No `-api` host (all candidates fail to resolve), no public IIIF (WAF-blocked), object pages WAF-walled; eHive (account 3011) **migrated to this Vernon site** (only a profile image left). Shares the legacy `switch` `case` with Canterbury 26 — **both occupants now verified no-improvement** |
+| 29 | South Canterbury Museum | pastPerfect (was `boutique`) | no-improvement — **PastPerfect Online** (`museum_58`), same as Waimate 20: passthrough `large_thumbnail_url` is the 950px display ceiling; larger s3 variants 404, true originals 403-locked upload zips (`imageuploads2/0000000058/`), `/Media/<GUID>` is an HTML viewer, no IIIF, eHive 3359 migrated. **~9% of records dead at source** (s3+landing+Media all imageless; unfixable) — left as-is (no HEAD-check/retry; would only hard-fail). Stays in passthrough group |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -102,6 +103,23 @@ and **eHive account 3011 is dead/migrated** (the Kōtuia aggregator org-page-301
 *profile* image and links to this Vernon site — the museum moved its collection off eHive onto Vernon;
 `ehiveaccountid:3011` is a stale harvest id). Shares the legacy `switch` `case` with Canterbury 26 — **both
 occupants now verified no-improvement.** No code change. See `logs/028-culture-waitaki.md`.
+
+**✅ Order 29 (South Canterbury Museum) no-improvement (2026-06-11).** Platform identified (was `boutique`):
+**PastPerfect Online** (`s3.amazonaws.com/pastperfectonline/images/museum_58/…`, landing
+`timdc.pastperfectonline.com`) — the **same platform as Waimate (20)**. The passthrough
+`large_thumbnail_url` **is** the display image, hard-capped at **950 px long side** = the public ceiling.
+No larger anonymous route: larger s3 variants (`original/`/`large/`/`.tif`/`full/`) 404; `<file>-2.jpg` is
+the same 950 px; `/Media/<GUID>` is an **HTML viewer page**, not an image; no IIIF/zoom; the "Original/Copy"
+strings are catalog field labels. True originals exist only as **403-locked upload zips**
+(`imageuploads2/0000000058/…Images###.zip`, GET = 403); eHive **3359** is migrated/legacy. Same resolution
+outcome as Waimate 20 — no code change, stays in the passthrough group. **New caveat: ~9 % of records are
+dead at source** (well-spread 250-sample = 8.8 %; older T-numbered photo batch ~16 %): the harvested s3 URL
+404s, **and** the thumb + landing + `/Media` viewer reference no image (0/8 recoverable) — the image was
+removed from PastPerfect (zombie records), unfixable anonymously. The Lambda validates only non-null
+`large_thumbnail_url` (no HEAD-check / retry loop — `DigitalNZAPIDataSource.swift:108-117`), so ~9 % of
+South Canterbury picks return a broken image; **left as-is** (user decision — a HEAD-probe would only turn a
+broken image into a hard error with no alternate to serve, cf. Tauranga 01 CAT3 / He Purapura 10). User will
+**not** pursue the museum's paid repro service. See `logs/029-south-canterbury-museum.md`.
 
 **Also learned (order 25):** `thumbnailer.digitalnz.org` is **decommissioned (NXDOMAIN)** — the
 `thumbnailerProxy` recipe/helper is dead (helper is unreferenced; remove in the final cleanup).

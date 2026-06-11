@@ -283,7 +283,22 @@ hard-coded per collection.
 - **Collection:** Waimate Museum and Archives PastPerfect.
 
 ### Verified findings (pastPerfect)
-- _(append here)_
+- **PastPerfect Online (Waimate 20 = `museum_1110`; South Canterbury Museum 29 = `museum_58`):** the
+  harvested `large_thumbnail_url` (`s3.amazonaws.com/pastperfectonline/images/museum_<n>/<dir>/<file>.jpg`)
+  **is** the display image, hard-capped at **950 px long side** — the public ceiling. ⇒ **no-improvement /
+  passthrough.** No larger anonymous variant: `original/`/`large/`/`<f>_large`/`<f>.tif`/`full/` all 404;
+  `<file>-2.jpg` is the same 950 px (alternate view); `/Media/<GUID>` is an **HTML viewer page**, not an
+  image; no public IIIF/DZI/zoom. The page's "Original / Original/Copy" strings are **catalog field
+  labels**, not a download (the only `…/original/…` URLs are the museum logo under `museumlogos/`).
+- **Originals exist but are 403-locked.** The S3 bucket is publicly **listable**: the museum's batch upload
+  archives sit at `imageuploads2/<10-digit-zero-padded museum id>/…_Images###.zip` (+ `…Thumbs.zip`) —
+  e.g. `imageuploads2/0000000058/` for museum 58 — but GET = **403 AccessDenied** (bucket grants
+  `ListBucket`, not `GetObject` on the upload prefix) and they're zip archives (not per-image /
+  browser-displayable). Repro copies are the paid museum service, not a Lambda route.
+- **Harvest can rot (South Canterbury 29):** ~9 % of `museum_58` records are **dead at source** — the S3
+  display + thumb 404 (`NoSuchKey`) and the landing/`Media` viewer reference no image (image removed from
+  PastPerfect). Unfixable anonymously; passthrough serves a broken image for those. Worth a quick
+  broken-rate sample on any PastPerfect collection (the Lambda has no HEAD-check / retry loop).
 
 ---
 
