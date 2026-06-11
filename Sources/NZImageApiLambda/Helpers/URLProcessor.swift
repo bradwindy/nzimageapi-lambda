@@ -111,6 +111,13 @@ final class URLProcessor: Sendable {
             // eHive account 3272 — same IIIF master-TIFF route as Mataura/Howick.
             ehiveIIIFLargest(result, url)
         },
+        "Te Hikoi Museum": { result, url in
+            // eHive account 3278 — same IIIF master-TIFF route as Mataura/Howick/Portrait Gallery.
+            // Te Hikoi's public master is capped at 1000 px (smaller than the ~12 MP Mataura masters):
+            // a 70-record spread showed ~80% gain 800→1000 (×1.56 area) and the rest are already ≤ 800
+            // and return their native size (never a regression; 70/70 IIIF ≥ `_l`, 0 worse). Pure URL build.
+            ehiveIIIFLargest(result, url)
+        },
         "Te Papa Collections Online": { result, url in
             await tePapaLargest(result, url)
         },
@@ -181,7 +188,6 @@ final class URLProcessor: Sendable {
              "South Canterbury Museum",
              "Waimate Museum and Archives PastPerfect",
              "Te Toi Uku, Crown Lynn and Clayworks Museum",
-             "Te Hikoi Museum",
              "V.C. Browne & Son NZ Aerial Photograph Collection":
             return try await handleUrl(
                 result: result,

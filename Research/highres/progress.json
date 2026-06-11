@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-11T00:00:00Z",
+  "lastUpdated": "2026-06-12T00:00:00Z",
   "removal": {
     "collection": "Wellington City Recollect",
     "status": "done"
@@ -674,22 +674,22 @@
       "name": "Te Hikoi Museum",
       "slug": "te-hikoi-museum",
       "group": "A",
-      "platform": "boutique",
+      "platform": "ehiveIIIF",
       "rawItemCount": 8589,
-      "weight": null,
-      "status": "todo",
+      "weight": 0.006,
+      "status": "committed",
       "baseline": {
-        "method": "passthrough (large_thumbnail_url)",
-        "px": null
+        "method": "passthrough (raw large_thumbnail_url = eHive _l derivative, images.ehive.com/accounts/3278/objects/images/<hash>_l.jpg)",
+        "px": "_l = 800px long side (~0.4-0.5 MP)"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "MOVE from legacy switch passthrough group to the registry pointing at the existing proven ehiveIIIFLargest (shared with Mataura 18 / Howick 17 / Portrait Gallery 19): IIIF 2.0 /full/full/ over the master TIFF at iiif.ehive.com (drop _l suffix, .jpg->.tif, '/'->'%2f'). Pure URL construction, no request-time fetch.",
+        "px": "IIIF master, Te Hikoi public cap = 1000px long side: ~80% of records 800->1000 (x1.25 linear, x1.56 area), ~20% already <=800 -> native (no regression). 70/70 IIIF>=_l (56 bigger, 14 equal, 0 worse/failed).",
+        "urlPattern": "https://iiif.ehive.com/iiif/2/accounts%2f3278%2fobjects%2fimages%2f<hash>.tif/full/full/0/default.jpg"
       },
       "commit": null,
       "log": "logs/031-te-hikoi-museum.md",
-      "notes": ""
+      "notes": "PLATFORM IDENTIFIED (was boutique->ehiveIIIF): LIVE eHive account 3278, same platform as Mataura(18)/Howick(17)/Portrait Gallery(19). Te Hikoi was mis-placed in the legacy switch passthrough group (serving the _l 800px derivative) even though the codebase already has the proven ehiveIIIFLargest strategy. FINDING: eHive's public IIIF service over the master TIFF at iiif.ehive.com/full/full/ returns the native master as browser JPEG, no sign-in. Te Hikoi's masters are CAPPED at exactly 1000px (bimodal exact-800/exact-1000 split = a server-side public cap, NOT natural original sizes; eHive docs confirm the true <=20MB original is sign-in-only). Distribution (70-record spread): min 800, max 1000, median 1000, mean 960 -- 56/70 (80%) gain 800->1000 (x1.56 area), 14/70 (20%) already <=800 -> native (no regression). HEALTH/PARITY: _l 200 70/70, IIIF default.jpg 200 70/70, IIIF bigger 56 / equal 14 / worse-or-failed 0 (strict-safe). CAP: full/max==full/full==1000px (no upscale at the honest endpoint); IIIF WILL upscale fixed-width requests (full/2000,->2000px fake/blurry) so ehiveIIIFLargest deliberately uses full/full only. HEADERS: image/jpeg, no Content-Disposition (inline), CORS *, 1yr cache, CloudFront. CODE: removed 'Te Hikoi Museum' from the passthrough switch case; added a strategies registry entry -> ehiveIIIFLargest (smaller masters than the other eHive accts: 1000px cap here vs up to ~12-17MP for Mataura/Howick). VERIFICATION: swift build 0; CollectionTester x3 HTTP200 image/jpeg -- run2 1000x667 vs _l 800x534 (x1.56), run3 800x533 vs _l 800x533 (no regression). User-approved IMPROVEMENT 2026-06-12. FOLLOW-UP: re-check only if Te Hikoi raises its public IIIF cap above 1000px or DigitalNZ re-harvests higher-res; route any future eHive collection through ehiveIIIFLargest, not passthrough."
     },
     {
       "order": 32,

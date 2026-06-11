@@ -273,6 +273,18 @@ hard-coded per collection.
   3272; 136 records (all "All rights reserved" — irrelevant). **24/24 uniform win, 0 honest-smaller, 0
   failures** (1.27×–49.3×; masters up to 5616×3744 = 21 MP). Cleanest eHive account (a portrait gallery
   uploads big masters; no upscaled-`_l` anomalies). Weight 0.001. ⇒ eHive cluster (17–19) COMPLETE.
+- **Te Hikoi Museum (2026-06-12, order 31): MOVE passthrough→`ehiveIIIFLargest`.** account 3278; ~8,690
+  records. Was mis-placed in the legacy switch passthrough group (serving `_l` 800 px) — the
+  `ehiveIIIFLargest` transform already covers its URL shape (single 32-hex hash, no upscale anomalies).
+  **Te Hikoi's IIIF masters are CAPPED at exactly 1000 px** — a 70-record spread is bimodal exact-800 /
+  exact-1000 (min 800, max 1000, median 1000), i.e. a **server-side public cap**, not natural original
+  sizes. **56/70 (80%) gain 800→1000 (×1.56 area); 14/70 (20%) already ≤800 → native; 0/70 worse or
+  failed** (`_l` 200 70/70, IIIF default.jpg 200 70/70). ⇒ a much **smaller** eHive account than
+  Mataura/Howick/Portrait Gallery (1000 px cap vs up to ~12–21 MP) — still a strict-safe win. Weight 0.006.
+  Committed (see log 031 / progress.json). ⇒ **LESSON: a "boutique"-classified collection can actually be
+  live eHive — always check `images.ehive.com` → route via `ehiveIIIFLargest`, never passthrough.** And
+  per-account IIIF ceilings vary wildly (some accounts cap public IIIF at 1000 px; the true ≤20 MB original
+  stays sign-in-only).
 
 ---
 

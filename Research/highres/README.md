@@ -4,12 +4,13 @@ This directory is the **single source of truth** for the high-res collection swe
 A fresh Claude Code session with zero prior context can resume the work using only
 these files.
 
-## Current resume state (updated 2026-06-11)
+## Current resume state (updated 2026-06-12)
 
-**Wellington removal: done.** Collections **1–30 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+**Wellington removal: done.** Collections **1–31 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
 self-hosted JP2→JPEG converter; Canterbury 26, Auckland Art Gallery 27, Culture Waitaki 28, South
-Canterbury Museum 29, V.C. Browne 30 all no-improvement). The per-collection sweep is **UNPAUSED — next is
-order 31.** `progress.json` is authoritative; this is a human summary.
+Canterbury Museum 29, V.C. Browne 30 all no-improvement; **Te Hikoi 31 committed IMPROVEMENT** —
+passthrough→`ehiveIIIFLargest`, 800→1000px). The per-collection sweep is **UNPAUSED — next is order 32.**
+`progress.json` is authoritative; this is a human summary.
 
 | # | collection | platform | outcome |
 |---|------------|----------|---------|
@@ -44,6 +45,7 @@ order 31.** `progress.json` is authoritative; this is a human summary.
 | 28 | Culture Waitaki | vernon (Vernon CMS) | no-improvement — clean Canterbury clone; shipped `large→xlarge` already serves `xlarge` (1200px box, 2.25× area over harvested `large`; above → 403, 14/14). No `-api` host (all candidates fail to resolve), no public IIIF (WAF-blocked), object pages WAF-walled; eHive (account 3011) **migrated to this Vernon site** (only a profile image left). Shares the legacy `switch` `case` with Canterbury 26 — **both occupants now verified no-improvement** |
 | 29 | South Canterbury Museum | pastPerfect (was `boutique`) | no-improvement — **PastPerfect Online** (`museum_58`), same as Waimate 20: passthrough `large_thumbnail_url` is the 950px display ceiling; larger s3 variants 404, true originals 403-locked upload zips (`imageuploads2/0000000058/`), `/Media/<GUID>` is an HTML viewer, no IIIF, eHive 3359 migrated. **~9% of records dead at source** (s3+landing+Media all imageless; unfixable) — left as-is (no HEAD-check/retry; would only hard-fail). Stays in passthrough group |
 | 30 | V.C. Browne & Son NZ Aerial Photograph Collection | boutique (commercial site) | no-improvement — company's own ASP.NET sales site; passthrough `large_thumbnail_url` is the only free image, ~700–756px and **watermarked** ("Copyright V.C. Browne & Son"). Full scrape found no anonymous larger/clean route (larger suffixes/dirs/handlers/resize all 404/ignored; `/Images/` not listable; `Detail.aspx` is an error page; CAPTCHA-gated; Wayback has only thumbs); clean high-res is **paid**. User declined removal. ~5% dead at source. Stays in passthrough group |
+| 31 | Te Hikoi Museum | ehiveIIIF (was `boutique`) | **committed IMPROVEMENT** — **live eHive** (account 3278), was mis-placed in the passthrough group serving the `_l` 800px derivative. Moved to the existing proven `ehiveIIIFLargest` (same as Mataura 18 / Howick 17 / Portrait Gallery 19) → IIIF `full/full` master. Te Hikoi's public master is **capped at exactly 1000px** (bimodal exact-800/1000 = server-side cap; true ≤20MB original is sign-in-only). **80% of records 800→1000 (×1.56 area), 20% already ≤800 → native, 0/70 worse or failed.** `swift build` 0; CollectionTester ×3 HTTP 200 |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -137,6 +139,22 @@ strings are an ASP.NET `TextBoxWatermarkBehavior` form-hint — a red herring, n
 source (404). No code change; stays in the passthrough group. See
 `logs/030-v-c-browne-son-nz-aerial-photograph-collection.md`.
 
+**✅ Order 31 (Te Hikoi Museum) committed IMPROVEMENT (2026-06-12).** Platform identified (was `boutique`):
+**live eHive**, account **3278** (`images.ehive.com/accounts/3278/…_l.jpg`). Te Hikoi was **mis-placed in
+the passthrough group** serving the `_l` **800 px** derivative, even though the codebase already has the
+proven **`ehiveIIIFLargest`** strategy (Mataura 18 / Howick 17 / Portrait Gallery 19). Moved it into the
+`strategies` registry → IIIF `full/full` over the master TIFF. Te Hikoi's public master is **capped at
+exactly 1000 px** — a 70-record spread is **bimodal exact-800 / exact-1000** (min 800, max 1000, median
+1000), i.e. a **server-side public cap**, not natural original sizes (eHive docs: the true ≤20 MB original
+is **sign-in-only**). Result: **56/70 (80%) gain 800→1000 (×1.56 area); 14/70 (20%) already ≤800 → native;
+0/70 worse or failed** (`_l` 200 70/70, IIIF default.jpg 200 70/70). The honest endpoint is `full/full`
+(=`full/max`=1000 px); eHive **upscales** fixed-width requests above the master (`full/2000,`→2000 px fake),
+so `ehiveIIIFLargest` deliberately uses `full/full` only. A **much smaller** eHive account than the others
+(1000 px cap vs up to ~12–21 MP). `swift build` 0; CollectionTester ×3 HTTP 200 image/jpeg (1000×667 vs
+`_l` 800×534; 800×533 vs 800×533 no-regression). **Lesson: a "boutique"-classified collection can actually
+be live eHive — always probe `images.ehive.com` and route via `ehiveIIIFLargest`, never passthrough.** See
+`logs/031-te-hikoi-museum.md`.
+
 **Also learned (order 25):** `thumbnailer.digitalnz.org` is **decommissioned (NXDOMAIN)** — the
 `thumbnailerProxy` recipe/helper is dead (helper is unreferenced; remove in the final cleanup).
 
@@ -168,7 +186,8 @@ no-improvement), Auckland Libraries Heritage (thumbnailer), Auckland Museum (clo
 Culture Waitaki (large→xlarge; shares this `case` with Canterbury 26 — **BOTH verified
 no-improvement (Canterbury 2026-06-10, Culture Waitaki 2026-06-11), intentionally left in the
 switch**), passthrough group (Antarctica, National
-Publicity, South Canterbury, Waimate, Te Toi Uku, Te Hikoi, V.C. Browne), TAPUHI
+Publicity, South Canterbury, Waimate, Te Toi Uku, V.C. Browne — **Te Hikoi 31 migrated OUT to the registry
+via `ehiveIIIFLargest`**), TAPUHI
 (fetchTapuhiHighResUrl), Hawke's Bay (weserv), Auckland Art Gallery (medium→xlarge; **verified
 no-improvement 2026-06-11, intentionally left in the switch** — Vernon CMS, `xlarge` is the public
 ceiling), National Army Museum (og:image→downloadwiz). Migrated to the registry so far: all Recollect (1–10), all Flickr
