@@ -753,7 +753,7 @@
         "px": "~98% 1000px (×1.56 area over 800px _l); ~2% large native masters up to ~4242×7065 (30 MP)",
         "urlPattern": "https://iiif.ehive.com/iiif/2/accounts%2f3102%2fobjects%2fimages%2f<id>.tif/full/full/0/default.jpg"
       },
-      "commit": null,
+      "commit": "f6bbb15",
       "log": "logs/034-wyndham-districts-historical-museum.md",
       "notes": "4th boutique-mislabel-actually-eHive in a row (cf 31/32/33). Group B ADD: registry entry + collectionWeights 0.002 (provisional). Master min 1000 > _l cap 800 so 0 worse/0 failures across 120-sample + 15 spread checks. ~1.5% (60/3937) records null-image at source (hard-fail pick, left as-is cf 29). All ids 32-hex."
     },
