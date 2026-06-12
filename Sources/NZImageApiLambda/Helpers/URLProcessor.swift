@@ -134,6 +134,16 @@ final class URLProcessor: Sendable {
             // older non-hex image ids (e.g. `ji3o28_cpap_l`) too (drop only the last `_<size>`). Pure URL build.
             ehiveIIIFLargest(result, url)
         },
+        "Wyndham & Districts Historical Museum": { result, url in
+            // eHive account 3102 — same IIIF master-TIFF route (ehiveIIIFLargest) as the rest of the eHive
+            // cluster. Group B ADD (new collection; also added to collectionWeights). 4th boutique-mislabel-
+            // actually-eHive in a row (cf. Te Hikoi 31 / Te Toi Uku 32 / Te Ūaka 33). A 120-record full-
+            // collection sample: ~98% are an exact 1000 px master (×1.56 area over the 800 px `_l`) and ~2%
+            // are large native masters (up to ~30 MP) — every IIIF full/full ≥ the `_l` (master min 1000 >
+            // `_l` cap 800), so 0 worse / 0 failures. Pure URL build. (~1.5% of records are null-image at
+            // source and hard-fail the pick — left as-is, cf. South Canterbury 29.)
+            ehiveIIIFLargest(result, url)
+        },
         "Te Papa Collections Online": { result, url in
             await tePapaLargest(result, url)
         },

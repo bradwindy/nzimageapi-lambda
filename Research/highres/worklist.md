@@ -6,7 +6,7 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 ## Removal
 - [x] REMOVE Wellington City Recollect — done
 
-## Collections (33/52 terminal)
+## Collections (34/52 terminal)
 
 ### recollect
 - [x] (01) Tauranga City Libraries Other Collection — group A — platform recollect — committed
@@ -36,6 +36,7 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 - [x] (31) Te Hikoi Museum — group A — platform ehiveIIIF — committed
 - [x] (32) Te Toi Uku, Crown Lynn and Clayworks Museum — group A — platform ehiveIIIF — committed
 - [x] (33) Te Ūaka The Lyttelton Museum — group B — platform ehiveIIIF — committed
+- [x] (34) Wyndham & Districts Historical Museum — group B — platform ehiveIIIF — committed
 
 ### pastPerfect
 - [x] (20) Waimate Museum and Archives PastPerfect — group A — platform pastPerfect — no-improvement
@@ -60,7 +61,6 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 
 ### boutique
 - [x] (30) V.C. Browne & Son NZ Aerial Photograph Collection — group A — platform boutique — no-improvement
-- [ ] (34) Wyndham & Districts Historical Museum — group B — platform boutique — todo
 - [ ] (35) Feilding Library — group B — platform boutique — todo
 - [ ] (36) Clutha Heritage — group B — platform boutique — todo
 - [ ] (37) John Kinder Theological Library — group B — platform boutique — todo

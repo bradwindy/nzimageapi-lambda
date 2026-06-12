@@ -740,22 +740,22 @@
       "name": "Wyndham & Districts Historical Museum",
       "slug": "wyndham-districts-historical-museum",
       "group": "B",
-      "platform": "boutique",
+      "platform": "ehiveIIIF",
       "rawItemCount": 3937,
-      "weight": null,
-      "status": "todo",
+      "weight": 0.002,
+      "status": "committed",
       "baseline": {
-        "method": "raw large_thumbnail_url",
-        "px": null
+        "method": "eHive _l (800px) passthrough — but NOT in Lambda (no weight); never served",
+        "px": "800 long-side cap"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "ehiveIIIFLargest (IIIF full/full master TIFF, iiif.ehive.com account 3102)",
+        "px": "~98% 1000px (×1.56 area over 800px _l); ~2% large native masters up to ~4242×7065 (30 MP)",
+        "urlPattern": "https://iiif.ehive.com/iiif/2/accounts%2f3102%2fobjects%2fimages%2f<id>.tif/full/full/0/default.jpg"
       },
       "commit": null,
       "log": "logs/034-wyndham-districts-historical-museum.md",
-      "notes": ""
+      "notes": "4th boutique-mislabel-actually-eHive in a row (cf 31/32/33). Group B ADD: registry entry + collectionWeights 0.002 (provisional). Master min 1000 > _l cap 800 so 0 worse/0 failures across 120-sample + 15 spread checks. ~1.5% (60/3937) records null-image at source (hard-fail pick, left as-is cf 29). All ids 32-hex."
     },
     {
       "order": 35,

@@ -305,6 +305,16 @@ hard-coded per collection.
   sample to the 1000 px newer uploads and MISSED the older non-hex ids (`ji3o28_cpap`, `13jcqnp_97mc`) that
   carry the 4000 px masters.** Always classify eHive ids by the **actual `ehiveIIIFLargest` rule (drop only
   the last `_<size>`)**, never assume a 32-hex id. Committed (see log 033 / progress.json).
+- **Wyndham & Districts Historical Museum (2026-06-12, order 34): Group B ADD via `ehiveIIIFLargest`.** account
+  3102; 3,937 records. **4th `boutique`-mislabel-actually-eHive in a row** (cf. 31/32/33). Was **NOT in
+  `collectionWeights`** → never served; **added** the registry entry + a provisional weight **0.002**.
+  Master distribution = **near-uniform 1000 px** (120-record full-collection sample via info.json: min 1000 /
+  max 4581 / median 1000): **801–1000: 118 (98%, ×1.56 over the 800 px `_l`), >3000: 2 (~2%)** — plus a
+  spread check found a **4242×7065 (~30 MP)** master. Because master **min 1000 > `_l` cap 800**, every IIIF
+  `full/full` ≥ `_l`: **0 worse / 0 failures** (no honest-smaller anomaly possible, unlike Te Toi Uku 32). All
+  ids are **32-hex** (no non-hex `cpa*` tokens → the order-33 sampling trap didn't recur; still classified by
+  the drop-last-`_<size>` rule). **~1.5% (60/3,937) of records are null-image at source** (hard-fail the pick,
+  no retry — left as-is, well below South Canterbury 29's ~9%). Committed (see log 034 / progress.json).
 
 ---
 
