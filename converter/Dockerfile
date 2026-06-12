@@ -6,6 +6,7 @@ FROM public.ecr.aws/lambda/python:3.13
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 RUN python -c "from PIL import features; assert features.check('jpg_2000'), 'OpenJPEG/JP2 NOT enabled in Pillow'"
+RUN python -c "from PIL import features; assert features.check('libtiff'), 'libtiff NOT enabled in Pillow'"
 
 COPY app.py ${LAMBDA_TASK_ROOT}/
 

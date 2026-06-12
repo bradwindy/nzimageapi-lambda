@@ -119,6 +119,61 @@ hard-coded per collection.
 
 ---
 
+## recollectIIIF (Recollect Ltd new-generation signed-IIIF) — NOT Axiell `downloadwiz`
+
+> **Two different vendors share the name "Recollect".** The section above is **Axiell Recollect**
+> (`*.recollect.co.nz`, `/assets/downloadwiz/<id>` masters). **This** is **Recollect Ltd**'s
+> *new-generation* product (`recollectcms.com`; cache identifier `curtis-*-cache`, e.g.
+> `curtis-production2-cache`): **CloudFront-signed IIIF derivatives + presigned-S3 TIFF originals**. The
+> `recollectLargest` / `recollectDisplayMax` family does **NOT** apply (no `/assets/` paths).
+
+- **Detect:** landing `https://<site>/item/<uuid>`; harvested `large_thumbnail_url` is a **CloudFront IIIF
+  derivative**: `https://<dist>.cloudfront.net/iiif/2/<cache-id>%2F…%2Fresize_master_<hash>.jpg/full/!880,1024/0/default.jpg?sig=…&ver=…`.
+  OpenSeadragon viewer with a `data-dzi` descriptor on the item page.
+
+### Verified findings (recollectIIIF)
+- **www.feildingheritage.nz (Feilding Library, order 35, 2026-06-12):** harvested derivative is confined to
+  the site's **`!880,1024` box (≈880×886, 0.78 MP)**. **The CloudFront signature is bound to the EXACT
+  derivative path** — mutating `/full/!880,1024/` → `/full/max/` returns **HTTP 403 `SignatureDoesNotMatch`**;
+  larger IIIF sizes **cannot be forged**. The site only pre-signs **`{!440,512, !880,1024, !1170,1170}`**;
+  `!1170,1170` (≈1163×1170, **1.36 MP**) is the largest displayable JPEG it exposes publicly. ⇒ The IIIF route
+  is a hard ceiling at ~1.36 MP.
+- **The true original is via the item-page download link, NOT a forgeable URL.** The page HTML contains
+  `…/item/<uuid>/files/<fileId>/download?variant=original` (the **`<fileId>` exists ONLY in the page HTML** —
+  not derivable from the harvested URL), which **302-redirects to a short-lived (~1 h) presigned S3 URL**
+  serving the **original TIFF** (e.g. **4969×5000, ~25 MP, ~75 MB**, RGB uncompressed; the `data-dzi`
+  confirms native size). Anonymous for **public-rights** records; restricted/login-walled records have no
+  public original.
+- **TIFF is undisplayable AND too big for weserv.** Browsers can't render TIFF, and the **~75 MB file 504s
+  weserv** → neither a raw URL nor a free proxy works.
+- **Recipe that works — reuse the self-hosted Pillow converter (the same Lambda TAPUHI order 25 built for
+  JP2), extended to TIFF + a multi-host allowlist.** The Swift Lambda stays a URL-builder; a Feilding-specific
+  **`feildingConverter`** strategy does **one bounded HTML GET** of `result.landingUrl`, regexes
+  `/item/[0-9a-f-]+/files/[0-9a-f-]+/download\?variant=original`, rebuilds the absolute endpoint from the
+  landing scheme+host, and returns `<JP2_CONVERTER_URL>/?url=<endpoint, .alphanumerics-encoded>` (mirrors
+  `tapuhiConverter`). The converter **follows the 302 to S3 itself** (only the entry host is allowlisted, which
+  is sufficient — the trusted entry host chooses its own asset store), downloads the TIFF, and the **generic
+  `convert_to_jpeg` decodes it with NO new code** (the JP2 `image.reduce` branch is skipped for TIFF; RGB
+  passes through; `convert("RGB")` covers CMYK/16-bit; the LANCZOS thumbnail ≤4000 px + the <6 MB budget loop
+  are shared). **Graceful fallback to the signed `!880,1024` JPEG** on any failure (no landing URL, host
+  mismatch, `JP2_CONVERTER_URL` unset, fetch throws, or **no `download?variant=original` link** =
+  login-walled). Never weserv, never a raw TIFF.
+- **Converter generalization (`app.py` / `template.yaml` / `Dockerfile`):** `ALLOWED_HOST` → multi-host
+  **`ALLOWED_HOSTS`** (comma-separated `frozenset`; singular still honoured); `DOWNLOAD_TIMEOUT` env-configurable
+  (default 20→**35** s, set to 45 for Feilding); a hard build-time assert **`features.check('libtiff')`** next
+  to the `jpg_2000` one; `MAX_DIM` stays 4000. No rename of `Jp2ConverterFunction` / `JP2_CONVERTER_URL`.
+- **Verified live** (stack `nzimageapi`, ap-southeast-2, in-place SAM update — 3 `Modify`/0 replace; Function
+  URL + API endpoint unchanged): Stanway 1898 **4000×3358 (13.4 MP)** 5.45 s cold (byte-identical to local),
+  Macarthur St **4000×3000 (12 MP)**, panorama **4000×1682 (6.7 MP)**, Power Board **3397×1845 (6.3 MP, honest
+  native)**; 6/6 local + 4/4 live picks HTTP 200 `image/jpeg`, never upscaled. TAPUHI regression unchanged
+  (FL73782300 → 3737×2148, 8.0 MP).
+- **Likely reuse — Manawatū Heritage (order 52)** is run by the **same Manawatu District Libraries** and is
+  very likely the identical Recollect Ltd signed-IIIF pipeline; **Kete Horowhenua (51)** and other "Heritage"
+  todo sites may be too. Reuse = add the landing domain to `ALLOWED_HOSTS` + one registry entry on a shared
+  helper (generalize `feildingConverter`). **Confirm per-collection; do not assume.**
+
+---
+
 ## flickr
 - **Detect:** `object_url`/`source_url` on `live.staticflickr.com` or
   `*.staticflickr.com`; `flickr.com/photos/...` landing.

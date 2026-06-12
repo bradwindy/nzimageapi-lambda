@@ -167,6 +167,17 @@ final class URLProcessor: Sendable {
             // NLNZStreamGate access copy if the resolve fails or the converter URL is unset.
             await tapuhiConverter(result, url)
         },
+        "Feilding Library": { result, url in
+            // Recollect signed-IIIF: the harvested `large_thumbnail_url` is a CloudFront-signed IIIF
+            // derivative capped at the site's ≤ 880 px box; larger IIIF sizes can't be forged (each size is
+            // individually signed). The true original is a ~25 MP TIFF reached via the item page's
+            // `…/files/<fileId>/download?variant=original` link (302 → short-lived presigned S3). TIFF isn't
+            // browser-displayable and is too large for weserv (it 504s), so route it through our self-hosted
+            // Pillow converter (TIFF→JPEG, downscaled ≤ 4000 px) — the same converter Lambda TAPUHI uses for
+            // JP2. Degrades to the harvested signed JPEG on any failure (no landing URL, login-walled record
+            // with no public original, converter unconfigured, or fetch failure); never serves a raw TIFF.
+            await feildingConverter(result, url)
+        },
     ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
@@ -668,6 +679,42 @@ final class URLProcessor: Sendable {
         guard let base = ProcessInfo.processInfo.environment["JP2_CONVERTER_URL"], !base.isEmpty,
               let encoded = flStreamURL.addingPercentEncoding(withAllowedCharacters: .alphanumerics)
         else {
+            return url.absoluteString
+        }
+
+        let trimmed = base.hasSuffix("/") ? String(base.dropLast()) : base
+        return "\(trimmed)/?url=\(encoded)"
+    }
+
+    /// Feilding Library (Recollect, signed-IIIF). Resolve the item's original-TIFF download endpoint, then
+    /// hand it to the self-hosted Pillow converter Lambda (its Function URL is injected as `JP2_CONVERTER_URL`,
+    /// a generic master→JPEG proxy that also handles TIFF). The browser loads `<converter>/?url=<encoded
+    /// download endpoint>` and receives a downscaled displayable JPEG of the ~25 MP original.
+    ///
+    /// The download endpoint (`/item/<uuid>/files/<fileId>/download?variant=original`) carries a `<fileId>`
+    /// that exists ONLY in the item-page HTML, so one bounded HTML GET of the landing page recovers it. The
+    /// converter follows the endpoint's 302 to the presigned S3 store itself (so the served URL stays short
+    /// and the presigned URL never expires in transit).
+    ///
+    /// Graceful, non-throwing: any failure (no landing URL / not a Feilding page / converter unconfigured /
+    /// fetch fails / no public original on a login-walled record) degrades to the harvested `url` — the
+    /// CloudFront-signed ≤ 880 px IIIF JPEG, which renders everywhere. Never weserv, never a raw TIFF.
+    private static func feildingConverter(_ result: NZRecordsResult, _ url: URL) async -> String {
+        guard let landing = result.landingUrl,
+              let host = landing.host, host.hasSuffix("feildingheritage.nz"),
+              let base = ProcessInfo.processInfo.environment["JP2_CONVERTER_URL"], !base.isEmpty,
+              let html = try? await NetworkRequestManager().fetchHTML(endpoint: landing.absoluteString),
+              let pathRange = html.range(
+                  of: #"/item/[0-9a-f-]+/files/[0-9a-f-]+/download\?variant=original"#,
+                  options: .regularExpression
+              )
+        else {
+            return url.absoluteString
+        }
+
+        let downloadURL = "\(landing.scheme ?? "https")://\(host)\(html[pathRange])"
+
+        guard let encoded = downloadURL.addingPercentEncoding(withAllowedCharacters: .alphanumerics) else {
             return url.absoluteString
         }
 

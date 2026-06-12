@@ -31,7 +31,10 @@ Resources:
       Timeout: 60               # large masters: download + reduced-level decode
       Environment:
         Variables:
-          ALLOWED_HOST: ndhadeliver.natlib.govt.nz
+          # Host allowlist for the master->JPEG proxy (comma-separated). NDHA for TAPUHI's
+          # JP2 FL streams; feildingheritage.nz for Feilding Library's TIFF originals (the
+          # download endpoint 302-redirects to its own presigned S3 store, followed transparently).
+          ALLOWED_HOSTS: "ndhadeliver.natlib.govt.nz,www.feildingheritage.nz,feildingheritage.nz"
           MAX_DIM: "4000"
       FunctionUrlConfig:
         AuthType: NONE

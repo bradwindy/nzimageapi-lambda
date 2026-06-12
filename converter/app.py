@@ -1,14 +1,25 @@
-"""JP2 -> JPEG converter Lambda (behind a Function URL).
+"""Master -> JPEG converter Lambda (behind a Function URL).
 
-The NZ Image API Swift Lambda stays a pure URL builder. For the TAPUHI collection it
-resolves an NDHA preservation master (`...DeliveryManagerServlet?dps_pid=FL<n>&dps_func=stream`),
-which is a JPEG 2000 (.jp2). JP2 is undecodable by ~98% of browsers and by every free
-keyless image proxy (weserv/cloudimg/etc.). This function downloads that JP2, decodes it
-with Pillow (OpenJPEG), downscales to stay under the Function URL 6 MB response cap, and
-returns a browser-displayable JPEG (base64, image/jpeg).
+The NZ Image API Swift Lambda stays a pure URL builder. Some collections expose a
+high-resolution preservation master that the browser can't display directly:
 
-It is a generic JP2->JPEG proxy, host-allowlisted to a single origin so it can never be
-used as an open proxy / SSRF pivot.
+  - TAPUHI / NDHA: a JPEG 2000 (.jp2) FL stream
+    (`...DeliveryManagerServlet?dps_pid=FL<n>&dps_func=stream`). JP2 is undecodable by
+    ~98% of browsers and by every free keyless image proxy (weserv/cloudimg/etc.).
+  - Feilding Library (Recollect): the original is a multi-megapixel TIFF reached via
+    `feildingheritage.nz/item/<uuid>/files/<fileId>/download?variant=original`, which
+    302-redirects to a short-lived presigned S3 URL. TIFF is also not browser-displayable
+    and the files (~75 MB / ~25 MP) are too large for weserv (it 504s on them).
+
+This function downloads that master (following redirects), decodes it with Pillow
+(OpenJPEG for JP2, libtiff for TIFF), downscales to stay under the Function URL 6 MB
+response cap, and returns a browser-displayable JPEG (base64, image/jpeg).
+
+It is a generic master->JPEG proxy, host-allowlisted to a fixed set of trusted origins so
+it can never be used as an open proxy / SSRF pivot. (A redirect issued by an allowlisted
+origin — e.g. Feilding -> its own presigned S3 store — is followed transparently by
+urlopen; only the entry host is checked, which is sufficient because the entry host is
+trusted to choose its own asset store.)
 """
 
 import base64
@@ -19,13 +30,18 @@ from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 # --- configuration (env-overridable; defaults match the SAM template) ---------------
-ALLOWED_HOST = os.environ.get("ALLOWED_HOST", "ndhadeliver.natlib.govt.nz")
+# Comma-separated allowlist; ALLOWED_HOST (singular) is still honoured for backward compat.
+_HOSTS_RAW = os.environ.get("ALLOWED_HOSTS") or os.environ.get("ALLOWED_HOST", "ndhadeliver.natlib.govt.nz")
+ALLOWED_HOSTS = frozenset(h.strip() for h in _HOSTS_RAW.split(",") if h.strip())
 MAX_DIM = int(os.environ.get("MAX_DIM", "4000"))
 
-# Browser UA: the NDHA FL `dps_func=stream` endpoint is stateless (no cookies needed).
+# Browser UA: the NDHA FL `dps_func=stream` endpoint is stateless (no cookies needed); the
+# Feilding download endpoint also serves anonymously for public-rights records.
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-DOWNLOAD_TIMEOUT = 20  # seconds
-MAX_DOWNLOAD_BYTES = 110 * 1024 * 1024  # guard on the source download (largest JP2 masters ~60 MB)
+# Large masters (≈60 MB JP2, ≈75 MB TIFF) need headroom to download; stays well under the
+# 60 s Lambda timeout once the (fast, same-region) S3/NDHA fetch completes.
+DOWNLOAD_TIMEOUT = int(os.environ.get("DOWNLOAD_TIMEOUT", "35"))  # seconds
+MAX_DOWNLOAD_BYTES = 110 * 1024 * 1024  # guard on the source download (masters ~60–80 MB)
 
 # Keep the *base64* response body under the Function URL 6 MB cap. base64 inflates by
 # ~4/3, so a ~4.0 MB JPEG -> ~5.4 MB base64, safely under 6 MB.
@@ -56,11 +72,12 @@ def _encode_jpeg(image, dim, quality):
 
 
 def convert_to_jpeg(data, max_dim=MAX_DIM):
-    """Decode arbitrary (incl. JP2) image bytes and return browser-displayable JPEG bytes.
+    """Decode arbitrary (incl. JP2 / TIFF) image bytes and return browser-displayable JPEG bytes.
 
-    Grayscale ("L") is kept as-is (the canonical TAPUHI master is grayscale); palette /
-    CMYK / etc. are converted to RGB. A small budget guard loop keeps the encoded JPEG
-    under RAW_JPEG_BUDGET so the base64 body never exceeds the 6 MB Function URL cap.
+    Grayscale ("L") is kept as-is (the canonical TAPUHI master is grayscale); RGB (the
+    Feilding TIFF originals) passes through unchanged; palette / CMYK / etc. are converted
+    to RGB. A small budget guard loop keeps the encoded JPEG under RAW_JPEG_BUDGET so the
+    base64 body never exceeds the 6 MB Function URL cap.
     """
     from PIL import Image
 
@@ -111,7 +128,7 @@ def lambda_handler(event, context):
         return _text_response(400, "missing 'url' query parameter")
 
     host = urlparse(source_url).hostname
-    if host != ALLOWED_HOST:
+    if host not in ALLOWED_HOSTS:
         return _text_response(403, f"host not allowed: {host}")
 
     t0 = time.perf_counter()

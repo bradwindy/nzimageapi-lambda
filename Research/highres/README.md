@@ -6,12 +6,14 @@ these files.
 
 ## Current resume state (updated 2026-06-12)
 
-**Wellington removal: done.** Collections **1–34 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+**Wellington removal: done.** Collections **1–35 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
 self-hosted JP2→JPEG converter; Canterbury 26, Auckland Art Gallery 27, Culture Waitaki 28, South
 Canterbury Museum 29, V.C. Browne 30 all no-improvement; **Te Hikoi 31 + Te Toi Uku 32 committed
 IMPROVEMENTS**, **Te Ūaka 33 + Wyndham 34 committed Group B ADDs** — all four `boutique`-mislabel-actually-
-eHive, `ehiveIIIFLargest`, 800→1000/1200/up-to-4000px). The per-collection sweep is **UNPAUSED — next is
-order 35 (Feilding Library).** `progress.json` is authoritative; this is a human summary.
+eHive, `ehiveIIIFLargest`, 800→1000/1200/up-to-4000px; **Feilding 35 committed Group B ADD** — Recollect Ltd
+new-gen **signed-IIIF**, the ~25 MP TIFF original routed through the **now-generic JP2+TIFF converter**, up to
+~13 MP live). The per-collection sweep is **UNPAUSED — next is order 36 (Clutha Heritage).** `progress.json` is
+authoritative; this is a human summary.
 
 | # | collection | platform | outcome |
 |---|------------|----------|---------|
@@ -50,6 +52,7 @@ order 35 (Feilding Library).** `progress.json` is authoritative; this is a human
 | 32 | Te Toi Uku, Crown Lynn and Clayworks Museum | ehiveIIIF (was `boutique`) | **committed IMPROVEMENT** — **live eHive** (account 3384), 2nd `boutique`-mislabel-actually-eHive in a row. Same fix → `ehiveIIIFLargest` IIIF `full/full` master. Public master **capped at 1200px** (higher than Te Hikoi's 1000): **66/70 → 1200 (×2.25 area), 2 → 1000, 2 → ≤800; 68/70 (97%) gain.** Health: `_l` 200 70/70, IIIF 200 70/70, bigger 68 / equal 1 / honest-smaller 1 (de-faked 793 vs upscaled-800 `_l`) / 0 failures. `swift build` 0; CollectionTester ×3 HTTP 200 (1200×1053 vs `_l` 800×702) |
 | 33 | Te Ūaka The Lyttelton Museum | ehiveIIIF (was `boutique`) | **committed Group B ADD** — **live eHive** (account 5362), 3rd `boutique`-mislabel-actually-eHive in a row; was **NOT in the Lambda** (no weight → never served; recent Lyttelton Museum rebrand). **Added** `ehiveIIIFLargest` + `collectionWeights` 0.009 (provisional). **MIXED masters** (120-rec full sample): ≤800: 48 (40%, parity), 1000: 54 (45%, ×1.56), **4000/12 MP: 18 (15%, ×25 area)** → 60% gain, 0 worse, 0 failures. 4000px batch (`cpa*` ids) is real native (info.json pyramid + `full/max`). Sampling trap noted (hex-only regex hid the 4000px non-hex ids). `swift build` 0; CollectionTester ×4 HTTP 200 |
 | 34 | Wyndham & Districts Historical Museum | ehiveIIIF (was `boutique`) | **committed Group B ADD** — **live eHive** (account 3102), 4th `boutique`-mislabel-actually-eHive in a row; was **NOT in the Lambda** (no weight → never served). **Added** `ehiveIIIFLargest` + `collectionWeights` 0.002 (provisional). **Near-uniform 1000px** masters (120-rec full sample via info.json, min 1000): **801–1000: 118 (98%, ×1.56 over 800px `_l`), >3000: 2 (~2%)**; a spread check hit a **4242×7065 (~30 MP)** master. Master min 1000 > `_l` cap 800 ⇒ every IIIF ≥ `_l`, **0 worse / 0 failures** (no honest-smaller possible). All ids 32-hex (no order-33 sampling trap). **~1.5% (60/3937) records null-image at source** (hard-fail pick, left as-is cf. 29). `swift build` 0; CollectionTester ×4 HTTP 200 |
+| 35 | Feilding Library | recollectIIIF (was `boutique`) | **committed Group B ADD** — **Recollect Ltd new-generation signed-IIIF** (`recollectcms.com`, `curtis-production2-cache`), **NOT** Axiell `*.recollect.co.nz downloadwiz`; was **NOT in the Lambda** (no weight → never served). Harvested signed IIIF derivative is hard-capped at **≈880×886 (0.78 MP)** — the **CloudFront signature is path-bound**, so `/full/max/` → **403 `SignatureDoesNotMatch`** (public ceiling `!1170,1170` = 1.36 MP). The **~25 MP TIFF original** (item page `…/files/<fileId>/download?variant=original` → 302 → presigned S3) is **undisplayable + 504s weserv**, so routed through the **existing self-hosted Pillow converter — now a generic JP2+TIFF master→JPEG proxy** (multi-host `ALLOWED_HOSTS`, libtiff build-assert), via new `feildingConverter` (one HTML GET for the `<fileId>`) → ≤4000 px JPEG (up to ~16 MP). **Graceful fallback to the signed `!880,1024` JPEG** (login-walled records). **Deployed live** (in-place SAM update, 3 Modify/0 replace); 6/6 local + 4/4 live picks HTTP 200 `image/jpeg` (up to 13.4 MP); TAPUHI regression unchanged. `collectionWeights` 0.002 (provisional). See `logs/035-feilding-library.md` |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -204,6 +207,30 @@ order-33 sampling trap did not recur — still classified by the drop-last-`_<si
 random record and `.checkHasTitleAndLargeImage()` throws with no retry, so ~1.5% of Wyndham picks hard-fail —
 **left as-is** (well below South Canterbury 29's ~9%; HEAD/retry out of scope per precedent). `swift build` 0;
 CollectionTester ×4 HTTP 200 image/jpeg. See `logs/034-wyndham-districts-historical-museum.md`.
+
+**✅ Order 35 (Feilding Library) committed Group B ADD (2026-06-12).** First **Recollect Ltd
+new-generation signed-IIIF** collection — vendor `recollectcms.com`, cache `curtis-production2-cache`,
+**distinct from Axiell `*.recollect.co.nz downloadwiz`** (two vendors, same name). **Was NOT in the Lambda**
+(no `collectionWeights` → never served). The harvested `large_thumbnail_url` is a **CloudFront-signed IIIF
+derivative hard-capped at ≈880×886 (0.78 MP)**: the **signature is bound to the exact derivative path**, so
+mutating `/full/!880,1024/` → `/full/max/` returns **403 `SignatureDoesNotMatch`** — larger IIIF sizes cannot
+be forged (the site pre-signs only `{!440,512, !880,1024, !1170,1170}`; the public ceiling `!1170,1170` is just
+1.36 MP). The **true ~25 MP TIFF original** is reachable via the item page's
+`…/files/<fileId>/download?variant=original` link (302 → short-lived presigned S3), but **TIFF is not
+browser-displayable and the ~75 MB file 504s weserv**. **User decision:** route it through the **existing
+self-hosted Pillow converter Lambda (the TAPUHI one) — now a generic JP2 + TIFF master→JPEG proxy.** The
+converter was generalized (`ALLOWED_HOST` → multi-host **`ALLOWED_HOSTS`**, env-tunable `DOWNLOAD_TIMEOUT`, a
+build-time **`libtiff` assert**; **TIFF reuses the generic `convert_to_jpeg` with no new decode code**), and a
+new Swift **`feildingConverter`** strategy does **one bounded HTML GET** of the landing page to recover the
+`<fileId>` (it exists only in the page HTML), then emits `<JP2_CONVERTER_URL>/?url=<download endpoint>`; the
+converter follows the 302 to S3 itself, downloads the TIFF, and returns a **≤4000 px JPEG (up to ~16 MP)**.
+**Graceful fallback to the signed `!880,1024` JPEG** on any failure (login-walled records with no public
+original). **Deployed live** under the existing SAM stack (in-place update — 3 `Modify`/0 replace; Function
+URL + API endpoint unchanged): 6/6 local + 4/4 live forced-Feilding picks → HTTP 200 `image/jpeg`, multi-MP
+(Stanway 1898 **4000×3358 / 13.4 MP** in 5.45 s cold; Macarthur St 4000×3000 / 12 MP; honest native when
+smaller; never upscaled), TAPUHI regression unchanged (8.0 MP). `collectionWeights` **0.002** (provisional).
+**Likely reuse: Manawatū Heritage (52)** (same Manawatu District Libraries) and possibly Kete Horowhenua (51) —
+confirm per-collection. See `logs/035-feilding-library.md`.
 
 **Also learned (order 25):** `thumbnailer.digitalnz.org` is **decommissioned (NXDOMAIN)** — the
 `thumbnailerProxy` recipe/helper is dead (helper is unreferenced; remove in the final cleanup).

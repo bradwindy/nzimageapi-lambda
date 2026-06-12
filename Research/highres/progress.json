@@ -762,22 +762,22 @@
       "name": "Feilding Library",
       "slug": "feilding-library",
       "group": "B",
-      "platform": "boutique",
+      "platform": "recollectIIIF",
       "rawItemCount": 3585,
-      "weight": null,
-      "status": "todo",
+      "weight": 0.002,
+      "status": "committed",
       "baseline": {
-        "method": "raw large_thumbnail_url",
-        "px": null
+        "method": "CloudFront-signed IIIF !880,1024 derivative passthrough -- but NOT in Lambda (no weight); never served",
+        "px": "~880x886 (0.78 MP); signature is path-bound so larger IIIF sizes 403; public ceiling !1170,1170 = 1.36 MP"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "feildingConverter: scrape item page for /files/<fileId>/download?variant=original (302 -> presigned-S3 TIFF original), route through the self-hosted Pillow converter Lambda (JP2+TIFF), downscaled <=4000px JPEG; graceful fallback to the signed !880,1024 JPEG",
+        "px": "~25 MP TIFF originals downscaled to <=4000px long side (up to ~16 MP); honest native when smaller; ~20x the 0.78 MP baseline",
+        "urlPattern": "<JP2_CONVERTER_URL>/?url=<https://www.feildingheritage.nz/item/<uuid>/files/<fileId>/download?variant=original, percent-encoded>"
       },
       "commit": null,
       "log": "logs/035-feilding-library.md",
-      "notes": ""
+      "notes": "Recollect Ltd NEW-generation signed-IIIF (recollectcms.com, curtis-production2-cache) -- NOT the Axiell *.recollect.co.nz downloadwiz pipeline. Group B ADD: feildingConverter strategy + collectionWeights 0.002 (provisional). Converter generalized: ALLOWED_HOST->ALLOWED_HOSTS multi-host, DOWNLOAD_TIMEOUT env (35s), Dockerfile libtiff assert; TIFF reuses the generic convert_to_jpeg (no new decode). Deployed live (in-place SAM update, 3 Modify/0 replace); 6/6 local + 4/4 live picks HTTP 200 image/jpeg multi-MP (up to 13.4 MP), TAPUHI regression unchanged. Login-walled records (no public original) fall back to the signed !880,1024 JPEG. Manawatu Heritage (52) likely reuses this pipeline."
     },
     {
       "order": 36,
