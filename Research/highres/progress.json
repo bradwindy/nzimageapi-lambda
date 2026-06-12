@@ -775,7 +775,7 @@
         "px": "~25 MP TIFF originals downscaled to <=4000px long side (up to ~16 MP); honest native when smaller; ~20x the 0.78 MP baseline",
         "urlPattern": "<JP2_CONVERTER_URL>/?url=<https://www.feildingheritage.nz/item/<uuid>/files/<fileId>/download?variant=original, percent-encoded>"
       },
-      "commit": null,
+      "commit": "8e9f0e9",
       "log": "logs/035-feilding-library.md",
       "notes": "Recollect Ltd NEW-generation signed-IIIF (recollectcms.com, curtis-production2-cache) -- NOT the Axiell *.recollect.co.nz downloadwiz pipeline. Group B ADD: feildingConverter strategy + collectionWeights 0.002 (provisional). Converter generalized: ALLOWED_HOST->ALLOWED_HOSTS multi-host, DOWNLOAD_TIMEOUT env (35s), Dockerfile libtiff assert; TIFF reuses the generic convert_to_jpeg (no new decode). Deployed live (in-place SAM update, 3 Modify/0 replace); 6/6 local + 4/4 live picks HTTP 200 image/jpeg multi-MP (up to 13.4 MP), TAPUHI regression unchanged. Login-walled records (no public original) fall back to the signed !880,1024 JPEG. Manawatu Heritage (52) likely reuses this pipeline."
     },
