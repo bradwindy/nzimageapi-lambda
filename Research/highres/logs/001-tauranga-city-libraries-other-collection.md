@@ -1,7 +1,7 @@
 # 001 — Tauranga City Libraries Other Collection
 
 - **Group:** A (re-check, already in Lambda)
-- **Platform:** recollect (Axiell Recollect) — `paekoroki.tauranga.govt.nz`
+- **Platform:** recollect (Recollect — Recollect Ltd / NZMS, NOT Axiell) — `paekoroki.tauranga.govt.nz`
 - **DigitalNZ result_count:** 65,285 (live)
 - **Timestamp:** 2026-06-02
 
@@ -27,7 +27,7 @@ All sampled records: host `paekoroki.tauranga.govt.nz`, `large_thumbnail_url` al
 
 - **Platform detection:** landing HTML contains `recollect` ×10, footer "RECOLLECT ©
   Recollect Limited"; asset paths `/assets/display/<id>-<token>`, `/nodes/view/<node>`.
-  Confirmed Axiell Recollect.
+  Confirmed Recollect (Recollect Ltd / NZMS, NOT Axiell).
 - **og:image:** landing page exposes `og:image = /assets/display/<id>-max?u=<sig>` with
   `og:image:width=5000`, `og:image:height=4982` — i.e. the metadata advertises the
   TRUE original dimensions, but the served `-max` derivative is capped (~1000 px).

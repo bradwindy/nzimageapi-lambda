@@ -19,7 +19,11 @@ hard-coded per collection.
 
 ---
 
-## recollect (Axiell Recollect)
+## recollect (Recollect — by Recollect Ltd / NZMS, NOT Axiell)
+> The `*.recollect.co.nz` `downloadwiz` platform is made by **Recollect Limited** (spun out of
+> **NZMS — New Zealand Micrographic Services** — in 2019). It is **not** an Axiell product. The
+> `recollectcms.com` signed-IIIF sites (see the `recollectIIIF` section) are the **same vendor's**
+> newer product generation, NOT a second vendor.
 - **Detect:** `<meta recollect="…">`; footer "RECOLLECT © Recollect Limited";
   paths `/nodes/view/<id>`, `/assets/display/<id>-<size>`.
 - **Extract:** asset ID usually already in `large_thumbnail_url`
@@ -116,16 +120,32 @@ hard-coded per collection.
   anonymously; a biased page sample can wildly over/under-count them, so sample uniformly across the
   full result set. The bare-`downloadwiz` (no fallback) is safe ONLY when CAT2==0 (Tāmiro); prefer
   `recollectLargest` whenever any CAT2 exists.
+- **clutha.recollect.co.nz (Clutha Heritage, order 36, 2026-06-14):** healthy Recollect, Tauranga-shape.
+  **Group B ADD via `recollectLargest`.** `downloadwiz` master 200 for **784/788** uniform sample (99.5%;
+  JPEG served `application/octet-stream`+`attachment`, up to 6000×4379 = 26 MP), vs the `-600`==`-max`
+  ~1000 px display cap → **34/36 pixel-sample win (median 4.27×, max 36×)**; 2/36 honest-smaller (small
+  originals whose `-600` is **upscaled-fake** to ~1000 px — master/`-max` give the honest native, cf.
+  Hocken 8). The 4 non-200 records (16437–16443, the newest batch) are CAT2 — `downloadwiz` 404 but
+  `-600`/`-max` 200, so `recollectLargest` serves `-max` (no breakage). **No login-wall, all rights
+  public/open** (no He-Purapura restricted tail). **★ Identity quirk:** "Clutha Heritage" is the DigitalNZ
+  **`primary_collection`**, not the `collection` field (`and[collection][]` → 0; `display_collection` on
+  every record = "Clutha Heritage" so the registry/domain-map/weights key works). **★ Vanity-domain
+  redirect:** `clutha.recollect.co.nz` **301-redirects to `heritage.cluthadc.govt.nz`** (council domain;
+  `og:image` points there) — both serve the master; the redirect is followed transparently by
+  `headStatusFollowingRedirects` and by browsers, so the harvested `*.recollect.co.nz` host works
+  end-to-end (kept in `recollectDomainMap`, consistent with the other entries). NOT NAM-style two-asset
+  (the thumbnail id's own `downloadwiz` already serves the master).
 
 ---
 
-## recollectIIIF (Recollect Ltd new-generation signed-IIIF) — NOT Axiell `downloadwiz`
+## recollectIIIF (Recollect new-generation signed-IIIF) — same vendor as the `downloadwiz` sites
 
-> **Two different vendors share the name "Recollect".** The section above is **Axiell Recollect**
-> (`*.recollect.co.nz`, `/assets/downloadwiz/<id>` masters). **This** is **Recollect Ltd**'s
-> *new-generation* product (`recollectcms.com`; cache identifier `curtis-*-cache`, e.g.
-> `curtis-production2-cache`): **CloudFront-signed IIIF derivatives + presigned-S3 TIFF originals**. The
-> `recollectLargest` / `recollectDisplayMax` family does **NOT** apply (no `/assets/` paths).
+> **One vendor, two product generations** — NOT two vendors, and **NOT Axiell.** Recollect is made
+> by **Recollect Ltd** (spun out of **NZMS — New Zealand Micrographic Services** — in 2019). The
+> `recollect` section above is the **older** `*.recollect.co.nz` generation (`/assets/downloadwiz/<id>`
+> masters). **This** is the **newer** generation (`recollectcms.com`; cache identifier `curtis-*-cache`,
+> e.g. `curtis-production2-cache`): **CloudFront-signed IIIF derivatives + presigned-S3 TIFF originals**.
+> The `recollectLargest` / `recollectDisplayMax` family does **NOT** apply here (no `/assets/` paths).
 
 - **Detect:** landing `https://<site>/item/<uuid>`; harvested `large_thumbnail_url` is a **CloudFront IIIF
   derivative**: `https://<dist>.cloudfront.net/iiif/2/<cache-id>%2F…%2Fresize_master_<hash>.jpg/full/!880,1024/0/default.jpg?sig=…&ver=…`.

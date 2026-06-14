@@ -1,7 +1,7 @@
 # 006 — Hastings Recollect
 
 - **Group:** B (ADD — not previously in the Lambda)
-- **Platform:** recollect (Axiell Recollect) — `hastings.recollect.co.nz`
+- **Platform:** recollect (Recollect — Recollect Ltd / NZMS, NOT Axiell) — `hastings.recollect.co.nz`
 - **DigitalNZ result_count:** 3,979 (live)
 - **Timestamp:** 2026-06-02
 - **Outcome:** **ADDED** via `recollectLargest` (downloadwiz master, `-max` fallback). Big win:

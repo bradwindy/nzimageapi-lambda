@@ -1,7 +1,7 @@
 # 007 — Lower Hutt MyRecollect
 
 - **Group:** B (ADD — not previously in the Lambda)
-- **Platform:** recollect (Axiell Recollect) — `huttcity.recollect.co.nz`
+- **Platform:** recollect (Recollect — Recollect Ltd / NZMS, NOT Axiell) — `huttcity.recollect.co.nz`
 - **DigitalNZ result_count:** 2,150 (live)
 - **Timestamp:** 2026-06-02
 - **Outcome:** **ADDED** via `recollectLargest`. Win: masters ~5000px (3.9–28 MP) vs ~1 MP `-600`.

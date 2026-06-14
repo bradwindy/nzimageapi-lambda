@@ -1,7 +1,7 @@
 # 002 — Antarctica NZ Digital Asset Manager
 
 - **Group:** A (re-check, already in Lambda)
-- **Platform:** recollect (Axiell Recollect) — asset host `antarctica.recollect.co.nz`,
+- **Platform:** recollect (Recollect — Recollect Ltd / NZMS, NOT Axiell) — asset host `antarctica.recollect.co.nz`,
   canonical host `adam.antarcticanz.govt.nz` (ADAM = Antarctica Digital Asset Manager)
 - **DigitalNZ result_count:** 59,372 (live)
 - **Timestamp:** 2026-06-02
@@ -32,7 +32,7 @@ in the image URL.
 ## Live site investigation (Discovery Playbook)
 
 - **Platform detection:** landing HTML contains `recollect` ×15; asset paths
-  `/assets/display/<id>-<token>`, `/nodes/view/<node>`. Confirmed Axiell Recollect.
+  `/assets/display/<id>-<token>`, `/nodes/view/<node>`. Confirmed Recollect (Recollect Ltd / NZMS, NOT Axiell).
 - **No zoom viewer:** no OpenSeadragon / Mirador / IIIF / DeepZoom / Zoomify signals → no
   tiled source larger than the display derivative.
 - **og:image:** landing exposes `og:image = /assets/display/<id>-max?u=<sig>` advertising the

@@ -57,6 +57,15 @@ final class URLProcessor: Sendable {
         "He Purapura Marara Scattered Seeds": { result, url in
             await recollectLargest(result, url)
         },
+        "Clutha Heritage": { result, url in
+            // Healthy Recollect (Recollect Ltd / NZMS) — clutha.recollect.co.nz redirects to the
+            // council vanity domain heritage.cluthadc.govt.nz. The harvested `-600`
+            // display tier is ~1000 px-capped; the `downloadwiz` master is present for
+            // ~99.5% of records (up to ~26 MP, 1.3×–36× the display area). The rare
+            // pending-master records (and the small-original records whose `-600` is
+            // upscaled-fake) fall back to / serve the honest `-max` native.
+            await recollectLargest(result, url)
+        },
         "Ministry for Culture and Heritage Te Ara Flickr": { result, url in
             // object_url is null; a subset of the pool has `_h`/`_k`/`_o` originals (up to ~13 MP)
             // reachable only via the photo page's alternate secrets. Scrape for the largest;
@@ -722,7 +731,7 @@ final class URLProcessor: Sendable {
         return "\(trimmed)/?url=\(encoded)"
     }
 
-    /// Recollect (Axiell): prefer the full-resolution master at
+    /// Recollect (Recollect Ltd / NZMS): prefer the full-resolution master at
     /// `/assets/downloadwiz/<id>` (often 5000 px) and fall back to the largest display
     /// derivative `/assets/display/<id>-max` when no master is retained.
     ///
@@ -749,7 +758,7 @@ final class URLProcessor: Sendable {
         return masterStatus == 200 ? downloadwiz : maxDerivative
     }
 
-    /// Recollect (Axiell): serve the largest display derivative `/assets/display/<id>-max`
+    /// Recollect (Recollect Ltd / NZMS): serve the largest display derivative `/assets/display/<id>-max`
     /// directly. Use this for instances where the `downloadwiz` master is disabled for every
     /// record (so `recollectLargest`'s HEAD probe would always 404 and waste a round-trip) but
     /// the `-max` derivative is still larger than the harvested `-600` (e.g. a ~2000px display
@@ -774,6 +783,11 @@ final class URLProcessor: Sendable {
         "National Army Museum": "nam.recollect.co.nz",
         "Tāmiro": "massey.recollect.co.nz",
         "He Purapura Marara Scattered Seeds": "dunedin.recollect.co.nz",
+        // clutha.recollect.co.nz 301-redirects to the council vanity domain
+        // heritage.cluthadc.govt.nz; both serve the identical master. We keep the
+        // harvested *.recollect.co.nz host (the redirect is followed transparently by
+        // headStatusFollowingRedirects and by browsers), consistent with the entries above.
+        "Clutha Heritage": "clutha.recollect.co.nz",
     ]
 
     private static func recollectDownloadUrlString(

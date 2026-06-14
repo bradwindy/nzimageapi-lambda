@@ -3,9 +3,10 @@
 - **Order:** 35
 - **Group:** B (candidate **new** collection — was NOT in the Lambda)
 - **Platform:** **Recollect Ltd new-generation signed-IIIF** (vendor **Recollect Ltd**, `recollectcms.com`;
-  cache identifier `curtis-production2-cache`; CloudFront IIIF + presigned-S3 originals). **NOT** the older
-  Axiell **`*.recollect.co.nz` `downloadwiz`** pipeline (orders 1/6/7/8/10/…) — a different vendor that
-  confusingly shares the "Recollect" name. (progress.json `platform` reclassified `boutique` → `recollectIIIF`.)
+  cache identifier `curtis-production2-cache`; CloudFront IIIF + presigned-S3 originals). This is the **newer
+  product generation of the same vendor** as the older **`*.recollect.co.nz` `downloadwiz`** pipeline
+  (orders 1/6/7/8/10/…) — **one vendor (Recollect Ltd / NZMS), two generations**, NOT two vendors and **NOT
+  Axiell** (vendor corrected 2026-06-14). (progress.json `platform` reclassified `boutique` → `recollectIIIF`.)
 - **DigitalNZ result_count (Images):** 3,585 (rawItemCount in progress.json).
 - **Status:** **committed** — Group B ADD; **deployed + verified live on AWS**; user-approved 2026-06-12.
 - **Date:** 2026-06-12
@@ -33,7 +34,8 @@ https://<dist>.cloudfront.net/iiif/2/curtis-production2-cache%2F6536%2F…%2Fres
 ## Discovery Playbook (all avenues)
 
 **A. Web research.** `recollectcms.com` / `curtis-production2-cache` / signed CloudFront IIIF ⇒ **Recollect
-Ltd** (the NEW-generation product), distinct from **Axiell Recollect** (`*.recollect.co.nz`, `downloadwiz`).
+Ltd** (the NEW-generation product), the same vendor's newer generation vs the older **`*.recollect.co.nz`
+`downloadwiz`** sites. (Vendor = **Recollect Ltd / NZMS**, NOT Axiell — corrected 2026-06-14.)
 The `recollectLargest` family does **not** apply (no `/assets/downloadwiz/`, no `/assets/display/`).
 
 **B. Page-source / DZI / info.json.** The item page's OpenSeadragon `data-dzi` descriptor gives the native

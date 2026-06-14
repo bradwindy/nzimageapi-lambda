@@ -1,7 +1,7 @@
 # 009 — Tāmiro
 
 - **Group:** A (re-check, already in Lambda)
-- **Platform:** recollect (Axiell Recollect) — `massey.recollect.co.nz`
+- **Platform:** recollect (Recollect — Recollect Ltd / NZMS, NOT Axiell) — `massey.recollect.co.nz`
 - **DigitalNZ result_count:** 5,628 (live)
 - **Timestamp:** 2026-06-02
 - **Outcome:** **no-improvement** — the current `downloadwiz` strategy already serves the master

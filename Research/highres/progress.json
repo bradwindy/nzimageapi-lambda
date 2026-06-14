@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "apiKeyEnvVar": "DIGITALNZ_API_KEY",
-  "lastUpdated": "2026-06-12T00:00:00Z",
+  "lastUpdated": "2026-06-14T01:41:24Z",
   "removal": {
     "collection": "Wellington City Recollect",
     "status": "done"
@@ -777,29 +777,29 @@
       },
       "commit": "8e9f0e9",
       "log": "logs/035-feilding-library.md",
-      "notes": "Recollect Ltd NEW-generation signed-IIIF (recollectcms.com, curtis-production2-cache) -- NOT the Axiell *.recollect.co.nz downloadwiz pipeline. Group B ADD: feildingConverter strategy + collectionWeights 0.002 (provisional). Converter generalized: ALLOWED_HOST->ALLOWED_HOSTS multi-host, DOWNLOAD_TIMEOUT env (35s), Dockerfile libtiff assert; TIFF reuses the generic convert_to_jpeg (no new decode). Deployed live (in-place SAM update, 3 Modify/0 replace); 6/6 local + 4/4 live picks HTTP 200 image/jpeg multi-MP (up to 13.4 MP), TAPUHI regression unchanged. Login-walled records (no public original) fall back to the signed !880,1024 JPEG. Manawatu Heritage (52) likely reuses this pipeline."
+      "notes": "Recollect Ltd NEW-generation signed-IIIF (recollectcms.com, curtis-production2-cache) -- a NEWER product GENERATION of the SAME vendor as the *.recollect.co.nz downloadwiz sites, NOT a different vendor and NOT Axiell (Recollect is by Recollect Ltd / NZMS). Group B ADD: feildingConverter strategy + collectionWeights 0.002 (provisional). Converter generalized: ALLOWED_HOST->ALLOWED_HOSTS multi-host, DOWNLOAD_TIMEOUT env (35s), Dockerfile libtiff assert; TIFF reuses the generic convert_to_jpeg (no new decode). Deployed live (in-place SAM update, 3 Modify/0 replace); 6/6 local + 4/4 live picks HTTP 200 image/jpeg multi-MP (up to 13.4 MP), TAPUHI regression unchanged. Login-walled records (no public original) fall back to the signed !880,1024 JPEG. Manawatu Heritage (52) likely reuses this pipeline."
     },
     {
       "order": 36,
       "name": "Clutha Heritage",
       "slug": "clutha-heritage",
       "group": "B",
-      "platform": "boutique",
+      "platform": "recollect",
       "rawItemCount": 2754,
-      "weight": null,
-      "status": "todo",
+      "weight": 0.002,
+      "status": "committed",
       "baseline": {
-        "method": "raw large_thumbnail_url",
-        "px": null
+        "method": "raw large_thumbnail_url (clutha.recollect.co.nz/assets/display/<id>-600)",
+        "px": "~1000px display tier (0.4-1.7 MP); a small-original subset is UPSCALED to a fake ~1000px"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "ADD via recollectLargest (HEAD-probe downloadwiz master following redirects, else -max). Reclassified boutique -> recollect.",
+        "px": "downloadwiz master for ~99.5% (1.3x-36x area over -600; up to 26.3 MP); honest -max native for the ~0.5% pending-master + the upscaled small-original records",
+        "urlPattern": "https://clutha.recollect.co.nz/assets/downloadwiz/<id>  OR  /assets/display/<id>-max"
       },
       "commit": null,
       "log": "logs/036-clutha-heritage.md",
-      "notes": ""
+      "notes": "Recollect (by Recollect Ltd / NZMS, NOT Axiell; clutha.recollect.co.nz 301-redirects to council vanity heritage.cluthadc.govt.nz; both serve the master). primary_collection=Clutha Heritage (2888 Images), content_partner Clutha District Libraries. downloadwiz master 200 for 784/788 uniform sample (JPEG octet-stream/attachment, up to 6000x4379); -600==-max ~1000px. 34/36 pixel-sample win (median 4.27x), 2/36 honest-smaller (small originals whose -600 upscales to fake ~1000px). 4 dead-master records (16437-16443, newest batch) fall back to -max (verified 200). No login-wall, all rights public/open."
     },
     {
       "order": 37,

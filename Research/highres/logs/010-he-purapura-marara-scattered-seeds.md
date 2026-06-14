@@ -1,7 +1,7 @@
 # 010 — He Purapura Marara Scattered Seeds
 
 - **Group:** A (re-check, already in Lambda; `collectionWeights` 0.005)
-- **Platform:** recollect (Axiell Recollect) — `dunedin.recollect.co.nz` (Dunedin Public Libraries)
+- **Platform:** recollect (Recollect — Recollect Ltd / NZMS, NOT Axiell) — `dunedin.recollect.co.nz` (Dunedin Public Libraries)
 - **DigitalNZ result_count:** 10,744 (live, 2026-06-06)
 - **Timestamp:** 2026-06-06
 - **Outcome (awaiting approval):** **migrate to `recollectLargest`** — a robustness/correctness

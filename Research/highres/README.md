@@ -4,16 +4,24 @@ This directory is the **single source of truth** for the high-res collection swe
 A fresh Claude Code session with zero prior context can resume the work using only
 these files.
 
-## Current resume state (updated 2026-06-12)
+## Current resume state (updated 2026-06-14)
 
-**Wellington removal: done.** Collections **1–35 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+**Wellington removal: done.** Collections **1–36 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
 self-hosted JP2→JPEG converter; Canterbury 26, Auckland Art Gallery 27, Culture Waitaki 28, South
 Canterbury Museum 29, V.C. Browne 30 all no-improvement; **Te Hikoi 31 + Te Toi Uku 32 committed
 IMPROVEMENTS**, **Te Ūaka 33 + Wyndham 34 committed Group B ADDs** — all four `boutique`-mislabel-actually-
-eHive, `ehiveIIIFLargest`, 800→1000/1200/up-to-4000px; **Feilding 35 committed Group B ADD** — Recollect Ltd
+eHive, `ehiveIIIFLargest`, 800→1000/1200/up-to-4000px; **Feilding 35 committed Group B ADD** — Recollect
 new-gen **signed-IIIF**, the ~25 MP TIFF original routed through the **now-generic JP2+TIFF converter**, up to
-~13 MP live). The per-collection sweep is **UNPAUSED — next is order 36 (Clutha Heritage).** `progress.json` is
-authoritative; this is a human summary.
+~13 MP live; **Clutha 36 committed Group B ADD** — `boutique`-mislabel-actually-**Recollect** `downloadwiz`,
+`recollectLargest`, masters up to 26 MP, median 4.27×). The per-collection sweep is **UNPAUSED — next is
+order 37 (John Kinder Theological Library).** `progress.json` is authoritative; this is a human summary.
+
+> **Vendor note (corrected 2026-06-14):** **Recollect** (both the `*.recollect.co.nz` `downloadwiz`
+> sites and the `recollectcms.com` signed-IIIF sites) is made by **Recollect Ltd** (spun out of
+> **NZMS — New Zealand Micrographic Services** — in 2019). It is **NOT** an Axiell product, and the
+> two are **one vendor's two product generations**, not two vendors. (Earlier records in this sweep
+> wrongly said "Axiell Recollect" / "two vendors" — being corrected. The genuine **Axiell** product
+> in this sweep is **Axiell Arena**, the Archives NZ portal in order 03.)
 
 | # | collection | platform | outcome |
 |---|------------|----------|---------|
@@ -52,7 +60,8 @@ authoritative; this is a human summary.
 | 32 | Te Toi Uku, Crown Lynn and Clayworks Museum | ehiveIIIF (was `boutique`) | **committed IMPROVEMENT** — **live eHive** (account 3384), 2nd `boutique`-mislabel-actually-eHive in a row. Same fix → `ehiveIIIFLargest` IIIF `full/full` master. Public master **capped at 1200px** (higher than Te Hikoi's 1000): **66/70 → 1200 (×2.25 area), 2 → 1000, 2 → ≤800; 68/70 (97%) gain.** Health: `_l` 200 70/70, IIIF 200 70/70, bigger 68 / equal 1 / honest-smaller 1 (de-faked 793 vs upscaled-800 `_l`) / 0 failures. `swift build` 0; CollectionTester ×3 HTTP 200 (1200×1053 vs `_l` 800×702) |
 | 33 | Te Ūaka The Lyttelton Museum | ehiveIIIF (was `boutique`) | **committed Group B ADD** — **live eHive** (account 5362), 3rd `boutique`-mislabel-actually-eHive in a row; was **NOT in the Lambda** (no weight → never served; recent Lyttelton Museum rebrand). **Added** `ehiveIIIFLargest` + `collectionWeights` 0.009 (provisional). **MIXED masters** (120-rec full sample): ≤800: 48 (40%, parity), 1000: 54 (45%, ×1.56), **4000/12 MP: 18 (15%, ×25 area)** → 60% gain, 0 worse, 0 failures. 4000px batch (`cpa*` ids) is real native (info.json pyramid + `full/max`). Sampling trap noted (hex-only regex hid the 4000px non-hex ids). `swift build` 0; CollectionTester ×4 HTTP 200 |
 | 34 | Wyndham & Districts Historical Museum | ehiveIIIF (was `boutique`) | **committed Group B ADD** — **live eHive** (account 3102), 4th `boutique`-mislabel-actually-eHive in a row; was **NOT in the Lambda** (no weight → never served). **Added** `ehiveIIIFLargest` + `collectionWeights` 0.002 (provisional). **Near-uniform 1000px** masters (120-rec full sample via info.json, min 1000): **801–1000: 118 (98%, ×1.56 over 800px `_l`), >3000: 2 (~2%)**; a spread check hit a **4242×7065 (~30 MP)** master. Master min 1000 > `_l` cap 800 ⇒ every IIIF ≥ `_l`, **0 worse / 0 failures** (no honest-smaller possible). All ids 32-hex (no order-33 sampling trap). **~1.5% (60/3937) records null-image at source** (hard-fail pick, left as-is cf. 29). `swift build` 0; CollectionTester ×4 HTTP 200 |
-| 35 | Feilding Library | recollectIIIF (was `boutique`) | **committed Group B ADD** — **Recollect Ltd new-generation signed-IIIF** (`recollectcms.com`, `curtis-production2-cache`), **NOT** Axiell `*.recollect.co.nz downloadwiz`; was **NOT in the Lambda** (no weight → never served). Harvested signed IIIF derivative is hard-capped at **≈880×886 (0.78 MP)** — the **CloudFront signature is path-bound**, so `/full/max/` → **403 `SignatureDoesNotMatch`** (public ceiling `!1170,1170` = 1.36 MP). The **~25 MP TIFF original** (item page `…/files/<fileId>/download?variant=original` → 302 → presigned S3) is **undisplayable + 504s weserv**, so routed through the **existing self-hosted Pillow converter — now a generic JP2+TIFF master→JPEG proxy** (multi-host `ALLOWED_HOSTS`, libtiff build-assert), via new `feildingConverter` (one HTML GET for the `<fileId>`) → ≤4000 px JPEG (up to ~16 MP). **Graceful fallback to the signed `!880,1024` JPEG** (login-walled records). **Deployed live** (in-place SAM update, 3 Modify/0 replace); 6/6 local + 4/4 live picks HTTP 200 `image/jpeg` (up to 13.4 MP); TAPUHI regression unchanged. `collectionWeights` 0.002 (provisional). See `logs/035-feilding-library.md` |
+| 35 | Feilding Library | recollectIIIF (was `boutique`) | **committed Group B ADD** — **Recollect new-generation signed-IIIF** (`recollectcms.com`, `curtis-production2-cache`), the same vendor's newer generation vs the older `*.recollect.co.nz downloadwiz` sites (both **Recollect Ltd / NZMS**, not Axiell); was **NOT in the Lambda** (no weight → never served). Harvested signed IIIF derivative is hard-capped at **≈880×886 (0.78 MP)** — the **CloudFront signature is path-bound**, so `/full/max/` → **403 `SignatureDoesNotMatch`** (public ceiling `!1170,1170` = 1.36 MP). The **~25 MP TIFF original** (item page `…/files/<fileId>/download?variant=original` → 302 → presigned S3) is **undisplayable + 504s weserv**, so routed through the **existing self-hosted Pillow converter — now a generic JP2+TIFF master→JPEG proxy** (multi-host `ALLOWED_HOSTS`, libtiff build-assert), via new `feildingConverter` (one HTML GET for the `<fileId>`) → ≤4000 px JPEG (up to ~16 MP). **Graceful fallback to the signed `!880,1024` JPEG** (login-walled records). **Deployed live** (in-place SAM update, 3 Modify/0 replace); 6/6 local + 4/4 live picks HTTP 200 `image/jpeg` (up to 13.4 MP); TAPUHI regression unchanged. `collectionWeights` 0.002 (provisional). See `logs/035-feilding-library.md` |
+| 36 | Clutha Heritage | recollect (was `boutique`) | **committed Group B ADD** — healthy **Recollect** (`clutha.recollect.co.nz`, the older `downloadwiz` generation — NOT Axiell), **not boutique**; was **NOT in the Lambda** (no weight → never served). `downloadwiz` master present for **99.5%** (784/788; JPEG octet-stream/attachment, up to **6000×4379 = 26 MP**) vs the `-600`==`-max` ~1000 px display cap → **34/36 pixel-sample win, median 4.27×, max 36×**; 2/36 honest-smaller (small originals whose `-600` is upscaled-fake; master gives honest native). Added via the existing **`recollectLargest`** (HEAD-probe `downloadwiz` → master, else `-max`) + `recollectDomainMap`. The 4 newest-batch records (16437–16443) are CAT2 → `-max` fallback (200). No login-wall, all rights public. **Identity quirk:** "Clutha Heritage" is the DigitalNZ `primary_collection` (the `collection` field is `[]`/themed); the Lambda already queries `primary_collection` so the key works. **Vanity redirect:** `clutha.recollect.co.nz` → `heritage.cluthadc.govt.nz` (followed transparently). Pure code change (no deploy). `swift build` 0; CollectionTester ×4 HTTP 200 master (2.0×–6.5× over baseline). `collectionWeights` 0.002 (provisional). See `logs/036-clutha-heritage.md` |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -208,9 +217,10 @@ random record and `.checkHasTitleAndLargeImage()` throws with no retry, so ~1.5%
 **left as-is** (well below South Canterbury 29's ~9%; HEAD/retry out of scope per precedent). `swift build` 0;
 CollectionTester ×4 HTTP 200 image/jpeg. See `logs/034-wyndham-districts-historical-museum.md`.
 
-**✅ Order 35 (Feilding Library) committed Group B ADD (2026-06-12).** First **Recollect Ltd
-new-generation signed-IIIF** collection — vendor `recollectcms.com`, cache `curtis-production2-cache`,
-**distinct from Axiell `*.recollect.co.nz downloadwiz`** (two vendors, same name). **Was NOT in the Lambda**
+**✅ Order 35 (Feilding Library) committed Group B ADD (2026-06-12).** First **Recollect
+new-generation signed-IIIF** collection — `recollectcms.com`, cache `curtis-production2-cache`,
+the **newer product generation of the same vendor** as the `*.recollect.co.nz downloadwiz` sites
+(both are **Recollect Ltd / NZMS** — NOT Axiell, NOT two vendors; corrected 2026-06-14). **Was NOT in the Lambda**
 (no `collectionWeights` → never served). The harvested `large_thumbnail_url` is a **CloudFront-signed IIIF
 derivative hard-capped at ≈880×886 (0.78 MP)**: the **signature is bound to the exact derivative path**, so
 mutating `/full/!880,1024/` → `/full/max/` returns **403 `SignatureDoesNotMatch`** — larger IIIF sizes cannot
@@ -231,6 +241,34 @@ URL + API endpoint unchanged): 6/6 local + 4/4 live forced-Feilding picks → HT
 smaller; never upscaled), TAPUHI regression unchanged (8.0 MP). `collectionWeights` **0.002** (provisional).
 **Likely reuse: Manawatū Heritage (52)** (same Manawatu District Libraries) and possibly Kete Horowhenua (51) —
 confirm per-collection. See `logs/035-feilding-library.md`.
+
+**✅ Order 36 (Clutha Heritage) committed Group B ADD (2026-06-14).** Another `boutique`-mislabel — actually
+**healthy Recollect** (`clutha.recollect.co.nz`), the **older `downloadwiz` generation** (NOT the Feilding-35
+signed-IIIF generation; both are **Recollect Ltd / NZMS**, **NOT Axiell**). **Was NOT in the Lambda** (no
+`collectionWeights` → never served). Same shape as Hastings (6) / Lower Hutt (7): the harvested
+`/assets/display/<id>-600` is the ~1000 px display tier (`-600`==`-max`), while `/assets/downloadwiz/<id>`
+serves the **JPEG master** (octet-stream/attachment, renders in `<img>`) for **99.5%** of records (784/788
+uniform sample; up to **6000×4379 = 26 MP**). **Added** via the existing **`recollectLargest`** (HEAD-probe
+`downloadwiz` following redirects → master, else `-max`) + a `recollectDomainMap` entry + `collectionWeights`
+**0.002** (provisional). **34/36 pixel-sample win** (median **4.27×**, max 36×); **2/36 honest-smaller** —
+small originals whose `-600` is **upscaled-fake** to ~1000 px, where the master/`-max` give the honest native
+(the established honest-native-always choice, cf. Hocken 8 / Kura 16). The 4 non-200 records (16437–16443, the
+newest batch) are **CAT2** — `downloadwiz` 404 but `-600`/`-max` 200, so `recollectLargest` serves `-max` (no
+breakage). **No login-wall, all rights public/open** (no He-Purapura restricted tail). **★ Two gotchas:**
+(1) "Clutha Heritage" is the DigitalNZ **`primary_collection`**, not the `collection` field
+(`and[collection][]` → 0; the Lambda already queries `primary_collection` and dispatches on
+`display_collection`="Clutha Heritage", so the single key works for query + weights + registry + domain map);
+(2) `clutha.recollect.co.nz` **301-redirects to the council vanity domain `heritage.cluthadc.govt.nz`** —
+both serve the master, the redirect is followed transparently (`headStatusFollowingRedirects` + browsers), so
+the harvested `*.recollect.co.nz` host is kept (consistent with the other map entries). Pure code change (no
+AWS deploy — unlike Feilding 35). `swift build` 0; CollectionTester ×4 HTTP 200 master (2.0×–6.5× over
+baseline). See `logs/036-clutha-heritage.md`.
+
+**★ Vendor correction (2026-06-14, user-flagged):** **Recollect is made by Recollect Ltd (spun out of NZMS —
+New Zealand Micrographic Services — in 2019), NOT Axiell.** Earlier sweep records (logs 001–010/035,
+`recipes.md`, code comments, this README) wrongly labelled it "Axiell Recollect" and called the two product
+generations "two vendors" — **both wrong: one vendor, two generations.** Corrected across the records in this
+commit. The only genuine **Axiell** product in the sweep is **Axiell Arena** (the Archives NZ portal, order 03).
 
 **Also learned (order 25):** `thumbnailer.digitalnz.org` is **decommissioned (NXDOMAIN)** — the
 `thumbnailerProxy` recipe/helper is dead (helper is unreferenced; remove in the final cleanup).

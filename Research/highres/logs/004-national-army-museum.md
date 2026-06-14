@@ -1,7 +1,7 @@
 # 004 — National Army Museum
 
 - **Group:** A (re-check, already in Lambda)
-- **Platform:** recollect (Axiell Recollect) — `nam.recollect.co.nz`
+- **Platform:** recollect (Recollect — Recollect Ltd / NZMS, NOT Axiell) — `nam.recollect.co.nz`
 - **DigitalNZ result_count:** 14,035 (live)
 - **Timestamp:** 2026-06-02
 - **Outcome:** **no-improvement** — the existing og:image→downloadwiz strategy already serves the

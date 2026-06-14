@@ -1,7 +1,7 @@
 # 008 — Hocken Digital Collections
 
 - **Group:** B (ADD — not previously in the Lambda)
-- **Platform:** recollect (Axiell Recollect) — `hocken.recollect.co.nz`
+- **Platform:** recollect (Recollect — Recollect Ltd / NZMS, NOT Axiell) — `hocken.recollect.co.nz`
 - **DigitalNZ result_count:** 56,710 (live)
 - **Timestamp:** 2026-06-02
 - **Outcome:** **ADDED** via new `recollectDisplayMax` strategy (serve `/assets/display/<id>-max`).

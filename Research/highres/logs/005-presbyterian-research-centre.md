@@ -1,7 +1,7 @@
 # 005 — Presbyterian Research Centre
 
 - **Group:** A (re-check, already in Lambda)
-- **Platform:** recollect (Axiell Recollect) — harvested host `prc.recollect.co.nz`, **migrated to
+- **Platform:** recollect (Recollect — Recollect Ltd / NZMS, NOT Axiell) — harvested host `prc.recollect.co.nz`, **migrated to
   `pcanzarchives.recollect.co.nz`** (Presbyterian Church of Aotearoa NZ Archives).
 - **DigitalNZ result_count:** 16,200 (live)
 - **Timestamp:** 2026-06-02
