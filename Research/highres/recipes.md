@@ -736,6 +736,41 @@ hard-coded per collection.
   it and not under our control). Acceptable for a random-image API (rarely re-serves the same record, so a
   cache would seldom hit).
 
+#### Resolution (War Art Online order 40, COMMITTED 2026-06-14) — NLNZStreamGate-shaped, but a TIFF master DOES exist via METS
+- **NLNZStreamGate-shaped ≠ "no master" (refines the National Publicity Studios 03 finding).** War Art
+  Online (Archives NZ war paintings) has the **same** `NLNZStreamGate/get?dps_pid=IE<n>` harvest shape as
+  National Publicity Studios — but here the Rosetta METS (`…&dps_func=mets`) lists a
+  **`PRESERVATION_MASTER` `image/tiff`** FL (`NCWA_*.tif`, 8-bit RGB, ~5000 px, 40–65 MB) in
+  `permanent_storage`, and its `…&dps_func=stream` serves the TIFF **anonymously** (HTTP 200 `image/tiff`,
+  a direct 200 — no S3 redirect). **Always parse the METS before concluding no-master**, even for the
+  NLNZStreamGate shape; National Publicity Studios genuinely had only an access rep, War Art has a real
+  master. (National Publicity is still no-improvement; War Art is a ~20× win for ~80 % of records.)
+- **Reuse the deployed converter for TIFF — no redeploy.** The converter became a generic JP2 **+ TIFF**
+  proxy at Feilding 35 (Pillow + libtiff), and `ndhadeliver.natlib.govt.nz` was already in `ALLOWED_HOSTS`
+  (from TAPUHI 25). So War Art is a **pure Swift change**: `warArtConverter` → `resolveWarArtFLStreamURL`
+  (IE → METS) → `warArtMasterFLPID` → `<JP2_CONVERTER_URL>/?url=<encoded FL stream>`. TIFF needs **no
+  reduced-level trick** (it isn't wavelet-coded like JP2); Pillow decodes + LANCZOS-downscales the
+  ~5000 px master to ≤ 4000 px in 5–7 s live (well under the 60 s Lambda timeout).
+- **★ The harvested baseline is BIMODAL and you can't pixel-measure it in-Lambda.** `NLNZStreamGate/get`
+  returns either a **900 px** access derivative (~80 %, older IE1204… batch) **or an already ~5000 px**
+  full-res JPEG (~20 %, newer IE257…/IE807… batches) **or a multi-page `combinedPDF.pdf`** (~1–2 %,
+  compilations — not `<img>`-displayable). The Swift Lambda has **no image decoder** (that's the
+  converter's job), and there is **no robust METS signal**: `preservationType` is `DERIVATIVE_COPY` for
+  **both** the 900 px and 5000 px access tiers, and `techMD tiff:ImageWidth` exists only on the master
+  (and is unreliable — 5287/4346 where the file decodes to 5000). **Decide from the access JPEG's
+  `fileSizeBytes`** (which exactly equals the served byte length): PDF present → convert the largest TIFF
+  page; access JPEG ≥ ~700 KB → passthrough the native ~5000 px baseline (the converter's 4000 px ceiling
+  would only shrink it); else → convert the master. The thumbnail-tier (≤ ~660 KB) vs full-tier (≥ ~590 KB)
+  byte clusters overlap slightly (the **pixel** gap 1452 ↔ 4347 px is clean, the **byte** gap is not), so a
+  few-percent of boundary records render at 4000 px instead of native ~5000 px (or vice-versa) — **always
+  graceful, never broken**. (Lesson: an NDHA collection can serve full-res access JPEGs for some
+  digitisation batches and 900 px for others — measure the baseline distribution, don't assume 900 px.)
+- **Cap the METS picker's byte limit at the converter's download cap (110 MB).** ~1/30 records is a
+  **908 MB** TIFF master (an oversized scan); rejecting it in `warArtMasterFLPID` (`size <= maxBytes`)
+  makes it fall back to its already-full-res baseline instead of handing the converter a download it would
+  502 on. Verified: CollectionTester ×8 = 7 converter + 1 passthrough, all HTTP 200; live converter up to
+  12.7 MP (4000×3173) in 5.7–7.3 s; passthrough record native 5000×4745 (23.7 MP).
+
 ---
 
 # Discovery Playbook (mandatory in Step 2 for EVERY collection)

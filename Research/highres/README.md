@@ -6,7 +6,7 @@ these files.
 
 ## Current resume state (updated 2026-06-14)
 
-**Wellington removal: done.** Collections **1–39 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+**Wellington removal: done.** Collections **1–40 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
 self-hosted JP2→JPEG converter; Canterbury 26, Auckland Art Gallery 27, Culture Waitaki 28, South
 Canterbury Museum 29, V.C. Browne 30 all no-improvement; **Te Hikoi 31 + Te Toi Uku 32 committed
 IMPROVEMENTS**, **Te Ūaka 33 + Wyndham 34 committed Group B ADDs** — all four `boutique`-mislabel-actually-
@@ -22,8 +22,14 @@ new-gen **signed-IIIF**, the ~25 MP TIFF original routed through the **now-gener
 cross-host redirect, masters up to ~10 MP, median 3.14×; **Western Bay Community Archives 39 committed
 Group B ADD** — same `downloadwiz` TWO-ASSET, **reused** `recollectOgImageMaster` (no new strategy, no
 vanity redirect), masters up to **57 MP** live, median 11.7×, with ~3% of harvested ids stale from a past
-site migration → graceful fallback). The per-collection sweep is **UNPAUSED — next is order 40 (War Art
-Online).** `progress.json` is authoritative; this is a human summary.
+site migration → graceful fallback); **War Art Online 40 committed Group B ADD** — Archives NZ war
+paintings on **NDHA/Rosetta**, 100% have a **TIFF preservation master** (~5000 px) reached via the same
+Rosetta METS path as TAPUHI but TIFF not JP2, routed through the **already-deployed** generic JP2+TIFF
+converter (`ndhadeliver` already allowlisted ⇒ **pure Swift, no redeploy**); ~80% of records (900 px
+baseline) get a **~20× win**, ~20% (already ~5000 px baseline) **passthrough native**, ~1–2% (multi-page
+PDF) convert one page — decided from the METS access-JPEG byte size since the Lambda can't decode images).
+The per-collection sweep is **UNPAUSED — next is order 41 (Far North District Libraries Rediscovery).**
+`progress.json` is authoritative; this is a human summary.
 
 > **Vendor note (corrected 2026-06-14):** **Recollect** (both the `*.recollect.co.nz` `downloadwiz`
 > sites and the `recollectcms.com` signed-IIIF sites) is made by **Recollect Ltd** (spun out of
@@ -74,6 +80,7 @@ Online).** `progress.json` is authoritative; this is a human summary.
 | 37 | John Kinder Theological Library | recollect (was `boutique`) | **committed Group B ADD** — **Recollect** `downloadwiz` (`kinderlibrary.recollect.co.nz`, footer "Recollect Limited" — NOT Axiell), **not boutique**; was **NOT in the Lambda** (no weight → never served). **★ TWO-ASSET pattern (cf. NAM 02):** the harvested `large_thumbnail_url` id is a **master-less display derivative** (`downloadwiz/<thumbId>` 404, `display/<thumbId>-600`==`-max`==`-4000` all ≈1000 px), while the **node `og:image` points to a DIFFERENT primary asset id whose `downloadwiz` master IS present**. Uniform 80-rec survey: thumb-dw 200 = **0/80**, og id differs = **80/80**, og-dw 200 = **80/80 (100%)**, 0 login-walls. Pixel sample (32): **22 win (median 3.81×, max 43×/31.5 MP)**, 8 equal (small ≤1000 px native), 2 honest-smaller (upscaled-fake `-600` → honest 800 px native). Master = JPEG octet-stream/attachment, up to **7383×5779 = 42.7 MP**. `recollectLargest` (rips the master-less thumb id) would **regress every record to ~1000 px** ⇒ added the **NEW reusable `recollectOgImageMaster`** (one node-page HTML GET → SwiftSoup `og:image` → `slice` the og id → HEAD-probe `downloadwiz/<ogId>`, else `-max`; harvested-`url` fallback). Pure code change (no deploy). `swift build` 0; CollectionTester ×5 HTTP 200 master (decoded 42.7/24.5/28.1/12.1 MP + one 1.0 MP small native). `collectionWeights` 0.002 (provisional). See `logs/037-john-kinder-theological-library.md` |
 | 38 | Tasman Heritage | recollect (was `boutique`) | **committed Group B ADD** — **Recollect** `downloadwiz` (`tasman.recollect.co.nz`, footer "Recollect Limited", Tasman District Libraries), **not boutique**; was **NOT in the Lambda**. **Same TWO-ASSET shape as John Kinder 37** (thumb `downloadwiz` 404 0/80; node `og:image` → a DIFFERENT primary asset, og `downloadwiz` 200 **80/80 = 100%**) — **reused `recollectOgImageMaster`, no new strategy code** — **PLUS a Clutha-style vanity redirect** `tasman.recollect.co.nz` → `heritage.tasmanlibraries.govt.nz` (og:image + master both on the vanity host; the strategy's og-host logic targets it automatically). Pixel sample (32): **26 win (median 3.14×, max 15.44×/10 MP)**, 3 equal (small native), 3 honest-smaller (upscaled-fake `-600` → honest native); og widths up to **9803 px**. **★ Required a shared `fetchHTML` fix:** the vanity host 403s any non-browser-UA request, and Alamofire wasn't carrying the session UA across the cross-host redirect → the og:image scrape silently fell back; fixed by also sending the UA as a per-request header (carried onto the redirected request). Additive — Kinder ×2 regression-clean; Feilding's local `!880,1024` fallback is env-gated (no `JP2_CONVERTER_URL` locally), not from this change. Pure code change (no deploy). `swift build` 0; CollectionTester ×4 HTTP 200 (3 masters 2.4–4.0 MP + 1 `-max` fallback). `collectionWeights` 0.002 (provisional). See `logs/038-tasman-heritage.md` |
 | 39 | Western Bay Community Archives | recollect (was `boutique`) | **committed Group B ADD** — **Recollect** `downloadwiz` (`westernbay.recollect.co.nz`, footer "Recollect Limited", Western Bay District Council), **not boutique**; was **NOT in the Lambda**. **Same TWO-ASSET shape as John Kinder 37 / Tasman 38** (harvested thumb asset id master-less — `downloadwiz/<aid>` 404, `display/<aid>-600`==`-max` ~1000 px; node `og:image` → a DIFFERENT primary asset, og `downloadwiz` 200 **29/29 = 100%** of live nodes) — **reused `recollectOgImageMaster`, no new strategy code**. **No vanity redirect** (nodes + master served directly on the recollect.co.nz host). Pixel sample (24): **24/24 win (median 11.72×, max 34.57×/~25 MP, min 2.74×)**; CollectionTester served up to **8411×6763 ≈ 57 MP**. **★ Newer Recollect generation** (also exposes `assets/pic/<nodeId>`, but the legacy `assets/display/<assetId>` scheme still resolves for ~97%). **★ ~3% stale harvested ids** — a past site migration renumbered nodes/assets and DigitalNZ never re-synced; those `nodes/view/<nid>` 302 to a `/pages/error404` page (no `og:image`) → graceful fallback to the harvested `url` (itself 404); additive (Group B) ⇒ not a regression. (Lesson: page-1-only sampling over-counted staleness at ~11% vs ~3% uniform.) Pure code change (no deploy). `swift build` 0; CollectionTester ×6 HTTP 200 (`downloadwiz` masters 9–57 MP). `collectionWeights` 0.002 (provisional). See `logs/039-western-bay-community-archives.md` |
+| 40 | War Art Online | ndha (was `boutique`) | **committed Group B ADD** — **NDHA/Rosetta** (`ndhadeliver.natlib.govt.nz/NLNZStreamGate`), holding inst **Archives NZ** (landing `archives.govt.nz` Incapsula-WAF-walled → no alternate route); was **NOT in the Lambda**. **Same `NLNZStreamGate/get?dps_pid=IE<n>` shape as National Publicity Studios 03, but — unlike 03 — a TIFF `PRESERVATION_MASTER` DOES exist** (`NCWA_*.tif`, ~5000 px, 40–65 MB, anonymously streamable) via the same Rosetta METS path as TAPUHI 25 — **TIFF not JP2**, routed through the **now-generic JP2+TIFF converter** (Feilding 35); `ndhadeliver` already in `ALLOWED_HOSTS` ⇒ **pure Swift change, no AWS redeploy**. New `warArtConverter`/`resolveWarArtFLStreamURL`/`warArtMasterFLPID`. **★ The harvested baseline is BIMODAL and the Lambda can't decode images:** `NLNZStreamGate` returns a **900 px** access JPEG (~80%, older IE1204… batch), an **already ~5000 px** JPEG (~20%, newer IE257…/IE807… batches), or a **multi-page PDF** (~1–2%). No robust METS signal (`preservationType`=`DERIVATIVE_COPY` for both tiers; `techMD` width only on the master + unreliable), so the case split is decided from the access-JPEG `fileSizeBytes`: PDF→convert one TIFF page; access ≥700 KB→**passthrough native ~5000 px**; else→convert the master (≤110 MB cap, so the 1/30 **908 MB** outlier falls back to its full-res baseline). **User chose heuristic-passthrough (pure Swift)** over always-convert / converter-decides-redeploy; the 700 KB threshold is graceful at the fuzzy byte boundary (few-% may render 4000 px vs 5000 px; never broken). Surveys: 30-rec master **30/30**; 100-rec baseline **Case1 80% / Case2 20% / Case3 ~1–2%**; ~80% get **~20× area**. `swift build` 0; CollectionTester ×8 (7 converter + 1 passthrough, all HTTP 200); LIVE converter up to **12.7 MP (4000×3173)** in 5.7–7.3 s; passthrough record native **5000×4745 (23.7 MP)**. `collectionWeights` 0.002 (provisional). See `logs/040-war-art-online.md` |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -342,6 +349,39 @@ and `recollectOgImageMaster` cleanly falls back to the harvested `url` (itself 4
 regression. (Lesson: don't trust a page-1-only sample for the stale fraction — it read ~11% on page 1 but ~3%
 uniformly.) `collectionWeights` **0.002** (provisional). Pure code change (no AWS deploy). `swift build` 0;
 CollectionTester ×6 HTTP 200 (`downloadwiz` masters 9–57 MP). See `logs/039-western-bay-community-archives.md`.
+
+**✅ Order 40 (War Art Online) committed Group B ADD (2026-06-14).** Archives NZ's National Collection of War
+Art (WWI/WWII paintings & drawings) — platform identified (was `boutique`): **NDHA / National Library Rosetta**
+(`ndhadeliver.natlib.govt.nz/NLNZStreamGate/get?dps_pid=IE<n>`), the **same delivery shape as National Publicity
+Studios 03 and TAPUHI 25**; holding institution **Archives NZ** (landing `archives.govt.nz` is
+**Incapsula/Imperva-WAF-walled** → a 212-byte JS-challenge stub, no alternate route). **Was NOT in the Lambda**
+(no `collectionWeights` → never served). **★ Unlike National Publicity Studios 03 (which had only an access rep),
+War Art DOES have a TIFF `PRESERVATION_MASTER`** — the Rosetta METS (`…&dps_func=mets`) lists an `image/tiff` FL
+(`NCWA_*.tif`, 8-bit RGB, **~5000 px, 40–65 MB**) whose `…&dps_func=stream` serves the TIFF **anonymously**
+(HTTP 200, direct 200, no S3 redirect). It's reached by the **same METS path as TAPUHI 25** but is **TIFF not JP2**,
+so it's routed through the **now-generic JP2+TIFF Pillow converter** (generalised at Feilding 35); since
+`ndhadeliver.natlib.govt.nz` was already in the deployed converter's `ALLOWED_HOSTS` (from TAPUHI), this is a
+**pure Swift change — NO converter change, NO AWS redeploy** (new `warArtConverter` → `resolveWarArtFLStreamURL`
+(IE→METS) → `warArtMasterFLPID` → `<JP2_CONVERTER_URL>/?url=<encoded FL stream>`; TIFF needs no reduced-level
+trick, decodes in 5–7 s live). **★ The one wrinkle — a BIMODAL baseline the Lambda can't pixel-measure:**
+`NLNZStreamGate/get` returns either a **900 px** access JPEG (**~80 %**, older IE1204… batch), an **already
+~5000 px** full-res JPEG (**~20 %**, newer IE257…/IE807… batches), or a **multi-page `combinedPDF.pdf`**
+(**~1–2 %**, compilations — not `<img>`-displayable). The Swift Lambda has **no image decoder** (the converter's
+whole reason to exist) and **there is no robust METS signal** (`preservationType`=`DERIVATIVE_COPY` for **both**
+the 900 px and 5000 px access tiers; `techMD tiff:ImageWidth` exists only on the master and is unreliable), so the
+case split is decided from the **access JPEG's `fileSizeBytes`** (== the served byte length): a PDF → convert the
+largest TIFF page; access ≥ **700 KB** → **passthrough the native ~5000 px baseline** (the converter's 4000 px
+ceiling would only shrink it); else → convert the master. The picker caps at the converter's **110 MB** download
+limit, so the **1/30 outlier 908 MB master** is rejected → falls back to its already-full-res 6039 px baseline.
+**User chose "heuristic passthrough (pure Swift)"** over always-convert (would shrink the 20 % to 4000 px) and over
+a converter-decides AWS redeploy; the 700 KB threshold is **graceful at the fuzzy byte boundary** (the **pixel**
+gap 1452 ↔ 4347 px is clean, the **byte** gap isn't, so a few-% of records may render at 4000 px instead of native
+~5000 px — never broken). **Lesson: an NDHA collection can serve full-res access JPEGs for some digitisation
+batches and 900 px for others — parse the METS (don't conclude "no master" from the NLNZStreamGate shape, cf. 03)
+AND measure the baseline distribution.** Surveys: 30-rec master **30/30 (100 %)**; 100-rec baseline **Case1 80 % /
+Case2 20 % / Case3 ~1–2 %**; ~80 % get **~20× area**. `swift build` 0; CollectionTester ×8 (**7 converter +
+1 passthrough, all HTTP 200**); LIVE deployed converter up to **12.7 MP (4000×3173)** in 5.7–7.3 s; passthrough
+record native **5000×4745 (23.7 MP)**. `collectionWeights` **0.002** (provisional). See `logs/040-war-art-online.md`.
 
 **★ Vendor correction (2026-06-14, user-flagged):** **Recollect is made by Recollect Ltd (spun out of NZMS —
 New Zealand Micrographic Services — in 2019), NOT Axiell.** Earlier sweep records (logs 001–010/035,

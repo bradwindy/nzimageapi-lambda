@@ -220,6 +220,22 @@ final class URLProcessor: Sendable {
             // with no public original, converter unconfigured, or fetch failure); never serves a raw TIFF.
             await feildingConverter(result, url)
         },
+        "War Art Online": { result, url in
+            // NDHA/Rosetta (Archives NZ war-art paintings) — the same delivery platform as TAPUHI, but the
+            // preservation master is a TIFF (not JP2). Resolve the IE → Rosetta METS → the largest image/tiff
+            // master stream, then emit `<JP2_CONVERTER_URL>/?url=<encoded FL stream>` so the browser loads our
+            // self-hosted Pillow converter (TIFF→JPEG, downscaled ≤ 4000 px) — the same now-generic JP2+TIFF
+            // converter TAPUHI and Feilding use (and `ndhadeliver.natlib.govt.nz` is already host-allowlisted,
+            // so this needs no redeploy). The harvested baseline is bimodal: ~80 % are a 900 px access
+            // derivative (the converter is a ~20× win), but ~20 % are ALREADY a full-res ~5000 px JPEG
+            // (re-rendering those at 4000 px would shrink them) and ~2 % are multi-page compilations whose
+            // default stream is a PDF (not `<img>`-displayable). The resolver decides from the METS: an
+            // already-large access JPEG → passthrough the native baseline; a PDF compilation → convert one
+            // displayable TIFF page; otherwise → convert the master. Degrades to the harvested URL on any
+            // failure (no IE PID, the rare oversized master above the converter's download cap, fetch failure,
+            // or converter unset); never serves a raw TIFF.
+            await warArtConverter(result, url)
+        },
     ]
 
     func getLargerImage(for result: NZRecordsResult) async throws -> NZRecordsResult {
@@ -762,6 +778,130 @@ final class URLProcessor: Sendable {
 
         let trimmed = base.hasSuffix("/") ? String(base.dropLast()) : base
         return "\(trimmed)/?url=\(encoded)"
+    }
+
+    /// War Art Online (Archives NZ via NDHA/Rosetta). Resolve the TIFF preservation master's FL stream and
+    /// hand it to the self-hosted Pillow converter (`JP2_CONVERTER_URL`) for a displayable ≤ 4000 px JPEG.
+    ///
+    /// Graceful, non-throwing: any failure (no IE PID, the harvested baseline is already a full-res JPEG, a
+    /// multi-page PDF with no convertible master, an oversized master above the converter's download cap, a
+    /// fetch failure, or the converter being unconfigured) degrades to the harvested `url` — the NLNZStreamGate
+    /// access copy (a normal JPEG that renders everywhere). Never serves a raw TIFF.
+    private static func warArtConverter(_ result: NZRecordsResult, _ url: URL) async -> String {
+        let flStreamURL: String
+        do {
+            flStreamURL = try await resolveWarArtFLStreamURL(from: url)
+        } catch {
+            return url.absoluteString
+        }
+
+        guard let base = ProcessInfo.processInfo.environment["JP2_CONVERTER_URL"], !base.isEmpty,
+              let encoded = flStreamURL.addingPercentEncoding(withAllowedCharacters: .alphanumerics)
+        else {
+            return url.absoluteString
+        }
+
+        let trimmed = base.hasSuffix("/") ? String(base.dropLast()) : base
+        return "\(trimmed)/?url=\(encoded)"
+    }
+
+    /// Resolve the War Art Online TIFF preservation master FL stream URL
+    /// (`…/DeliveryManagerServlet?dps_pid=FL<n>&dps_func=stream`). Throws when the harvested baseline should be
+    /// served unchanged instead (already full-resolution, or no convertible master) — the caller
+    /// (`warArtConverter`) treats a throw as "passthrough the harvested URL". Does NOT proxy.
+    private static func resolveWarArtFLStreamURL(from url: URL) async throws -> String {
+        let urlString = url.absoluteString
+        let baseURL = "https://ndhadeliver.natlib.govt.nz"
+        let requestManager = NetworkRequestManager()
+
+        // Extract the IE PID from the harvested NLNZStreamGate URL (`…/get?dps_pid=IE<n>`).
+        guard let match = urlString.range(of: #"IE\d+"#, options: .regularExpression) else {
+            throw URLProcessorError(kind: .unableToExtractIEPID, data: ["url": urlString])
+        }
+        let iePID = String(urlString[match])
+
+        // Stateless Rosetta METS GET: reliably enumerates every file with its MIME type and byte size.
+        let metsURL = "\(baseURL)/delivery/DeliveryManagerServlet?dps_pid=\(iePID)&dps_func=mets"
+        let metsXML = try await requestManager.fetchHTML(endpoint: metsURL)
+
+        // Decide from the METS: the largest TIFF master to convert, or nil to passthrough the baseline.
+        // `maxBytes` matches the converter's own download cap (110 MB) so the rare oversized master
+        // (e.g. a ~900 MB scan) is rejected here and falls back to the already-full-res baseline.
+        guard let flPID = warArtMasterFLPID(
+            inMETS: metsXML,
+            maxBytes: 110 * 1024 * 1024,
+            accessPassthroughThreshold: 700 * 1024
+        ) else {
+            throw URLProcessorError(kind: .noFilesFound, data: ["url": urlString, "iePID": iePID])
+        }
+
+        return "\(baseURL)/delivery/DeliveryManagerServlet?dps_pid=\(flPID)&dps_func=stream"
+    }
+
+    /// Parse a Rosetta METS document and choose the FL PID of the TIFF preservation master to convert, or
+    /// `nil` to passthrough the harvested baseline. Each file's technical metadata lives in its own
+    /// `<mets:amdSec ID="FL<n>-amd"> … </mets:amdSec>` block carrying `<key id="fileMIMEType">` and
+    /// `<key id="fileSizeBytes">`.
+    ///
+    /// Decision (Archives NZ delivers a bimodal access tier we cannot pixel-measure in-Lambda):
+    /// - No `image/tiff` master ≤ `maxBytes` → `nil` (passthrough; nothing convertible under the cap).
+    /// - A multi-page `application/pdf` compilation is present → convert the largest TIFF page (one
+    ///   displayable image beats a PDF that won't render in an `<img>`).
+    /// - The largest `image/jpeg` access derivative is ≥ `accessPassthroughThreshold` → `nil`: the baseline
+    ///   is already a full-resolution ~5000 px JPEG (above the converter's 4000 px ceiling), so serve it
+    ///   directly rather than downscale.
+    /// - Otherwise (a small ~900 px access derivative) → convert the master.
+    ///
+    /// The byte threshold maps the bimodal access tiers (thumbnail ~900 px ≈ ≤ ~0.65 MB vs full ~5000 px ≈
+    /// ≥ ~0.59 MB); the small overlap means a few-percent of records near the boundary may render at 4000 px
+    /// instead of native ~5000 px (or vice-versa) — always graceful, never a broken image.
+    static func warArtMasterFLPID(
+        inMETS metsXML: String,
+        maxBytes: Int64,
+        accessPassthroughThreshold: Int64
+    ) -> String? {
+        let blockPattern = #"<mets:amdSec ID="(FL\d+)-amd">(.*?)</mets:amdSec>"#
+        guard let regex = try? NSRegularExpression(pattern: blockPattern, options: [.dotMatchesLineSeparators]) else {
+            return nil
+        }
+
+        var bestTIFFPID: String?
+        var bestTIFFSize: Int64 = -1
+        var largestAccessJPEG: Int64 = -1
+        var hasPDF = false
+        let whole = NSRange(metsXML.startIndex..., in: metsXML)
+
+        for match in regex.matches(in: metsXML, range: whole) {
+            guard let pidRange = Range(match.range(at: 1), in: metsXML),
+                  let bodyRange = Range(match.range(at: 2), in: metsXML) else { continue }
+            let body = metsXML[bodyRange]
+
+            var size: Int64 = -1
+            if let sizeRange = body.range(of: #"<key id="fileSizeBytes">\d+</key>"#, options: .regularExpression),
+               let digitsRange = body[sizeRange].range(of: #"\d+"#, options: .regularExpression) {
+                size = Int64(body[sizeRange][digitsRange]) ?? -1
+            }
+
+            if body.contains(#"<key id="fileMIMEType">image/tiff</key>"#) {
+                if size <= maxBytes, size > bestTIFFSize {
+                    bestTIFFSize = size
+                    bestTIFFPID = String(metsXML[pidRange])
+                }
+            } else if body.contains(#"<key id="fileMIMEType">image/jpeg</key>"#) {
+                if size > largestAccessJPEG { largestAccessJPEG = size }
+            } else if body.contains(#"<key id="fileMIMEType">application/pdf</key>"#) {
+                hasPDF = true
+            }
+        }
+
+        // Nothing convertible under the converter's download cap → serve the harvested baseline.
+        guard let tiffPID = bestTIFFPID else { return nil }
+        // Multi-page compilation (PDF default stream): convert one displayable TIFF page.
+        if hasPDF { return tiffPID }
+        // The harvested access derivative is already full-resolution (> the converter's 4000 px ceiling).
+        if largestAccessJPEG >= accessPassthroughThreshold { return nil }
+        // Thumbnail-tier access (~900 px) → upgrade to the TIFF master via the converter.
+        return tiffPID
     }
 
     /// Recollect (Recollect Ltd / NZMS): prefer the full-resolution master at
