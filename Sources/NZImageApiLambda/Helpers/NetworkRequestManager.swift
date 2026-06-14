@@ -75,13 +75,22 @@ final class NetworkRequestManager: ValidatedRequestManager {
     }
 
     func fetchHTML(endpoint: String) async throws -> String {
+        let userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+
         let configuration = URLSessionConfiguration.default
-        configuration.httpAdditionalHeaders = [
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-        ]
+        configuration.httpAdditionalHeaders = ["User-Agent": userAgent]
 
         let session = Session(configuration: configuration)
-        let response = await session.request(endpoint).serializingString().response
+
+        // Also set the User-Agent as a per-REQUEST header (not only on the session config) so it is
+        // carried onto the redirected URLRequest when URLSession auto-follows a redirect. Some
+        // Recollect instances 301/302 the harvested *.recollect.co.nz landing host to a council vanity
+        // domain (e.g. tasman.recollect.co.nz -> heritage.tasmanlibraries.govt.nz) that 403s any
+        // request lacking a browser UA. Session-level httpAdditionalHeaders are NOT reliably reapplied
+        // to the cross-host redirect (URLSession returns the 403 error page, so an og:image scrape sees
+        // no image and falls back), whereas request headers ARE copied across the redirect.
+        let headers: HTTPHeaders = ["User-Agent": userAgent]
+        let response = await session.request(endpoint, headers: headers).serializingString().response
 
         switch response.result {
         case let .success(value):

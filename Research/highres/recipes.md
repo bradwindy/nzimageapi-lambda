@@ -155,6 +155,31 @@ hard-coded per collection.
   (NAM's legacy switch case is the same idea without the master-probe/`-max` fallback; it was left intact
   as already-optimal. Reuse `recollectOgImageMaster` for any future Recollect collection whose thumb-id
   `downloadwiz` is uniformly 404 but the node `og:image` carries a different master-bearing id.)
+- **tasman.recollect.co.nz (Tasman Heritage, order 38, 2026-06-14): TWO-ASSET + VANITY REDIRECT, ADD by
+  REUSING `recollectOgImageMaster`.** Same two-asset shape as John Kinder (thumb `downloadwiz` 404 0/80;
+  node `og:image` → a DIFFERENT primary asset, og `downloadwiz` 200 **80/80 = 100%**; `-600`==`-max`
+  ~1000 px), **plus a Clutha-style vanity redirect** `tasman.recollect.co.nz` → **`heritage.tasmanlibraries.govt.nz`**
+  (the og:image and master both live on the vanity host; the uniform 80-rec survey saw og host =
+  `heritage.tasmanlibraries.govt.nz` for all 80). Because `recollectOgImageMaster` builds the master URL
+  from the **og:image's own host**, it targets the vanity domain automatically — **no new strategy code,
+  just a registry entry + weight.** Pixel sample (32): **26 win (median 3.14×, max 15.44×/10 MP)**, 3
+  equal (small ≤1000 px native), 3 honest-smaller; og widths min 318 / median 1855 / **max 9803**; master
+  JPEG octet-stream/attachment (7/7 magic-checked). CollectionTester ×4 → 3 masters (2.4–4.0 MP) + 1 `-max`
+  fallback, all HTTP 200.
+  - **★ REQUIRED a shared `fetchHTML` fix (applies to ALL og:image/HTML-scrape strategies):** the vanity
+    host **403s any request lacking a browser User-Agent**, and Alamofire/URLSession does **NOT** reliably
+    reapply the session-level `httpAdditionalHeaders` User-Agent to the **redirected** request on a
+    **cross-host** 301/302 — so `fetchHTML` got the vanity 403 error page (no `og:image`) and the scrape
+    silently fell back to the `-600`. Fixed by **also sending the UA as a per-REQUEST header**
+    (`session.request(endpoint, headers:)`), which URLSession **does** copy onto the redirected
+    `URLRequest`. Additive (a no-op for non-redirecting hosts). ⇒ **Lesson:** any Recollect collection
+    whose harvested `*.recollect.co.nz` landing host **cross-host-redirects to a council vanity domain**
+    (Clutha 36, Tasman 38) needs the request-header UA to scrape the redirected page; check for a vanity
+    redirect (`curl -sIL`) when an og:image scrape mysteriously returns the harvested URL.
+  - **★ stale `:7000` recurred & masked the fix** — a leftover Kinder-era lambda held the port
+    (`bind … errno 48`), so CollectionTester tested the OLD binary (passthrough). The bundled
+    `killProcessOnPort` uses `/usr/bin/lsof` which **does not exist here** (`lsof` is at **`/usr/sbin/lsof`**),
+    so its kill silently no-ops. Free `:7000` with `/usr/sbin/lsof -ti :7000 | xargs kill -9` between runs.
 
 ---
 

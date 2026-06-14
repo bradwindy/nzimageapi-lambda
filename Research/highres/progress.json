@@ -828,22 +828,22 @@
       "name": "Tasman Heritage",
       "slug": "tasman-heritage",
       "group": "B",
-      "platform": "boutique",
+      "platform": "recollect",
       "rawItemCount": 2668,
-      "weight": null,
-      "status": "todo",
+      "weight": 0.002,
+      "status": "committed",
       "baseline": {
-        "method": "raw large_thumbnail_url",
-        "px": null
+        "method": "raw large_thumbnail_url (tasman.recollect.co.nz/assets/display/<thumbId>-600)",
+        "px": "~1000px display tier (~0.4-0.7 MP); the harvested THUMB id is a master-less display derivative (downloadwiz 404), and a small-original subset is UPSCALED to a fake ~1000px"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "ADD via the EXISTING recollectOgImageMaster (introduced for John Kinder 37): scrape node og:image -> the DIFFERENT primary asset id -> HEAD-probe downloadwiz master following redirects, else that asset -max. Two-asset (cf. NAM) PLUS a Clutha-style vanity redirect tasman.recollect.co.nz -> heritage.tasmanlibraries.govt.nz; the strategy uses the og:image own host so it targets the vanity domain automatically. Reclassified boutique -> recollect.",
+        "px": "downloadwiz master for 80/80 uniform sample (og widths min 318 / median 1855 / max 9803, up to ~10 MP); 26/32 pixel-win (median 3.14x, max 15.44x), 3/32 equal (small <=1000px native), 3/32 honest-smaller (upscaled-fake -600 -> honest ~800px native)",
+        "urlPattern": "https://heritage.tasmanlibraries.govt.nz/assets/downloadwiz/<ogId>  OR  /assets/display/<ogId>-max  (ogId from node og:image, on the vanity host, \\!= harvested thumb id)"
       },
       "commit": null,
       "log": "logs/038-tasman-heritage.md",
-      "notes": ""
+      "notes": "Recollect (Recollect Ltd / NZMS, NOT Axiell), classic downloadwiz generation. primary_collection=display_collection=\"Tasman Heritage\" (2879 Images; collection field = 0), content_partner Tasman District Libraries; rights mostly CC BY-NC / no-known-copyright. **TWO-ASSET pattern (cf. NAM 02 / John Kinder 37):** the harvested large_thumbnail id is a master-less display derivative (downloadwiz 404 \"goDownload failed\"; display/-600==-max==-4000 ~1000px); the node og:image references a DIFFERENT primary asset whose downloadwiz master IS present. Uniform 80-rec survey: thumb-dw 200 = 0/80, og id differs = 80/80, og-dw 200 = 80/80 (100%), 0 login-walls / 0 dead nodes / 0 missing-og, all masters real JPEG (7/7 magic-checked). **PLUS a Clutha-style vanity redirect:** tasman.recollect.co.nz 301/302-redirects to heritage.tasmanlibraries.govt.nz (council domain; og:image + master both on the vanity host). recollectOgImageMaster uses the og:image own host so it targets the vanity domain automatically -- no new strategy code, just a registry entry reusing the Kinder helper. **Required a shared fetchHTML fix:** the vanity host 403s any request lacking a browser UA, and Alamofire was not carrying the session httpAdditionalHeaders UA across the cross-host redirect, so the og:image scrape silently fell back; fixed by also sending the UA as a per-REQUEST header (carried onto the redirected URLRequest). 26/32 pixel-win (median 3.14x, max 15.44x / 10 MP), 3 equal (small native), 3 honest-smaller (upscaled-fake -600 -> honest native). CollectionTester x4 -> 3 downloadwiz masters (2.4-4.0 MP) + 1 -max fallback, all HTTP 200; Kinder 37 / Feilding 35 regression-checked (Feilding falls back to !880,1024 locally only because JP2_CONVERTER_URL is unset in the local env -- pre-existing, not from this change)."
     },
     {
       "order": 39,

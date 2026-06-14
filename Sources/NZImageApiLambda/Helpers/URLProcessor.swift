@@ -77,6 +77,16 @@ final class URLProcessor: Sendable {
             // `-600` vs the honest 800 px native — honest-native-always, cf. Clutha/Hocken/Kura).
             await recollectOgImageMaster(result, url)
         },
+        "Tasman Heritage": { result, url in
+            // Same Recollect two-asset shape as John Kinder (the harvested large_thumbnail id is a
+            // master-less display derivative; the node og:image points to a DIFFERENT primary asset
+            // whose downloadwiz master IS present — 80/80 sampled, up to 9803 px). Plus a Clutha-style
+            // vanity redirect: tasman.recollect.co.nz → heritage.tasmanlibraries.govt.nz, which the og
+            // image carries, so recollectOgImageMaster (which uses the og:image's own host) targets the
+            // vanity domain automatically. 26/32 pixel-win (median 3.14×, max 15×/10 MP), 3 equal (small
+            // ≤1000 px native), 3 honest-smaller (upscaled-fake -600 → honest native).
+            await recollectOgImageMaster(result, url)
+        },
         "Ministry for Culture and Heritage Te Ara Flickr": { result, url in
             // object_url is null; a subset of the pool has `_h`/`_k`/`_o` originals (up to ~13 MP)
             // reachable only via the photo page's alternate secrets. Scrape for the largest;
