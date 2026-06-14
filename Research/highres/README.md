@@ -6,7 +6,7 @@ these files.
 
 ## Current resume state (updated 2026-06-14)
 
-**Wellington removal: done.** Collections **1–38 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+**Wellington removal: done.** Collections **1–39 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
 self-hosted JP2→JPEG converter; Canterbury 26, Auckland Art Gallery 27, Culture Waitaki 28, South
 Canterbury Museum 29, V.C. Browne 30 all no-improvement; **Te Hikoi 31 + Te Toi Uku 32 committed
 IMPROVEMENTS**, **Te Ūaka 33 + Wyndham 34 committed Group B ADDs** — all four `boutique`-mislabel-actually-
@@ -19,8 +19,11 @@ new-gen **signed-IIIF**, the ~25 MP TIFF original routed through the **now-gener
 42.7 MP, median 3.81×; **Tasman 38 committed Group B ADD** — same `downloadwiz` TWO-ASSET, **reused**
 `recollectOgImageMaster` (no new strategy) **+ a Clutha-style vanity redirect** to
 `heritage.tasmanlibraries.govt.nz`; required a shared `fetchHTML` fix to carry the browser UA across the
-cross-host redirect, masters up to ~10 MP, median 3.14×). The per-collection sweep is **UNPAUSED — next
-is order 39 (Western Bay Community Archives).** `progress.json` is authoritative; this is a human summary.
+cross-host redirect, masters up to ~10 MP, median 3.14×; **Western Bay Community Archives 39 committed
+Group B ADD** — same `downloadwiz` TWO-ASSET, **reused** `recollectOgImageMaster` (no new strategy, no
+vanity redirect), masters up to **57 MP** live, median 11.7×, with ~3% of harvested ids stale from a past
+site migration → graceful fallback). The per-collection sweep is **UNPAUSED — next is order 40 (War Art
+Online).** `progress.json` is authoritative; this is a human summary.
 
 > **Vendor note (corrected 2026-06-14):** **Recollect** (both the `*.recollect.co.nz` `downloadwiz`
 > sites and the `recollectcms.com` signed-IIIF sites) is made by **Recollect Ltd** (spun out of
@@ -70,6 +73,7 @@ is order 39 (Western Bay Community Archives).** `progress.json` is authoritative
 | 36 | Clutha Heritage | recollect (was `boutique`) | **committed Group B ADD** — healthy **Recollect** (`clutha.recollect.co.nz`, the older `downloadwiz` generation — NOT Axiell), **not boutique**; was **NOT in the Lambda** (no weight → never served). `downloadwiz` master present for **99.5%** (784/788; JPEG octet-stream/attachment, up to **6000×4379 = 26 MP**) vs the `-600`==`-max` ~1000 px display cap → **34/36 pixel-sample win, median 4.27×, max 36×**; 2/36 honest-smaller (small originals whose `-600` is upscaled-fake; master gives honest native). Added via the existing **`recollectLargest`** (HEAD-probe `downloadwiz` → master, else `-max`) + `recollectDomainMap`. The 4 newest-batch records (16437–16443) are CAT2 → `-max` fallback (200). No login-wall, all rights public. **Identity quirk:** "Clutha Heritage" is the DigitalNZ `primary_collection` (the `collection` field is `[]`/themed); the Lambda already queries `primary_collection` so the key works. **Vanity redirect:** `clutha.recollect.co.nz` → `heritage.cluthadc.govt.nz` (followed transparently). Pure code change (no deploy). `swift build` 0; CollectionTester ×4 HTTP 200 master (2.0×–6.5× over baseline). `collectionWeights` 0.002 (provisional). See `logs/036-clutha-heritage.md` |
 | 37 | John Kinder Theological Library | recollect (was `boutique`) | **committed Group B ADD** — **Recollect** `downloadwiz` (`kinderlibrary.recollect.co.nz`, footer "Recollect Limited" — NOT Axiell), **not boutique**; was **NOT in the Lambda** (no weight → never served). **★ TWO-ASSET pattern (cf. NAM 02):** the harvested `large_thumbnail_url` id is a **master-less display derivative** (`downloadwiz/<thumbId>` 404, `display/<thumbId>-600`==`-max`==`-4000` all ≈1000 px), while the **node `og:image` points to a DIFFERENT primary asset id whose `downloadwiz` master IS present**. Uniform 80-rec survey: thumb-dw 200 = **0/80**, og id differs = **80/80**, og-dw 200 = **80/80 (100%)**, 0 login-walls. Pixel sample (32): **22 win (median 3.81×, max 43×/31.5 MP)**, 8 equal (small ≤1000 px native), 2 honest-smaller (upscaled-fake `-600` → honest 800 px native). Master = JPEG octet-stream/attachment, up to **7383×5779 = 42.7 MP**. `recollectLargest` (rips the master-less thumb id) would **regress every record to ~1000 px** ⇒ added the **NEW reusable `recollectOgImageMaster`** (one node-page HTML GET → SwiftSoup `og:image` → `slice` the og id → HEAD-probe `downloadwiz/<ogId>`, else `-max`; harvested-`url` fallback). Pure code change (no deploy). `swift build` 0; CollectionTester ×5 HTTP 200 master (decoded 42.7/24.5/28.1/12.1 MP + one 1.0 MP small native). `collectionWeights` 0.002 (provisional). See `logs/037-john-kinder-theological-library.md` |
 | 38 | Tasman Heritage | recollect (was `boutique`) | **committed Group B ADD** — **Recollect** `downloadwiz` (`tasman.recollect.co.nz`, footer "Recollect Limited", Tasman District Libraries), **not boutique**; was **NOT in the Lambda**. **Same TWO-ASSET shape as John Kinder 37** (thumb `downloadwiz` 404 0/80; node `og:image` → a DIFFERENT primary asset, og `downloadwiz` 200 **80/80 = 100%**) — **reused `recollectOgImageMaster`, no new strategy code** — **PLUS a Clutha-style vanity redirect** `tasman.recollect.co.nz` → `heritage.tasmanlibraries.govt.nz` (og:image + master both on the vanity host; the strategy's og-host logic targets it automatically). Pixel sample (32): **26 win (median 3.14×, max 15.44×/10 MP)**, 3 equal (small native), 3 honest-smaller (upscaled-fake `-600` → honest native); og widths up to **9803 px**. **★ Required a shared `fetchHTML` fix:** the vanity host 403s any non-browser-UA request, and Alamofire wasn't carrying the session UA across the cross-host redirect → the og:image scrape silently fell back; fixed by also sending the UA as a per-request header (carried onto the redirected request). Additive — Kinder ×2 regression-clean; Feilding's local `!880,1024` fallback is env-gated (no `JP2_CONVERTER_URL` locally), not from this change. Pure code change (no deploy). `swift build` 0; CollectionTester ×4 HTTP 200 (3 masters 2.4–4.0 MP + 1 `-max` fallback). `collectionWeights` 0.002 (provisional). See `logs/038-tasman-heritage.md` |
+| 39 | Western Bay Community Archives | recollect (was `boutique`) | **committed Group B ADD** — **Recollect** `downloadwiz` (`westernbay.recollect.co.nz`, footer "Recollect Limited", Western Bay District Council), **not boutique**; was **NOT in the Lambda**. **Same TWO-ASSET shape as John Kinder 37 / Tasman 38** (harvested thumb asset id master-less — `downloadwiz/<aid>` 404, `display/<aid>-600`==`-max` ~1000 px; node `og:image` → a DIFFERENT primary asset, og `downloadwiz` 200 **29/29 = 100%** of live nodes) — **reused `recollectOgImageMaster`, no new strategy code**. **No vanity redirect** (nodes + master served directly on the recollect.co.nz host). Pixel sample (24): **24/24 win (median 11.72×, max 34.57×/~25 MP, min 2.74×)**; CollectionTester served up to **8411×6763 ≈ 57 MP**. **★ Newer Recollect generation** (also exposes `assets/pic/<nodeId>`, but the legacy `assets/display/<assetId>` scheme still resolves for ~97%). **★ ~3% stale harvested ids** — a past site migration renumbered nodes/assets and DigitalNZ never re-synced; those `nodes/view/<nid>` 302 to a `/pages/error404` page (no `og:image`) → graceful fallback to the harvested `url` (itself 404); additive (Group B) ⇒ not a regression. (Lesson: page-1-only sampling over-counted staleness at ~11% vs ~3% uniform.) Pure code change (no deploy). `swift build` 0; CollectionTester ×6 HTTP 200 (`downloadwiz` masters 9–57 MP). `collectionWeights` 0.002 (provisional). See `logs/039-western-bay-community-archives.md` |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -320,6 +324,24 @@ cleared — the bundled `killProcessOnPort` calls `/usr/bin/lsof`, which doesn't
 `/usr/sbin/lsof`.) `collectionWeights` **0.002** (provisional). Pure code change (no AWS deploy). `swift build` 0;
 CollectionTester ×4 HTTP 200 (3 `downloadwiz` masters 2.4–4.0 MP + 1 `-max` fallback). See
 `logs/038-tasman-heritage.md`.
+
+**✅ Order 39 (Western Bay Community Archives) committed Group B ADD (2026-06-14).** A 7th `boutique` mislabel —
+**Recollect** `downloadwiz` (`westernbay.recollect.co.nz`, footer "Recollect Limited", Western Bay District
+Council). **Was NOT in the Lambda.** **The same NAM-style TWO-ASSET pattern as John Kinder 37 / Tasman 38** (the
+harvested `large_thumbnail` asset id is a master-less display derivative — `downloadwiz/<aid>` 404,
+`display/<aid>-600`==`-max` ~1000 px — while the node `og:image` points to a DIFFERENT primary asset whose
+`downloadwiz` master IS present), **so it REUSED `recollectOgImageMaster` — no new strategy code, just a registry
+entry + weight.** **No vanity redirect** (nodes + master served directly on `westernbay.recollect.co.nz`). Uniform
+30-rec survey: live nodes **29/30 (97%)**, og-`downloadwiz` 200 = **29/29 (100%)** of live nodes; pixel sample
+(24): **24/24 win** (median **11.72×**, max **34.57×**/~25 MP, min 2.74×); CollectionTester served up to
+**8411×6763 ≈ 57 MP**. **★ Two notes:** (1) a **newer Recollect generation** — the site also exposes
+`assets/pic/<nodeId>`, but the legacy `assets/display/<assetId>` scheme still resolves for ~97%, so the two-asset
+strategy applies unchanged; (2) **~3% of harvested ids are stale** — a past site migration renumbered nodes/assets
+and DigitalNZ never re-synced those records, so `nodes/view/<nid>` 302s to a `/pages/error404` page (no `og:image`)
+and `recollectOgImageMaster` cleanly falls back to the harvested `url` (itself 404). Additive (Group B) ⇒ not a
+regression. (Lesson: don't trust a page-1-only sample for the stale fraction — it read ~11% on page 1 but ~3%
+uniformly.) `collectionWeights` **0.002** (provisional). Pure code change (no AWS deploy). `swift build` 0;
+CollectionTester ×6 HTTP 200 (`downloadwiz` masters 9–57 MP). See `logs/039-western-bay-community-archives.md`.
 
 **★ Vendor correction (2026-06-14, user-flagged):** **Recollect is made by Recollect Ltd (spun out of NZMS —
 New Zealand Micrographic Services — in 2019), NOT Axiell.** Earlier sweep records (logs 001–010/035,

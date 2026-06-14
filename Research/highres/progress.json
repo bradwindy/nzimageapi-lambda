@@ -850,22 +850,22 @@
       "name": "Western Bay Community Archives",
       "slug": "western-bay-community-archives",
       "group": "B",
-      "platform": "boutique",
+      "platform": "recollect",
       "rawItemCount": 2420,
-      "weight": null,
-      "status": "todo",
+      "weight": 0.002,
+      "status": "committed",
       "baseline": {
-        "method": "raw large_thumbnail_url",
-        "px": null
+        "method": "raw large_thumbnail_url (westernbay.recollect.co.nz/assets/display/<aid>-600)",
+        "px": "~1000px display tier (~0.7 MP); the harvested THUMB asset id is a master-less display derivative (downloadwiz 404; display/-600==-max). ~3% of harvested records were renumbered by a past site migration and now 404."
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "ADD via the EXISTING recollectOgImageMaster (John Kinder 37 / Tasman 38): scrape node og:image -> the DIFFERENT primary asset id -> HEAD-probe downloadwiz master following redirects, else that asset -max. Two-asset (cf. NAM). No vanity redirect (stays on westernbay.recollect.co.nz). Reclassified boutique -> recollect. No new strategy code, just a registry entry + weight.",
+        "px": "downloadwiz master for 29/29 live nodes (100%); 24/24 pixel-win (median 11.72x, max 34.57x, min 2.74x), up to ~25 MP in sample / 57 MP live (8411x6763). ~3% stale harvested records -> error404 page (no og:image) -> graceful fallback to harvested url.",
+        "urlPattern": "https://westernbay.recollect.co.nz/assets/downloadwiz/<ogId>  OR  /assets/display/<ogId>-max  (ogId from node og:image, != harvested thumb id)"
       },
-      "commit": null,
+      "commit": "PENDING",
       "log": "logs/039-western-bay-community-archives.md",
-      "notes": ""
+      "notes": "Recollect (Recollect Ltd / NZMS, NOT Axiell), classic downloadwiz master on a NEWER Recollect generation (the site also exposes assets/pic/<nodeId>, but the legacy assets/display/<assetId> scheme still resolves for ~97% of records). primary_collection=display_collection=collection=\"Western Bay Community Archives\" (2440 Images), content_partner Western Bay District Council; rights mostly CC BY-NC-ND / CC BY-SA. **TWO-ASSET pattern (cf. NAM 02 / John Kinder 37 / Tasman 38):** the harvested large_thumbnail asset id is a master-less display derivative (downloadwiz 404; display/-600==-max ~1000px); the node og:image references a DIFFERENT primary asset id (usually aid+1, sometimes larger gap) whose downloadwiz master IS present. Uniform 30-rec survey: live nodes 29/30 (97%), og-dw 200 = 29/29 (100%) of live nodes, 0 misleading default og on the error404 page. Pixel sample (24): 24/24 win (median 11.72x, max 34.57x ~25 MP, min 2.74x). **NO vanity redirect** (westernbay.recollect.co.nz serves nodes + downloadwiz master directly), so recollectOgImageMaster is reused verbatim -- no new strategy code, just a registry entry + weight 0.002. **~3% stale harvested ids:** a past site migration renumbered nodes/assets and DigitalNZ never re-synced those records, so nodes/view/<nid> 302s to a /pages/error404 page ('Item does not exist') and assets/display/<aid>-600 404s; no reliable old->new mapping exists (id collisions are coincidental). recollectOgImageMaster fetches the landing -> error404 page (no og:image meta) -> graceful fallback to the harvested url (itself 404). Additive (Group B), so not a regression. CollectionTester x6 -> 6 downloadwiz masters (9-57 MP, e.g. 8411x6763), all HTTP 200; pure code change (no deploy)."
     },
     {
       "order": 40,

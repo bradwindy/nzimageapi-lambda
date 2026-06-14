@@ -180,6 +180,28 @@ hard-coded per collection.
     (`bind … errno 48`), so CollectionTester tested the OLD binary (passthrough). The bundled
     `killProcessOnPort` uses `/usr/bin/lsof` which **does not exist here** (`lsof` is at **`/usr/sbin/lsof`**),
     so its kill silently no-ops. Free `:7000` with `/usr/sbin/lsof -ti :7000 | xargs kill -9` between runs.
+- **westernbay.recollect.co.nz (Western Bay Community Archives, order 39, 2026-06-14): TWO-ASSET (no
+  vanity redirect), ADD by REUSING `recollectOgImageMaster`.** Same two-asset shape as John Kinder /
+  Tasman: harvested thumb asset id is master-less (`downloadwiz/<aid>` 404; `display/<aid>-600`==`-max`
+  ~1000 px); node `og:image` → a DIFFERENT primary asset (usually `aid+1`, sometimes a larger gap)
+  whose `downloadwiz` master IS present. Uniform survey: live nodes 29/30, og `downloadwiz` 200 =
+  **29/29 = 100%** of live nodes; pixel sample (24): **24/24 win (median 11.72×, max 34.57×/~25 MP,
+  min 2.74×)**, CollectionTester served up to **8411×6763 ≈ 57 MP**. **No vanity redirect** (nodes +
+  `downloadwiz` master served directly on `westernbay.recollect.co.nz`), so the helper is reused
+  verbatim — **registry entry + weight only, no new code.**
+  - **★ Newer Recollect generation, legacy scheme still works:** the site also exposes
+    `assets/pic/<nodeId>` (node-id display image; `-600`/`-max` suffixes ignored), but the legacy
+    `assets/display/<assetId>-…` scheme still resolves for ~97% of records, so the harvested baseline
+    is mostly live and the two-asset strategy applies unchanged.
+  - **★ ~3% stale harvested ids (site migration renumbered):** the most-recent / page-1 harvested
+    records 404 — `nodes/view/<nid>` 302s to `/pages/error404` ("Item does not exist") and
+    `assets/display/<aid>-600` 404s; DigitalNZ never re-synced them, and id collisions are coincidental
+    (live `nodes/view/2633` is a DIFFERENT item than the harvested record that used asset 2633), so there
+    is **no reliable old→new mapping**. The error404 page has **no `og:image`**, so `recollectOgImageMaster`
+    cleanly falls back to the harvested `url` (itself 404). Additive (Group B) ⇒ not a regression. ⇒
+    **Lesson:** don't sample only page 1 — its top records can be disproportionately stale; survey
+    uniformly across all pages to get the true stale fraction (page-1-only first sample said ~11%, the
+    uniform 30-rec survey said ~3%).
 
 ---
 

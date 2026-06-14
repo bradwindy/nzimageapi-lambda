@@ -87,6 +87,18 @@ final class URLProcessor: Sendable {
             // ≤1000 px native), 3 honest-smaller (upscaled-fake -600 → honest native).
             await recollectOgImageMaster(result, url)
         },
+        "Western Bay Community Archives": { result, url in
+            // Same Recollect two-asset shape as John Kinder / Tasman, on a newer Recollect
+            // generation (westernbay.recollect.co.nz; footer "Recollect Limited"). The harvested
+            // large_thumbnail id is a master-less display derivative (its `downloadwiz` 404s,
+            // `display/<id>-max` == `-600` ~1000 px), while the node `og:image` points to a
+            // DIFFERENT primary asset whose `downloadwiz` master IS present (29/29 live nodes
+            // sampled, up to ~25 MP). No vanity redirect (stays on westernbay.recollect.co.nz).
+            // 24/24 pixel-win (median 11.7×, max 34.6×). ~3% of harvested records were renumbered
+            // by a site migration and now 404 (node → error404 page with no og:image) → graceful
+            // fallback to the harvested `url`; additive (Group B), so not a regression.
+            await recollectOgImageMaster(result, url)
+        },
         "Ministry for Culture and Heritage Te Ara Flickr": { result, url in
             // object_url is null; a subset of the pool has `_h`/`_k`/`_o` originals (up to ~13 MP)
             // reachable only via the photo page's alternate secrets. Scrape for the largest;
