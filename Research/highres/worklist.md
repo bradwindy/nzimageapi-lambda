@@ -6,7 +6,7 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 ## Removal
 - [x] REMOVE Wellington City Recollect — done
 
-## Collections (36/52 terminal)
+## Collections (37/52 terminal)
 
 ### recollect
 - [x] (01) Tauranga City Libraries Other Collection — group A — platform recollect — committed
@@ -19,6 +19,7 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 - [x] (09) Tāmiro — group A — platform recollect — no-improvement
 - [x] (10) He Purapura Marara Scattered Seeds — group A — platform recollect — committed
 - [x] (36) Clutha Heritage — group B — platform recollect — committed
+- [x] (37) John Kinder Theological Library — group B — platform recollect — committed
 
 ### flickr
 - [x] (11) Ministry for Culture and Heritage Te Ara Flickr — group B — platform flickr — committed
@@ -62,7 +63,6 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 
 ### boutique
 - [x] (30) V.C. Browne & Son NZ Aerial Photograph Collection — group A — platform boutique — no-improvement
-- [ ] (37) John Kinder Theological Library — group B — platform boutique — todo
 - [ ] (38) Tasman Heritage — group B — platform boutique — todo
 - [ ] (39) Western Bay Community Archives — group B — platform boutique — todo
 - [ ] (40) War Art Online — group B — platform boutique — todo

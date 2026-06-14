@@ -6,15 +6,18 @@ these files.
 
 ## Current resume state (updated 2026-06-14)
 
-**Wellington removal: done.** Collections **1–36 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+**Wellington removal: done.** Collections **1–37 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
 self-hosted JP2→JPEG converter; Canterbury 26, Auckland Art Gallery 27, Culture Waitaki 28, South
 Canterbury Museum 29, V.C. Browne 30 all no-improvement; **Te Hikoi 31 + Te Toi Uku 32 committed
 IMPROVEMENTS**, **Te Ūaka 33 + Wyndham 34 committed Group B ADDs** — all four `boutique`-mislabel-actually-
 eHive, `ehiveIIIFLargest`, 800→1000/1200/up-to-4000px; **Feilding 35 committed Group B ADD** — Recollect
 new-gen **signed-IIIF**, the ~25 MP TIFF original routed through the **now-generic JP2+TIFF converter**, up to
 ~13 MP live; **Clutha 36 committed Group B ADD** — `boutique`-mislabel-actually-**Recollect** `downloadwiz`,
-`recollectLargest`, masters up to 26 MP, median 4.27×). The per-collection sweep is **UNPAUSED — next is
-order 37 (John Kinder Theological Library).** `progress.json` is authoritative; this is a human summary.
+`recollectLargest`, masters up to 26 MP, median 4.27×; **John Kinder 37 committed Group B ADD** —
+`boutique`-mislabel-actually-**Recollect** `downloadwiz`, **TWO-ASSET** (cf. NAM), new reusable
+`recollectOgImageMaster` scrapes the node `og:image` → the master-bearing primary asset id, masters up to
+42.7 MP, median 3.81×). The per-collection sweep is **UNPAUSED — next is order 38 (Tasman Heritage).**
+`progress.json` is authoritative; this is a human summary.
 
 > **Vendor note (corrected 2026-06-14):** **Recollect** (both the `*.recollect.co.nz` `downloadwiz`
 > sites and the `recollectcms.com` signed-IIIF sites) is made by **Recollect Ltd** (spun out of
@@ -62,6 +65,7 @@ order 37 (John Kinder Theological Library).** `progress.json` is authoritative; 
 | 34 | Wyndham & Districts Historical Museum | ehiveIIIF (was `boutique`) | **committed Group B ADD** — **live eHive** (account 3102), 4th `boutique`-mislabel-actually-eHive in a row; was **NOT in the Lambda** (no weight → never served). **Added** `ehiveIIIFLargest` + `collectionWeights` 0.002 (provisional). **Near-uniform 1000px** masters (120-rec full sample via info.json, min 1000): **801–1000: 118 (98%, ×1.56 over 800px `_l`), >3000: 2 (~2%)**; a spread check hit a **4242×7065 (~30 MP)** master. Master min 1000 > `_l` cap 800 ⇒ every IIIF ≥ `_l`, **0 worse / 0 failures** (no honest-smaller possible). All ids 32-hex (no order-33 sampling trap). **~1.5% (60/3937) records null-image at source** (hard-fail pick, left as-is cf. 29). `swift build` 0; CollectionTester ×4 HTTP 200 |
 | 35 | Feilding Library | recollectIIIF (was `boutique`) | **committed Group B ADD** — **Recollect new-generation signed-IIIF** (`recollectcms.com`, `curtis-production2-cache`), the same vendor's newer generation vs the older `*.recollect.co.nz downloadwiz` sites (both **Recollect Ltd / NZMS**, not Axiell); was **NOT in the Lambda** (no weight → never served). Harvested signed IIIF derivative is hard-capped at **≈880×886 (0.78 MP)** — the **CloudFront signature is path-bound**, so `/full/max/` → **403 `SignatureDoesNotMatch`** (public ceiling `!1170,1170` = 1.36 MP). The **~25 MP TIFF original** (item page `…/files/<fileId>/download?variant=original` → 302 → presigned S3) is **undisplayable + 504s weserv**, so routed through the **existing self-hosted Pillow converter — now a generic JP2+TIFF master→JPEG proxy** (multi-host `ALLOWED_HOSTS`, libtiff build-assert), via new `feildingConverter` (one HTML GET for the `<fileId>`) → ≤4000 px JPEG (up to ~16 MP). **Graceful fallback to the signed `!880,1024` JPEG** (login-walled records). **Deployed live** (in-place SAM update, 3 Modify/0 replace); 6/6 local + 4/4 live picks HTTP 200 `image/jpeg` (up to 13.4 MP); TAPUHI regression unchanged. `collectionWeights` 0.002 (provisional). See `logs/035-feilding-library.md` |
 | 36 | Clutha Heritage | recollect (was `boutique`) | **committed Group B ADD** — healthy **Recollect** (`clutha.recollect.co.nz`, the older `downloadwiz` generation — NOT Axiell), **not boutique**; was **NOT in the Lambda** (no weight → never served). `downloadwiz` master present for **99.5%** (784/788; JPEG octet-stream/attachment, up to **6000×4379 = 26 MP**) vs the `-600`==`-max` ~1000 px display cap → **34/36 pixel-sample win, median 4.27×, max 36×**; 2/36 honest-smaller (small originals whose `-600` is upscaled-fake; master gives honest native). Added via the existing **`recollectLargest`** (HEAD-probe `downloadwiz` → master, else `-max`) + `recollectDomainMap`. The 4 newest-batch records (16437–16443) are CAT2 → `-max` fallback (200). No login-wall, all rights public. **Identity quirk:** "Clutha Heritage" is the DigitalNZ `primary_collection` (the `collection` field is `[]`/themed); the Lambda already queries `primary_collection` so the key works. **Vanity redirect:** `clutha.recollect.co.nz` → `heritage.cluthadc.govt.nz` (followed transparently). Pure code change (no deploy). `swift build` 0; CollectionTester ×4 HTTP 200 master (2.0×–6.5× over baseline). `collectionWeights` 0.002 (provisional). See `logs/036-clutha-heritage.md` |
+| 37 | John Kinder Theological Library | recollect (was `boutique`) | **committed Group B ADD** — **Recollect** `downloadwiz` (`kinderlibrary.recollect.co.nz`, footer "Recollect Limited" — NOT Axiell), **not boutique**; was **NOT in the Lambda** (no weight → never served). **★ TWO-ASSET pattern (cf. NAM 02):** the harvested `large_thumbnail_url` id is a **master-less display derivative** (`downloadwiz/<thumbId>` 404, `display/<thumbId>-600`==`-max`==`-4000` all ≈1000 px), while the **node `og:image` points to a DIFFERENT primary asset id whose `downloadwiz` master IS present**. Uniform 80-rec survey: thumb-dw 200 = **0/80**, og id differs = **80/80**, og-dw 200 = **80/80 (100%)**, 0 login-walls. Pixel sample (32): **22 win (median 3.81×, max 43×/31.5 MP)**, 8 equal (small ≤1000 px native), 2 honest-smaller (upscaled-fake `-600` → honest 800 px native). Master = JPEG octet-stream/attachment, up to **7383×5779 = 42.7 MP**. `recollectLargest` (rips the master-less thumb id) would **regress every record to ~1000 px** ⇒ added the **NEW reusable `recollectOgImageMaster`** (one node-page HTML GET → SwiftSoup `og:image` → `slice` the og id → HEAD-probe `downloadwiz/<ogId>`, else `-max`; harvested-`url` fallback). Pure code change (no deploy). `swift build` 0; CollectionTester ×5 HTTP 200 master (decoded 42.7/24.5/28.1/12.1 MP + one 1.0 MP small native). `collectionWeights` 0.002 (provisional). See `logs/037-john-kinder-theological-library.md` |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -263,6 +267,31 @@ both serve the master, the redirect is followed transparently (`headStatusFollow
 the harvested `*.recollect.co.nz` host is kept (consistent with the other map entries). Pure code change (no
 AWS deploy — unlike Feilding 35). `swift build` 0; CollectionTester ×4 HTTP 200 master (2.0×–6.5× over
 baseline). See `logs/036-clutha-heritage.md`.
+
+**✅ Order 37 (John Kinder Theological Library) committed Group B ADD (2026-06-14).** A 5th `boutique`
+mislabel — actually **Recollect** `downloadwiz` (`kinderlibrary.recollect.co.nz`, footer "Recollect Limited",
+**NOT Axiell**). **Was NOT in the Lambda** (no `collectionWeights` → never served). **★ This one is the
+NAM-style TWO-ASSET pattern (order 02), now generalised into a reusable strategy.** The harvested
+`large_thumbnail_url` id is a **master-less display derivative** — `downloadwiz/<thumbId>` 404s
+("goDownload failed"), and `display/<thumbId>-600`==`-max`==`-1000…-4000` are all byte-identical ≈1000 px
+(the size token unlocks nothing) — while the **node page's `og:image` references a DIFFERENT primary asset
+id** (e.g. thumb 374245→og 374380) whose **`downloadwiz` master IS present**. Uniform **80-record survey**:
+thumb-`downloadwiz` 200 = **0/80**, og id differs from thumb id = **80/80**, og-`downloadwiz` 200 =
+**80/80 (100%)**, **0** login-walls / **0** dead nodes / **0** missing-og; og widths min 318 / median 1927 /
+max 6587. **Pixel sample (32):** **22 win** (median **3.81×**, max **43.49×** / 31.5 MP), **8 equal** (small
+≤1000 px native — master == display, no fakery), **2 honest-smaller** (the `-600` upscales small originals to
+fake ~1000 px; `downloadwiz` serves the honest 800 px native — honest-native-always, cf. Clutha 36 / Hocken 8
+/ Kura 16). Master = JPEG `application/octet-stream`+`attachment`, up to **7383×5779 = 42.7 MP**. Because the
+harvested thumb id has **no master**, `recollectLargest` (which rips that id) would **regress every record to
+~1000 px** — so I added the **NEW reusable `recollectOgImageMaster`**: one bounded `fetchHTML(landingUrl)` →
+SwiftSoup `meta[property=og:image]` → `slice` the og id (`display/ … -`) → HEAD-probe `downloadwiz/<ogId>`
+following redirects, serve on 200 else `display/<ogId>-max` (using the og:image's own host); fall back to the
+harvested `url` on any failure. (The legacy NAM switch case is the same idea minus the master-probe/`-max`
+fallback; left intact as already-optimal. The new helper is the reusable home for this pattern.)
+`collectionWeights` **0.002** (provisional). Pure code change (no AWS deploy). `swift build` 0; CollectionTester
+×5 HTTP 200 `downloadwiz` master (decoded 42.7 / 24.5 / 28.1 / 12.1 MP + one 1.0 MP small native; every pick's
+final URL is `downloadwiz/<ogId>`, ogId ≠ harvested thumb id). See
+`logs/037-john-kinder-theological-library.md`.
 
 **★ Vendor correction (2026-06-14, user-flagged):** **Recollect is made by Recollect Ltd (spun out of NZMS —
 New Zealand Micrographic Services — in 2019), NOT Axiell.** Earlier sweep records (logs 001–010/035,

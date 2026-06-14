@@ -135,6 +135,26 @@ hard-coded per collection.
   `headStatusFollowingRedirects` and by browsers, so the harvested `*.recollect.co.nz` host works
   end-to-end (kept in `recollectDomainMap`, consistent with the other entries). NOT NAM-style two-asset
   (the thumbnail id's own `downloadwiz` already serves the master).
+- **kinderlibrary.recollect.co.nz (John Kinder Theological Library, order 37, 2026-06-14): TWO-ASSET,
+  ADD via NEW reusable `recollectOgImageMaster`.** The canonical NAM (order 02) two-asset shape,
+  generalised into a registry strategy. The harvested `large_thumbnail_url` id is a **master-less display
+  derivative** — `downloadwiz/<thumbId>` 404s ("goDownload failed") and `display/<thumbId>-600` == `-max`
+  == `-1000…-4000` are all byte-identical ≈1000 px (the size token unlocks nothing) — while the **node
+  page's `og:image` points to a DIFFERENT primary asset id** (thumb 374245→og 374380, thumb 378354→og
+  398934, …) whose **`downloadwiz` master IS present**. Uniform 80-record survey: thumb `downloadwiz` 200
+  = **0/80**, og id differs = **80/80**, og `downloadwiz` 200 = **80/80 (100%)**, 0 login-walls / 0 dead
+  nodes / 0 missing-og; og widths min 318 / median 1927 / max 6587. Pixel sample (32): **22 win (median
+  3.81×, max 43×/31.5 MP)**, 8 equal (small ≤1000 px native), **2 honest-smaller** (the `-600` upscales
+  small originals to fake ~1000 px; `downloadwiz` serves the honest 800 px native — honest-native-always,
+  cf. Clutha/Hocken/Kura). Master = JPEG `application/octet-stream`+`attachment` (up to 7383×5779 =
+  42.7 MP). ⇒ `recollectLargest` (rips the master-less thumb id) would **regress every record to
+  ~1000 px** — you MUST scrape the node `og:image` for the primary asset id. **`recollectOgImageMaster`
+  (URLProcessor):** one bounded `fetchHTML(landingUrl)` → SwiftSoup `meta[property=og:image]` →
+  `slice(display/ … -)` the og id → HEAD-probe `downloadwiz/<ogId>` following redirects, serve on 200 else
+  `display/<ogId>-max`, using the og:image's own host; fall back to the harvested `url` on any failure.
+  (NAM's legacy switch case is the same idea without the master-probe/`-max` fallback; it was left intact
+  as already-optimal. Reuse `recollectOgImageMaster` for any future Recollect collection whose thumb-id
+  `downloadwiz` is uniformly 404 but the node `og:image` carries a different master-bearing id.)
 
 ---
 

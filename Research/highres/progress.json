@@ -806,22 +806,22 @@
       "name": "John Kinder Theological Library",
       "slug": "john-kinder-theological-library",
       "group": "B",
-      "platform": "boutique",
+      "platform": "recollect",
       "rawItemCount": 2714,
-      "weight": null,
-      "status": "todo",
+      "weight": 0.002,
+      "status": "committed",
       "baseline": {
-        "method": "raw large_thumbnail_url",
-        "px": null
+        "method": "raw large_thumbnail_url (kinderlibrary.recollect.co.nz/assets/display/<thumbId>-600)",
+        "px": "~1000px display tier (~0.4-1.0 MP); the harvested THUMB id is a master-less display derivative (downloadwiz 404), and a small-original subset is UPSCALED to a fake ~1000px"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "ADD via NEW recollectOgImageMaster (scrape node og:image -> the DIFFERENT primary asset id -> HEAD-probe downloadwiz master following redirects, else that asset -max). Two-asset pattern, cf. National Army Museum. Reclassified boutique -> recollect.",
+        "px": "downloadwiz master for 80/80 uniform sample (up to 7383x5779 = 42.7 MP); 22/32 pixel-win (median 3.81x, max 43x), 8/32 equal (small <=1000px native), 2/32 honest-smaller (upscaled-fake -600 -> honest 800px native)",
+        "urlPattern": "https://kinderlibrary.recollect.co.nz/assets/downloadwiz/<ogId>  OR  /assets/display/<ogId>-max  (ogId from node og:image, \\!= harvested thumb id)"
       },
       "commit": null,
       "log": "logs/037-john-kinder-theological-library.md",
-      "notes": ""
+      "notes": "Recollect (by Recollect Ltd / NZMS, NOT Axiell), classic downloadwiz generation. primary_collection=collection=display_collection=\"John Kinder Theological Library\" (all three facets = 2714 Images), content_partner John Kinder Theological Library. **TWO-ASSET pattern (cf. NAM):** the harvested large_thumbnail id is a master-less display derivative (downloadwiz 404 \"goDownload failed\", display/-max capped ~1000px); the node og:image references a DIFFERENT primary asset whose downloadwiz master IS present. og master 200 for 80/80 uniform sample, og id differs from thumb id 80/80, no login-wall, no migration, all nodes 200. Master served JPEG octet-stream/attachment (up to 7383x5779=42.7 MP). 22/32 pixel-win (median 3.81x, max 43x/31.5 MP), 8/32 equal (small <=1000px native), 2/32 honest-smaller (the -600 upscales small originals to fake ~1000px; downloadwiz serves the honest 800px native). recollectLargest would regress every record to ~1000px (rips the master-less thumb id), so added the new reusable recollectOgImageMaster strategy (one node-page HTML GET + master HEAD-probe with -max fallback). CollectionTester 5/5 -> downloadwiz masters HTTP 200 (decoded 42.7/24.5/28.1/12.1 MP + one 1.0 MP small native)."
     },
     {
       "order": 38,

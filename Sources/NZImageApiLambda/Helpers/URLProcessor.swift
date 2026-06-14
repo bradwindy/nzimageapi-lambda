@@ -66,6 +66,17 @@ final class URLProcessor: Sendable {
             // upscaled-fake) fall back to / serve the honest `-max` native.
             await recollectLargest(result, url)
         },
+        "John Kinder Theological Library": { result, url in
+            // Recollect "two-asset" (cf. National Army Museum): the harvested large_thumbnail id is
+            // a master-less display derivative — its `downloadwiz` 404s ("goDownload failed") and
+            // `display/<id>-max` is capped ~1000 px — while the node page's `og:image` points to a
+            // DIFFERENT primary asset whose `downloadwiz` master IS retained (80/80 sampled, up to
+            // 31.5 MP). `recollectLargest` (which rips the harvested id) would regress every record
+            // to ~1000 px, so we scrape the node `og:image` → master. 22/32 pixel-win (median 3.8×,
+            // up to 43×), 8/32 equal (small ≤1000 px native), 2/32 honest-smaller (the upscaled-fake
+            // `-600` vs the honest 800 px native — honest-native-always, cf. Clutha/Hocken/Kura).
+            await recollectOgImageMaster(result, url)
+        },
         "Ministry for Culture and Heritage Te Ara Flickr": { result, url in
             // object_url is null; a subset of the pool has `_h`/`_k`/`_o` originals (up to ~13 MP)
             // reachable only via the photo page's alternate secrets. Scrape for the largest;
@@ -773,6 +784,52 @@ final class URLProcessor: Sendable {
         }
 
         return "https://\(domain)/assets/display/\(id)-max"
+    }
+
+    /// Recollect "two-asset" records (e.g. National Army Museum, John Kinder Theological Library):
+    /// the DigitalNZ `large_thumbnail_url` id is a master-less *display* derivative — its
+    /// `/assets/downloadwiz/<id>` 404s ("goDownload failed") and `/assets/display/<id>-max` is
+    /// capped ~1000 px — while the item/node page's `og:image` references a DIFFERENT *primary*
+    /// asset whose `downloadwiz` master IS retained. `recollectLargest` (which rips the harvested
+    /// id) would therefore regress every record to ~1000 px; we must scrape the node page's
+    /// `og:image` to recover the primary asset id, then apply the same master-probe-else-`-max`
+    /// logic as `recollectLargest` on THAT id, using the `og:image`'s own host.
+    ///
+    /// One bounded HTML GET of the landing page (the page is parsed, never the image). Falls back
+    /// to the harvested `url` on any failure (no landing URL, fetch throws, no `og:image` meta, or
+    /// an unparseable id) so the output is always a valid image.
+    private static func recollectOgImageMaster(_ result: NZRecordsResult, _ url: URL) async -> String {
+        guard let landing = result.landingUrl,
+              let html = try? await NetworkRequestManager().fetchHTML(endpoint: landing.absoluteString)
+        else {
+            return url.absoluteString
+        }
+
+        do {
+            let document = try SwiftSoup.parse(html)
+            let imageMetaTag = try document
+                .select("meta")
+                .first { element in
+                    try element.attr("property") == "og:image"
+                }
+
+            guard let content = try imageMetaTag?.attr("content"),
+                  let ogUrl = URL(string: content),
+                  let host = ogUrl.host,
+                  let id = content.slice(from: "display/", to: "-")
+            else {
+                return url.absoluteString
+            }
+
+            let downloadwiz = "https://\(host)/assets/downloadwiz/\(id)"
+            let maxDerivative = "https://\(host)/assets/display/\(id)-max"
+
+            let masterStatus = await NetworkRequestManager().headStatusFollowingRedirects(endpoint: downloadwiz)
+            return masterStatus == 200 ? downloadwiz : maxDerivative
+        }
+        catch {
+            return url.absoluteString
+        }
     }
 
     private static let recollectDomainMap = [
