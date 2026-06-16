@@ -227,6 +227,27 @@ hard-coded per collection.
     `Content-Disposition: attachment` + `X-Content-Type-Options: nosniff` is **byte-identical** to the
     already-approved Clutha 36 / Hastings 6 `downloadwiz` masters (renders in `<img>`; direct navigation
     downloads the `.jpg`). The `nosniff` is standard Recollect, not anomalous.
+- **rotorua.recollect.co.nz (Pakiaka Rotorua Heritage Online, order 42, 2026-06-16): TWO-ASSET +
+  VANITY REDIRECT, ADD by REUSING `recollectOgImageMaster`.** 9th boutique-mislabel-actually-Recollect,
+  5th two-asset case, **2nd with a Clutha/Tasman-style vanity redirect**
+  `rotorua.recollect.co.nz` → **`pakiaka.rotorualibrary.govt.nz`** (Rotorua Library — Te Aka Mauri). The
+  harvested `large_thumbnail_url` is the **small `-280` thumbnail** (≈500 px, 0.17 MP) — note the display
+  pyramid here extends **past 1000 px** (`-280` 499×333, `-600` 999×667, `-max` 1845×1232), unlike Far
+  North where `-600`==`-max`. The node `og:image` points to the master-bearing primary asset **on the
+  vanity host** (og id differs from thumb id for **50/64 ~78%**); `downloadwiz/<ogId>` 200 = **64/64 (100%)**,
+  and is **≥ `-max` for every record** (a true larger master for ~40%, up to 6000×4000 = 24 MP; == `-max`
+  for ~60%). Pixel (vs the `-280` baseline): **63/64 win, median 11.7×, max 144×**, 1 equal (tiny 380×300
+  native), 0 honest-smaller, **0 stale/dead, 0 login-walls**. Registry entry + weight only — **no new code,
+  no domain-map entry, no deploy.**
+  - **★ Why `recollectOgImageMaster` (not `recollectLargest`):** the harvested thumb id is master-less
+    for the two-asset ~78% (`downloadwiz/<thumbId>` 404; verified thumb 11610→404 vs og 12166→200), **and**
+    the assets are UA-gated (403 without a browser UA) behind a **cross-host** vanity redirect.
+    `recollectOgImageMaster` builds the master URL from the og:image's **own (vanity) host**, so the
+    `downloadwiz` HEAD probe is a **direct** request (no cross-host redirect) and the session UA applies.
+    `recollectLargest` would both rip the wrong id and have to follow the redirect through the UA-gate.
+  - **★ live count drift:** `result_count` is **1,571** vs the progress.json snapshot's 1,374 (the
+    collection grew) — `rawItemCount` updated to 1,571. The `?u=<32-hex>` on the og:image is a cache-buster
+    (cf. Far North 41), not a signed token.
 
 ---
 

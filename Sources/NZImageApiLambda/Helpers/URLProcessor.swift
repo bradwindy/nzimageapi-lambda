@@ -113,6 +113,21 @@ final class URLProcessor: Sendable {
             // and `headStatusFollowingRedirects` both send one.)
             await recollectOgImageMaster(result, url)
         },
+        "Pakiaka Rotorua Heritage Online": { result, url in
+            // Same Recollect two-asset shape as Far North / Western Bay / Tasman / John Kinder
+            // (rotorua.recollect.co.nz, Rotorua Library — Te Aka Mauri), PLUS a Clutha/Tasman-style
+            // vanity redirect rotorua.recollect.co.nz -> pakiaka.rotorualibrary.govt.nz. The harvested
+            // `large_thumbnail_url` is the small `-280` thumbnail; the node `og:image` points to the
+            // master-bearing primary asset on the vanity host (og id differs from thumb id for ~78%;
+            // its `downloadwiz` master is present for 64/64 sampled = 100%). recollectOgImageMaster
+            // builds the master URL from the og:image's OWN host, so it targets the vanity domain
+            // directly (no cross-host redirect during the probe) — important here because the assets
+            // are UA-gated (403 without a browser UA) and the rotorua.recollect.co.nz -> vanity redirect
+            // is cross-host. 63/64 pixel-win (median 11.7×, max 144× / 6000×4000 ≈ 24 MP), 1 equal
+            // (a genuinely tiny 380×300 native), 0 honest-smaller, 0 stale/dead. The `downloadwiz`
+            // master is ≥ `-max` for every record (a true larger master for ~40%, == `-max` for ~60%).
+            await recollectOgImageMaster(result, url)
+        },
         "Ministry for Culture and Heritage Te Ara Flickr": { result, url in
             // object_url is null; a subset of the pool has `_h`/`_k`/`_o` originals (up to ~13 MP)
             // reachable only via the photo page's alternate secrets. Scrape for the largest;
