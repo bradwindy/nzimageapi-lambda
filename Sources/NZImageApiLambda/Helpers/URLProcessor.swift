@@ -99,6 +99,20 @@ final class URLProcessor: Sendable {
             // fallback to the harvested `url`; additive (Group B), so not a regression.
             await recollectOgImageMaster(result, url)
         },
+        "Far North District Libraries Rediscovery": { result, url in
+            // Same Recollect two-asset shape as John Kinder / Tasman / Western Bay
+            // (fndclibraries.recollect.co.nz, Far North District Libraries). The harvested
+            // large_thumbnail id is a master-less display derivative (its `downloadwiz` 404s for ~70%
+            // of records, `display/<id>-600` == `-max` ~1000 px), while the node `og:image` points to
+            // the master-bearing primary asset (sometimes the same id, usually a different one) whose
+            // `downloadwiz` master IS present — 59/60 sampled (98%). No vanity redirect (stays on
+            // fndclibraries.recollect.co.nz). 58/60 pixel-win (median 23.4×, max 57.6× / ~38 MP), 1
+            // equal, 0 honest-smaller. ~1.7% of nodes are stale (no real `og:image` — the page returns
+            // the site logo) → graceful fallback to the harvested `-600`; additive (Group B), so not a
+            // regression. (The site UA-gates its assets — 403 without a browser UA — but `fetchHTML`
+            // and `headStatusFollowingRedirects` both send one.)
+            await recollectOgImageMaster(result, url)
+        },
         "Ministry for Culture and Heritage Te Ara Flickr": { result, url in
             // object_url is null; a subset of the pool has `_h`/`_k`/`_o` originals (up to ~13 MP)
             // reachable only via the photo page's alternate secrets. Scrape for the largest;

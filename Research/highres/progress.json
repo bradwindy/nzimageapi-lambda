@@ -894,22 +894,22 @@
       "name": "Far North District Libraries Rediscovery",
       "slug": "far-north-district-libraries-rediscovery",
       "group": "B",
-      "platform": "boutique",
+      "platform": "recollect",
       "rawItemCount": 1435,
-      "weight": null,
-      "status": "todo",
+      "weight": 0.002,
+      "status": "committed",
       "baseline": {
-        "method": "raw large_thumbnail_url",
-        "px": null
+        "method": "raw large_thumbnail_url (fndclibraries.recollect.co.nz/assets/display/<thumbId>-600)",
+        "px": "~1000px display tier (-600 == -max == -4000, byte-identical); e.g. 1000x1351"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "ADD via the existing recollectOgImageMaster (REUSED, no new strategy code): scrape node og:image -> the master-bearing primary asset id -> HEAD-probe downloadwiz master, else -max; harvested-url fallback. TWO-ASSET (cf. John Kinder 37 / Tasman 38 / Western Bay 39).",
+        "px": "downloadwiz master for ~98%; 58/60 pixel-win, median 23.4x, max 57.6x (up to ~38 MP); 1 equal; 0 honest-smaller; ~1.7% stale nodes -> harvested -600 fallback",
+        "urlPattern": "https://fndclibraries.recollect.co.nz/assets/downloadwiz/<ogAssetId>  OR  /assets/display/<ogAssetId>-max"
       },
       "commit": null,
       "log": "logs/041-far-north-district-libraries-rediscovery.md",
-      "notes": ""
+      "notes": "8th boutique-mislabel-actually-Recollect (fndclibraries.recollect.co.nz, classic downloadwiz generation, Far North District Libraries, CC BY-NC/BY-NC-ND). 4th TWO-ASSET case -> REUSED recollectOgImageMaster, no new strategy code, no domain-map entry (the strategy uses the og:image's own host), no AWS deploy. The harvested thumb id is mostly master-less (downloadwiz/<thumbId> 200 only 31/105 ~30%; -600==-max ~1000px); the node og:image points to the master-bearing primary asset (og id differs from thumb id for 77/105 ~73%, same for ~30%). Survey 2 (60 uniform): og present 60/60, og-downloadwiz 200 59/60 (98%), pixel 58 win/1 equal/0 honest-smaller, ratio min 1.0 median 23.4x max 57.6x (up to 7590x5042 ~38 MP). 1 fail (49622662): node og:image is the site logo (no display id) -> graceful fallback to harvested -600 (~1.7% stale, cf. Western Bay ~3%). UA-GATE: all assets 403 without a browser UA (the ?u= token is a red herring); fetchHTML + headStatusFollowingRedirects both send a browser UA, master served directly (no cross-host redirect), so it works unchanged. Master = octet-stream + Content-Disposition attachment + nosniff, byte-identical to approved Clutha 36 / Hastings 6 (renders in <img>). swift build 0; CollectionTester x6 HTTP200 downloadwiz masters 18.3/0.9/29.5/21.4/25.0/28.5 MP. collectionWeights 0.002 (provisional)."
     },
     {
       "order": 42,

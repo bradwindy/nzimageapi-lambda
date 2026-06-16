@@ -202,6 +202,31 @@ hard-coded per collection.
     **Lesson:** don't sample only page 1 — its top records can be disproportionately stale; survey
     uniformly across all pages to get the true stale fraction (page-1-only first sample said ~11%, the
     uniform 30-rec survey said ~3%).
+- **fndclibraries.recollect.co.nz (Far North District Libraries Rediscovery, order 41, 2026-06-16):
+  TWO-ASSET (no vanity redirect), ADD by REUSING `recollectOgImageMaster`.** 8th
+  boutique-mislabel-actually-Recollect, 4th two-asset case. Same shape as John Kinder 37 / Tasman 38 /
+  Western Bay 39: the harvested thumb id is mostly master-less (`downloadwiz/<thumbId>` 200 only ~30%,
+  `display/<thumbId>-600`==`-max`==`-4000` ~1000 px), while the node `og:image` points to the
+  master-bearing primary asset (og id == thumb id for ~30%, differs — usually `+1` or a small offset —
+  for ~70%). Uniform survey 2 (60 records): og present **60/60**, og-`downloadwiz` 200 = **59/60 (98%)**,
+  pixel **58 win / 1 equal / 0 honest-smaller**, ratio **min 1.0 median 23.4× max 57.6×** (up to
+  7590×5042 ≈ 38 MP); CollectionTester ×6 served masters 18.3–29.5 MP. Registry entry + weight only —
+  **no new code, no domain-map entry** (`recollectOgImageMaster` uses the og:image's own host), no deploy.
+  - **★ UA-gate red herring:** every `assets/…` URL **403s without a browser User-Agent** (118-byte
+    stub), and the node `og:image` is `display/<id>-max?u=<32-hex>` — the `?u=` looks like a signed
+    token but is **irrelevant** (works with or without it). The real gate is purely the **User-Agent**
+    (same as Tasman 38). `fetchHTML` + `headStatusFollowingRedirects` both already send a browser UA,
+    and the master is served **directly** (no cross-host redirect), so the session-level UA suffices and
+    the helper works unchanged. ⇒ **Lesson:** a Recollect `?u=` query on the og:image is a cache-buster,
+    not a path-bound signature — don't mistake it for the Feilding-35 signed-IIIF gate; probe with vs
+    without a browser UA before assuming a token is required.
+  - **★ ~1.7% stale nodes:** a few records' node `og:image` is the **site logo**
+    (`theme/fndclibraries/img/logo.mobile.png`, no `display/<id>`) → `recollectOgImageMaster` cleanly
+    falls back to the harvested `-600` (still valid). Additive (Group B) ⇒ not a regression.
+  - **★ master header profile = approved precedent:** `application/octet-stream` +
+    `Content-Disposition: attachment` + `X-Content-Type-Options: nosniff` is **byte-identical** to the
+    already-approved Clutha 36 / Hastings 6 `downloadwiz` masters (renders in `<img>`; direct navigation
+    downloads the `.jpg`). The `nosniff` is standard Recollect, not anomalous.
 
 ---
 

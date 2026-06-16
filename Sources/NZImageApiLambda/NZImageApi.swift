@@ -66,6 +66,7 @@ public struct NZImageApi: Sendable {
         "Tasman Heritage": 0.002,
         "Western Bay Community Archives": 0.002,
         "War Art Online": 0.002,
+        "Far North District Libraries Rediscovery": 0.002,
     ]
 
     public func image(collection: String?, logger: @Sendable (String) -> Void = { _ in }) async -> NZRecordsResult? {

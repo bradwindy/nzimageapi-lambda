@@ -6,7 +6,7 @@ these files.
 
 ## Current resume state (updated 2026-06-14)
 
-**Wellington removal: done.** Collections **1–40 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+**Wellington removal: done.** Collections **1–41 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
 self-hosted JP2→JPEG converter; Canterbury 26, Auckland Art Gallery 27, Culture Waitaki 28, South
 Canterbury Museum 29, V.C. Browne 30 all no-improvement; **Te Hikoi 31 + Te Toi Uku 32 committed
 IMPROVEMENTS**, **Te Ūaka 33 + Wyndham 34 committed Group B ADDs** — all four `boutique`-mislabel-actually-
@@ -27,8 +27,13 @@ paintings on **NDHA/Rosetta**, 100% have a **TIFF preservation master** (~5000 p
 Rosetta METS path as TAPUHI but TIFF not JP2, routed through the **already-deployed** generic JP2+TIFF
 converter (`ndhadeliver` already allowlisted ⇒ **pure Swift, no redeploy**); ~80% of records (900 px
 baseline) get a **~20× win**, ~20% (already ~5000 px baseline) **passthrough native**, ~1–2% (multi-page
-PDF) convert one page — decided from the METS access-JPEG byte size since the Lambda can't decode images).
-The per-collection sweep is **UNPAUSED — next is order 41 (Far North District Libraries Rediscovery).**
+PDF) convert one page — decided from the METS access-JPEG byte size since the Lambda can't decode images);
+**Far North District Libraries Rediscovery 41 committed Group B ADD** — 8th `boutique`-mislabel-actually-
+**Recollect** (`fndclibraries.recollect.co.nz`, classic `downloadwiz`), the 4th **TWO-ASSET** case →
+**reused `recollectOgImageMaster`** (no new code, no domain-map entry, no deploy); og-`downloadwiz` master
+**59/60 (98%)**, **58/60 pixel-win, median 23.4×, up to ~38 MP**; ~1.7% stale nodes (logo `og:image`) →
+graceful harvested-`-600` fallback. The per-collection sweep is **UNPAUSED — next is order 42 (Pakiaka
+Rotorua Heritage Online).**
 `progress.json` is authoritative; this is a human summary.
 
 > **Vendor note (corrected 2026-06-14):** **Recollect** (both the `*.recollect.co.nz` `downloadwiz`
@@ -81,6 +86,7 @@ The per-collection sweep is **UNPAUSED — next is order 41 (Far North District 
 | 38 | Tasman Heritage | recollect (was `boutique`) | **committed Group B ADD** — **Recollect** `downloadwiz` (`tasman.recollect.co.nz`, footer "Recollect Limited", Tasman District Libraries), **not boutique**; was **NOT in the Lambda**. **Same TWO-ASSET shape as John Kinder 37** (thumb `downloadwiz` 404 0/80; node `og:image` → a DIFFERENT primary asset, og `downloadwiz` 200 **80/80 = 100%**) — **reused `recollectOgImageMaster`, no new strategy code** — **PLUS a Clutha-style vanity redirect** `tasman.recollect.co.nz` → `heritage.tasmanlibraries.govt.nz` (og:image + master both on the vanity host; the strategy's og-host logic targets it automatically). Pixel sample (32): **26 win (median 3.14×, max 15.44×/10 MP)**, 3 equal (small native), 3 honest-smaller (upscaled-fake `-600` → honest native); og widths up to **9803 px**. **★ Required a shared `fetchHTML` fix:** the vanity host 403s any non-browser-UA request, and Alamofire wasn't carrying the session UA across the cross-host redirect → the og:image scrape silently fell back; fixed by also sending the UA as a per-request header (carried onto the redirected request). Additive — Kinder ×2 regression-clean; Feilding's local `!880,1024` fallback is env-gated (no `JP2_CONVERTER_URL` locally), not from this change. Pure code change (no deploy). `swift build` 0; CollectionTester ×4 HTTP 200 (3 masters 2.4–4.0 MP + 1 `-max` fallback). `collectionWeights` 0.002 (provisional). See `logs/038-tasman-heritage.md` |
 | 39 | Western Bay Community Archives | recollect (was `boutique`) | **committed Group B ADD** — **Recollect** `downloadwiz` (`westernbay.recollect.co.nz`, footer "Recollect Limited", Western Bay District Council), **not boutique**; was **NOT in the Lambda**. **Same TWO-ASSET shape as John Kinder 37 / Tasman 38** (harvested thumb asset id master-less — `downloadwiz/<aid>` 404, `display/<aid>-600`==`-max` ~1000 px; node `og:image` → a DIFFERENT primary asset, og `downloadwiz` 200 **29/29 = 100%** of live nodes) — **reused `recollectOgImageMaster`, no new strategy code**. **No vanity redirect** (nodes + master served directly on the recollect.co.nz host). Pixel sample (24): **24/24 win (median 11.72×, max 34.57×/~25 MP, min 2.74×)**; CollectionTester served up to **8411×6763 ≈ 57 MP**. **★ Newer Recollect generation** (also exposes `assets/pic/<nodeId>`, but the legacy `assets/display/<assetId>` scheme still resolves for ~97%). **★ ~3% stale harvested ids** — a past site migration renumbered nodes/assets and DigitalNZ never re-synced; those `nodes/view/<nid>` 302 to a `/pages/error404` page (no `og:image`) → graceful fallback to the harvested `url` (itself 404); additive (Group B) ⇒ not a regression. (Lesson: page-1-only sampling over-counted staleness at ~11% vs ~3% uniform.) Pure code change (no deploy). `swift build` 0; CollectionTester ×6 HTTP 200 (`downloadwiz` masters 9–57 MP). `collectionWeights` 0.002 (provisional). See `logs/039-western-bay-community-archives.md` |
 | 40 | War Art Online | ndha (was `boutique`) | **committed Group B ADD** — **NDHA/Rosetta** (`ndhadeliver.natlib.govt.nz/NLNZStreamGate`), holding inst **Archives NZ** (landing `archives.govt.nz` Incapsula-WAF-walled → no alternate route); was **NOT in the Lambda**. **Same `NLNZStreamGate/get?dps_pid=IE<n>` shape as National Publicity Studios 03, but — unlike 03 — a TIFF `PRESERVATION_MASTER` DOES exist** (`NCWA_*.tif`, ~5000 px, 40–65 MB, anonymously streamable) via the same Rosetta METS path as TAPUHI 25 — **TIFF not JP2**, routed through the **now-generic JP2+TIFF converter** (Feilding 35); `ndhadeliver` already in `ALLOWED_HOSTS` ⇒ **pure Swift change, no AWS redeploy**. New `warArtConverter`/`resolveWarArtFLStreamURL`/`warArtMasterFLPID`. **★ The harvested baseline is BIMODAL and the Lambda can't decode images:** `NLNZStreamGate` returns a **900 px** access JPEG (~80%, older IE1204… batch), an **already ~5000 px** JPEG (~20%, newer IE257…/IE807… batches), or a **multi-page PDF** (~1–2%). No robust METS signal (`preservationType`=`DERIVATIVE_COPY` for both tiers; `techMD` width only on the master + unreliable), so the case split is decided from the access-JPEG `fileSizeBytes`: PDF→convert one TIFF page; access ≥700 KB→**passthrough native ~5000 px**; else→convert the master (≤110 MB cap, so the 1/30 **908 MB** outlier falls back to its full-res baseline). **User chose heuristic-passthrough (pure Swift)** over always-convert / converter-decides-redeploy; the 700 KB threshold is graceful at the fuzzy byte boundary (few-% may render 4000 px vs 5000 px; never broken). Surveys: 30-rec master **30/30**; 100-rec baseline **Case1 80% / Case2 20% / Case3 ~1–2%**; ~80% get **~20× area**. `swift build` 0; CollectionTester ×8 (7 converter + 1 passthrough, all HTTP 200); LIVE converter up to **12.7 MP (4000×3173)** in 5.7–7.3 s; passthrough record native **5000×4745 (23.7 MP)**. `collectionWeights` 0.002 (provisional). See `logs/040-war-art-online.md` |
+| 41 | Far North District Libraries Rediscovery | recollect (was `boutique`) | **committed Group B ADD** — **8th `boutique`-mislabel-actually-Recollect** (`fndclibraries.recollect.co.nz`, the classic `downloadwiz` generation, Far North District Libraries, CC BY-NC/BY-NC-ND); was **NOT in the Lambda**. **The 4th NAM-style TWO-ASSET case** (cf. John Kinder 37 / Tasman 38 / Western Bay 39): the harvested thumb id is mostly master-less (`downloadwiz/<thumbId>` 200 only **31/105 ~30%**, `display/<thumbId>-600`==`-max`==`-4000` ~1000 px), while the node `og:image` points to the master-bearing primary asset (og id == thumb id for ~30%, **differs for 77/105 ~73%**, usually `+1`/small offset) whose `downloadwiz` master IS present — so **REUSED `recollectOgImageMaster`, no new strategy code, no `recollectDomainMap` entry** (the helper uses the og:image's own host), **no vanity redirect, no AWS deploy**. Uniform survey (60 recs): og present **60/60**, og-`downloadwiz` 200 = **59/60 (98%)**; pixel **58 win / 1 equal / 0 honest-smaller**, ratio **min 1.0 median 23.4× max 57.6×** (up to 7590×5042 ≈ **38 MP** from a ~1000 px baseline). **★ UA-gate red herring:** every `assets/…` URL **403s without a browser UA**, and the og:image's `display/<id>-max?u=<32-hex>` `?u=` looks like a signed token but is a **cache-buster** (works with/without) — the real gate is the User-Agent (cf. Tasman 38), which `fetchHTML`/`headStatusFollowingRedirects` both send; the master is served directly (no cross-host redirect). **~1.7% stale nodes** (no real `og:image` — the page serves the site logo) → graceful fallback to the harvested `-600`; additive (Group B), not a regression. Master = `application/octet-stream` + `Content-Disposition: attachment` + `nosniff`, **byte-identical to the approved Clutha 36 / Hastings 6 masters** (renders in `<img>`). `swift build` 0; CollectionTester ×6 HTTP 200 `downloadwiz` masters (18.3 / 0.9 / 29.5 / 21.4 / 25.0 / 28.5 MP). `collectionWeights` 0.002 (provisional). See `logs/041-far-north-district-libraries-rediscovery.md` |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -382,6 +388,35 @@ AND measure the baseline distribution.** Surveys: 30-rec master **30/30 (100 %)*
 Case2 20 % / Case3 ~1–2 %**; ~80 % get **~20× area**. `swift build` 0; CollectionTester ×8 (**7 converter +
 1 passthrough, all HTTP 200**); LIVE deployed converter up to **12.7 MP (4000×3173)** in 5.7–7.3 s; passthrough
 record native **5000×4745 (23.7 MP)**. `collectionWeights` **0.002** (provisional). See `logs/040-war-art-online.md`.
+
+**✅ Order 41 (Far North District Libraries Rediscovery) committed Group B ADD (2026-06-16).** The **8th
+`boutique`-mislabel-actually-Recollect** (`fndclibraries.recollect.co.nz`, the classic `downloadwiz`
+generation, Far North District Libraries, CC BY-NC/BY-NC-ND) and the **4th NAM-style TWO-ASSET case**, so
+it **REUSED `recollectOgImageMaster`** — registry entry + `collectionWeights` **0.002** only, **no new
+strategy code, no `recollectDomainMap` entry** (the helper builds the master URL from the `og:image`'s own
+host), **no vanity redirect, no AWS deploy.** Was **NOT in the Lambda** (no weight → never served). The
+harvested thumb id is mostly master-less (`downloadwiz/<thumbId>` 200 only **31/105 ~30%**;
+`display/<thumbId>-600`==`-max`==`-4000` byte-identical ~1000 px), while the node `og:image` points to the
+master-bearing primary asset — id **== thumb id for ~30%**, **differs for 77/105 (~73%)** (usually `+1` or a
+small offset). Uniform survey 2 (60 records across all 15 pages): `og:image` present **60/60**,
+og-`downloadwiz` 200 = **59/60 (98%)**; pixel **58 win / 1 equal / 0 honest-smaller**, area ratio **min 1.0,
+median 23.4×, max 57.6×** (up to 7590×5042 ≈ **38 MP** from a ~1000 px baseline). **★ A UA-gate red herring:**
+every `assets/…` URL **403s without a browser User-Agent** (118-byte stub), and the node `og:image` is
+`display/<id>-max?u=<32-hex>` — the `?u=` *looks* like a per-asset signed token (cf. the Feilding-35
+path-bound CloudFront signature) but is just a **cache-buster** (works with or without it); the real gate is
+purely the **User-Agent** (same as Tasman 38). `NetworkRequestManager.fetchHTML` and
+`headStatusFollowingRedirects` **both already send a browser UA**, and the master is served **directly** (no
+cross-host redirect), so the session-level UA suffices and the helper works unchanged. **~1.7% of nodes are
+stale** (no real `og:image` — the page returns the site logo `theme/.../logo.mobile.png`) →
+`recollectOgImageMaster`'s `slice(from: "display/", to: "-")` returns nil → **graceful fallback to the
+harvested `-600`** (still a valid ~1000 px image); additive (Group B), so not a regression (cf. Western
+Bay 39's ~3%). The `downloadwiz` master is `application/octet-stream` + `Content-Disposition: attachment` +
+`X-Content-Type-Options: nosniff` — **byte-identical to the already-approved Clutha 36 / Hastings 6
+masters** (renders in `<img>`; direct navigation downloads the `.jpg`); the `nosniff` is standard Recollect,
+not anomalous. `swift build` 0; CollectionTester ×6 → **6/6 HTTP 200** `downloadwiz` masters (decoded
+**18.3 / 0.9 / 29.5 / 21.4 / 25.0 / 28.5 MP**, five large + one honest small native 793×1098). **Lesson: a
+Recollect `?u=` query on the `og:image` is a cache-buster, not a path-bound signature — probe with vs without
+a browser UA before assuming a token is required.** See `logs/041-far-north-district-libraries-rediscovery.md`.
 
 **★ Vendor correction (2026-06-14, user-flagged):** **Recollect is made by Recollect Ltd (spun out of NZMS —
 New Zealand Micrographic Services — in 2019), NOT Axiell.** Earlier sweep records (logs 001–010/035,
