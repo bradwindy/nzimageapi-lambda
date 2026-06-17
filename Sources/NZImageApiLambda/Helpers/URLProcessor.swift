@@ -240,6 +240,18 @@ final class URLProcessor: Sendable {
             // weight reflects this. (cf. South Canterbury 29 / Wyndham 34 null-image hard-fails.)
             ehiveIIIFLargest(result, url)
         },
+        // CollectiveAccess (Pawtucket) collection site at collection.teahumuseum.nz; was `boutique`-
+        // mislabelled and NOT in the Lambda (Group B ADD). The harvested large_thumbnail_url
+        // (`…/records/images/large/<NN>/<hash>.jpg`, S3/CloudFront) is the 800 px "large" derivative;
+        // the "xlarge" media version (1200 px long side) is the largest PUBLIC one — `original`/
+        // `fullsize`/`full`/`tilepic`/etc. all 403 (not public; CollectiveAccess gates originals behind
+        // login). Strict 1.56–2.25× improvement (median 2.25×), present for 100% of the 506 records
+        // (uniform survey: 0 null-image, xlarge 63 win / 0 equal / 0 smaller / 0 missing; ceiling
+        // 1200 px ≈ 1.44 MP, since originals are 403-locked). `xlarge` never exceeds the master, so no
+        // upscale/honest-smaller fork. Pure path-segment swap, no request-time fetch; a non-matching URL
+        // (the substring is absent) passes through unchanged. The landing page is bot-walled (HTTP 202
+        // challenge) but irrelevant — the /records/images/ CDN is not, and the swap needs no page fetch.
+        "Te Ahu Museum": stringSwap(from: "/records/images/large/", to: "/records/images/xlarge/"),
         "Te Papa Collections Online": { result, url in
             await tePapaLargest(result, url)
         },

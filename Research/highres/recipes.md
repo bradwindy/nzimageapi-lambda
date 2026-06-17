@@ -548,6 +548,40 @@ hard-coded per collection.
 
 ---
 
+## collectiveAccess (CollectiveAccess / Pawtucket self-hosted CMS)
+- **Detect:** harvested `large_thumbnail_url` of the shape
+  `https://<host>/records/images/<version>/<shard>/<40-hex-sha1>.jpg` where `<version>` ∈
+  {`small`,`medium`,`large`,`xlarge`} and `<shard>` is a 1–3 digit dir. Images served from
+  **AmazonS3** (`server: AmazonS3`) behind CloudFront; the landing page is `…/objects/<objId>`. This
+  is the **CollectiveAccess** media-version scheme (Pawtucket front-end). The landing page may be
+  **bot-walled** (CloudFront returns **HTTP 202** + a small JS-challenge page) — but the
+  `/records/images/` CDN is **not** walled, so a pure URL swap works without a page fetch.
+- **Extract:** swap the `<version>` path segment `large` → **`xlarge`** (the largest **public** media
+  version). `xlarge` ≈ 1200 px long side; `large` ≈ 800 px. **Originals are login-gated:**
+  `original`/`fullsize`/`full`/`huge`/`page`/`screen`/`tilepic`/`xxlarge`/`master`/`archive`/… all
+  **403** (S3 "access denied" for a non-public key). So **`xlarge` (~1.44 MP) is the public ceiling.**
+- **★ No upscale risk:** CollectiveAccess generates each version capped at the master and **does not
+  upscale by default**, so `xlarge` ≥ `large` for every record and never exceeds the master → **no
+  honest-smaller fork** (unlike eHive's `_l`). Safe as a blind path swap.
+- **Swift strategy:** **`stringSwap(from: "/records/images/large/", to: "/records/images/xlarge/")`**
+  (the generic registry helper; pure `replacingOccurrences`, no request-time fetch; a URL lacking the
+  substring passes through unchanged).
+
+### Verified findings (collectiveAccess)
+- **Te Ahu Museum (2026-06-17, order 45): Group B ADD via `stringSwap` (first registry use of the
+  helper).** Host `collection.teahumuseum.nz`; 506 records. `boutique`-mislabelled, was **NOT in
+  `collectionWeights`** → never served; **added** the registry entry + weight **0.002**. Size ladder
+  small 123×150 / medium 328×400 / **large 657×800 (harvested)** / **xlarge 985×1200**; all other
+  version names 403. **Null-image census all 506 = 0 (0.0%)** (the opposite of Waikato 44's 61.5%).
+  Uniform 64-rec survey: `xlarge` **63 win / 0 equal / 0 smaller / 0 missing**, area ratio **min 1.562
+  / median 2.250 / max 2.254**, biggest 1200×1199 ≈ 1.44 MP; **1/64 (~1.6%) had a `large` that itself
+  403'd** (pre-broken baseline at source — swap no worse; additive ⇒ not a regression). `swift build`
+  0; CollectionTester ×6 → 6/6 HTTP 200 `xlarge` (each 2.25× area over `large`). Committed (see log 045
+  / progress.json). ⇒ **For any future CollectiveAccess/Pawtucket site, probe the `xlarge` media
+  version and swap the path segment; `original` will be login-gated (403), so don't chase it.**
+
+---
+
 ## pastPerfect (`*.pastperfectonline.com`)
 - **Detect:** host `*.pastperfectonline.com`.
 - **Extract:** full-size at `/Media/<UUID>`; record page at `/Webobject/<UUID>`;
