@@ -252,6 +252,21 @@ final class URLProcessor: Sendable {
         // (the substring is absent) passes through unchanged. The landing page is bot-walled (HTTP 202
         // challenge) but irrelevant — the /records/images/ CDN is not, and the swap needs no page fetch.
         "Te Ahu Museum": stringSwap(from: "/records/images/large/", to: "/records/images/xlarge/"),
+        // Te Pātaka Toi Adam Art Gallery (the VUW university art collection) at
+        // universityartcollection.adamartgallery.nz — the SAME CollectiveAccess/Pawtucket platform as
+        // Te Ahu 45 (S3/CloudFront; `…/records/images/<version>/<shard>/<hash>.jpg`; landing
+        // `…/objects/<id>` is bot-walled with an HTTP 202 challenge but the image CDN is not). Group B
+        // ADD. Identical size ladder (small 150 / medium 400 / large 800 / xlarge 1200;
+        // original/fullsize/etc. all 403-locked behind login), so `xlarge` (≈1.4 MP) is the public
+        // ceiling — a 1.0–2.25× (median 2.25×) gain over the harvested 800 px `large`. BUT unlike Te Ahu,
+        // ~1.2% of records (6/486 in a full scan) have a `large` with NO generated `xlarge` (403), so a
+        // blind swap would serve a broken 403. Hence the request-time HEAD probe (HEAD == GET on this
+        // CDN, verified) with graceful fallback to the harvested `large`. `xlarge` is master-capped
+        // (never upscaled) → no honest-smaller fork. (~0.4% of records are null-image and hard-fail the
+        // pick, pre-existing.)
+        "Ngā Puhipuhi o Te Herenga Waka—Victoria University of Wellington Art Collection": { result, url in
+            await collectiveAccessLargest(result, url)
+        },
         "Te Papa Collections Online": { result, url in
             await tePapaLargest(result, url)
         },
@@ -812,6 +827,35 @@ final class URLProcessor: Sendable {
     /// Build a strategy that swaps a size token in the URL (e.g. `large` -> `xlarge`).
     private static func stringSwap(from: String, to: String) -> URLStrategy {
         { _, url in url.absoluteString.replacingOccurrences(of: from, with: to) }
+    }
+
+    /// CollectiveAccess / Pawtucket self-hosted collection sites (e.g. the Adam Art Gallery university
+    /// art collection at `universityartcollection.adamartgallery.nz`). The harvested
+    /// `large_thumbnail_url` is the 800 px `large` media version
+    /// (`…/records/images/large/<shard>/<hash>.jpg`); the `xlarge` version (1200 px long side — the
+    /// public ceiling, since `original`/`fullsize`/etc. are 403-locked behind login) is a strict
+    /// improvement where it exists. CollectiveAccess generates each version capped at the master (no
+    /// upscaling), so `xlarge` ≥ `large` and never exceeds the master (no fake-upscale / honest-smaller
+    /// fork). A small fraction of records (~1.2% for Adam Art Gallery) have a `large` but no generated
+    /// `xlarge` (HTTP 403), so we HEAD-probe the `xlarge` (HEAD matches GET on this S3/CloudFront CDN)
+    /// and fall back to the harvested `large` when it is absent — never serving a broken 403. Returns the
+    /// URL unchanged if it is not of the expected `…/records/images/large/…` shape.
+    ///
+    /// (Te Ahu 45 — the same platform with 0% missing `xlarge` — uses the cheaper synchronous
+    /// `stringSwap` instead; this probing variant is for sites where `xlarge` is not 100% present.)
+    private static func collectiveAccessLargest(_ result: NZRecordsResult, _ url: URL) async -> String {
+        let urlString = url.absoluteString
+        guard urlString.contains("/records/images/large/") else { return urlString }
+
+        let xlarge = urlString.replacingOccurrences(
+            of: "/records/images/large/",
+            with: "/records/images/xlarge/"
+        )
+
+        if await NetworkRequestManager().headStatusFollowingRedirects(endpoint: xlarge) == 200 {
+            return xlarge
+        }
+        return urlString
     }
 
     /// TAPUHI / NDHA: resolve the FL JP2 preservation master stream, then hand it to our self-hosted

@@ -563,9 +563,16 @@ hard-coded per collection.
 - **★ No upscale risk:** CollectiveAccess generates each version capped at the master and **does not
   upscale by default**, so `xlarge` ≥ `large` for every record and never exceeds the master → **no
   honest-smaller fork** (unlike eHive's `_l`). Safe as a blind path swap.
-- **Swift strategy:** **`stringSwap(from: "/records/images/large/", to: "/records/images/xlarge/")`**
-  (the generic registry helper; pure `replacingOccurrences`, no request-time fetch; a URL lacking the
-  substring passes through unchanged).
+- **Swift strategy (two variants — pick per-site by the missing-`xlarge` rate):**
+  - **`stringSwap(from: "/records/images/large/", to: "/records/images/xlarge/")`** when `xlarge` is
+    **100% present** (e.g. Te Ahu 45) — the generic registry helper; pure `replacingOccurrences`, no
+    request-time fetch; a URL lacking the substring passes through unchanged.
+  - **`collectiveAccessLargest` (async HEAD-probe + fallback)** when `xlarge` is **not 100% present**
+    (e.g. Adam Art Gallery 46, ~1.2% missing) — swaps `large`→`xlarge`, **HEAD-probes the `xlarge`**
+    (`headStatusFollowingRedirects`) and **falls back to the harvested `large`** on a non-200 so it
+    never serves a broken 403. HEAD == GET on this S3/CloudFront CDN (verified), so the probe is exact.
+  - **Always full-scan the missing-`xlarge` rate** (HEAD every record's `xlarge`) before choosing — a
+    page-1 or 60-record sample can miss it; if the rate is >0, use the probing variant.
 
 ### Verified findings (collectiveAccess)
 - **Te Ahu Museum (2026-06-17, order 45): Group B ADD via `stringSwap` (first registry use of the
@@ -579,6 +586,21 @@ hard-coded per collection.
   0; CollectionTester ×6 → 6/6 HTTP 200 `xlarge` (each 2.25× area over `large`). Committed (see log 045
   / progress.json). ⇒ **For any future CollectiveAccess/Pawtucket site, probe the `xlarge` media
   version and swap the path segment; `original` will be login-gated (403), so don't chase it.**
+- **Ngā Puhipuhi o Te Herenga Waka—VUW Art Collection (2026-06-18, order 46): Group B ADD via NEW
+  `collectiveAccessLargest` (async HEAD-probe + fallback).** Host
+  `universityartcollection.adamartgallery.nz` (Te Pātaka Toi **Adam Art Gallery**, VUW); 488 records.
+  **2nd CollectiveAccess site** (cf. Te Ahu 45). Same ladder (small 150×117 / medium 400×313 / large
+  800×626 / xlarge 1200×939; all other version names 403). **★ UNLIKE Te Ahu, `xlarge` is NOT 100%
+  present:** a **full HEAD scan of all 486 image-bearing records found 6 (1.2%) with a `large` (200) but
+  NO `xlarge` (403)** → a blind `stringSwap` would serve a broken 403, so this collection uses the
+  **HEAD-probe `collectiveAccessLargest`** with graceful fallback to `large`. **HEAD == GET for all 486**
+  (0 mismatches), so the probe is exact. (★ Debug gotcha: a `xl[-46:]` print shows only the *last digit*
+  of a multi-digit shard dir — don't reconstruct URLs from it; use the full `large_thumbnail_url`.)
+  Null-image census all 488 = 2 (0.4%; HTTP 400 hard-fail, pre-existing). Uniform 61-rec survey: `xlarge`
+  46 win / 13 equal / 0 smaller / 2 missing, area ratio min 1.000 / median 2.249 / max 2.253, biggest
+  1200×1187 ≈ 1.42 MP. `swift build` 0; CollectionTester ×6 → 6/6 HTTP 200 `xlarge`; fallback verified
+  (record 50811364 `xlarge` 403 → served `large` 800×648 200). Weight 0.002. Committed (see log 046 /
+  progress.json). ⇒ **`xlarge` availability is per-site; full-scan it and use the probe variant when >0.**
 
 ---
 
