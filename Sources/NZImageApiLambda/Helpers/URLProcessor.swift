@@ -167,6 +167,15 @@ final class URLProcessor: Sendable {
                 endString: "/default.jpg"
             )
         },
+        "Victoria and Albert Museum": { result, url in
+            // V&A (London). The harvested `media.vam.ac.uk/.../collection_images/<batch>/<id>.jpg` is the
+            // legacy image host (~768 px where present, 404 for ~⅓ of records). The V&A IIIF service at
+            // `framemark.vam.ac.uk/collections/<id>/` serves the same asset (id == the harvested filename
+            // stem) up to its 2500 px cap; `/full/max/` is honest native (≤ 2500, never upscaled). Strict
+            // improvement: ≥ the media image for every record, 2500 px for the ~half with a high-res master
+            // (median ~10.6×), and it fixes the ~⅓ dead-media records. Pure URL build, no request-time fetch.
+            vamIIIFLargest(result, url)
+        },
         "Mataura Museum NZMuseums": { result, url in
             // eHive: the harvested `_l` is 800 px-capped, but eHive's public IIIF service over the
             // master TIFF serves the full native (up to ~12 MP here) for every record. Pure URL build.
@@ -534,6 +543,37 @@ final class URLProcessor: Sendable {
         let encoded = identifier.replacingOccurrences(of: "/", with: "%2f")
 
         return "https://iiif.ehive.com/iiif/2/\(encoded)/full/full/0/default.jpg"
+    }
+
+    /// Victoria and Albert Museum (London). The harvested `large_thumbnail_url`
+    /// (`media.vam.ac.uk/media/thira/collection_images/<batch>/<id>.jpg`) is the LEGACY image host:
+    /// where present it serves only ~640–768 px, and it 404s for ~⅓ of records (the host is being
+    /// retired). The V&A's IIIF Image API at `framemark.vam.ac.uk/collections/<id>/` serves the same
+    /// asset — keyed by the SAME `<id>` (the harvested filename stem == the V&A API's `_iiif_image`
+    /// identifier) — up to its 2500 px cap. `/full/max/` returns the honest native size (≤ 2500 px; a
+    /// `/full/<w>,` request would clamp to 2500 too, but `max` also avoids upscaling the small-native
+    /// records, since the service advertises `sizeAboveFull`). Strict improvement: ≥ the media image for
+    /// every record (0/20 regressions sampled), 2500 px for the ~half with a high-res master (median
+    /// ~10.6×), and it FIXES the ~⅓ dead-media records (framemark resolves 100%). framemark needs no
+    /// browser UA and there is no larger public derivative (the IIIF maxWidth is 2500 and the manifest
+    /// exposes nothing else). Pure URL construction (no request-time fetch); falls back to the harvested
+    /// URL if the host/filename shape is unexpected.
+    private static func vamIIIFLargest(_ result: NZRecordsResult, _ url: URL) -> String {
+        let urlString = url.absoluteString
+
+        guard urlString.contains("vam.ac.uk"),
+              url.pathExtension.lowercased() == "jpg"
+        else {
+            return urlString
+        }
+
+        let stem = url.deletingPathExtension().lastPathComponent          // e.g. "2025PE4780"
+        // Defensive: the harvested `large_thumbnail_url` is the bare `<id>.jpg`, but the `thumbnail_url`
+        // variant adds a `_jpg_w` suffix; strip it so the IIIF identifier is the clean asset ref.
+        let id = stem.hasSuffix("_jpg_w") ? String(stem.dropLast("_jpg_w".count)) : stem
+        guard !id.isEmpty else { return urlString }
+
+        return "https://framemark.vam.ac.uk/collections/\(id)/full/max/0/default.jpg"
     }
 
     /// Te Papa Collections Online (`media.tepapa.govt.nz/collection/<id>/<size>`). The harvested

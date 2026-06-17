@@ -407,6 +407,26 @@ hard-coded per collection.
   request `/full/max/` (v2) or `/full/max/` (v3); a profile listing `sizeAboveFull` means a fixed width
   > native yields interpolation, not detail. Decision (quality vs pixel-count, like Hocken): user chose
   honest native. **Migrated switch → registry.**
+- **Victoria and Albert Museum (order 43, 2026-06-16): ADD via NEW `vamIIIFLargest` (framemark IIIF).**
+  The harvested `large_thumbnail_url` is the V&A's **legacy image host**
+  `media.vam.ac.uk/media/thira/collection_images/<batch>/<id>.jpg` — ~640–768 px where present, **404 for
+  ~⅓ of records** (host being retired). The V&A's IIIF Image API at `framemark.vam.ac.uk/collections/<id>/`
+  serves the same asset, keyed by the **SAME `<id>` == the harvested filename stem** (confirmed via the V&A
+  object API `api.vam.ac.uk/v2/object/O<n>` → `meta.images._iiif_image` = `framemark…/collections/<id>/`).
+  So the IIIF URL is derivable **purely from the harvested filename** — `vamIIIFLargest` emits
+  `framemark.vam.ac.uk/collections/<id>/full/max/0/default.jpg` (pure URL construction, no request-time
+  fetch; defensively strips a `_jpg_w` suffix; falls back to the harvested URL if the shape is unexpected).
+  - **★ Strict Pareto improvement (head-to-head, 30 recs):** IIIF `/full/max/` vs the harvested media image
+    = **win 12 / equal 8 / lose 0** (ratio median 10.6×, max 17.2×), AND it **fixes the ~⅓ dead-media 404s**
+    (framemark resolves 100%). Bimodal: ~half the collection has a high-res master → **2500 px** (4.2–4.9 MP);
+    ~half are genuinely low-res masters → IIIF returns native ~640–768 px (== the old media, no regression).
+  - **★ 2500 px is the hard public ceiling; use `/full/max/` not a fixed width:** info.json profile is IIIF 2
+    level1 with `maxWidth`/`maxHeight` = **2500** and `supports: sizeAboveFull` — so a fixed width would
+    fake-upscale the small-native records (Kura lesson). Verified: 768-native records return 768 via
+    `/full/max/` (not upscaled), and `/full/4000,` on a high-res id **clamps to 2500** (byte-identical to
+    `/full/max/`). The presentation manifest (`iiif.vam.ac.uk/collections/O<n>/manifest.json`) exposes
+    **nothing larger** than framemark; rights are "© V&A", public delivery capped at 2500. framemark needs
+    **no browser UA**. `collectionWeights` 0.001 (564 records). Pure code change (no deploy).
 
 ---
 
