@@ -69,6 +69,7 @@ public struct NZImageApi: Sendable {
         "Far North District Libraries Rediscovery": 0.002,
         "Pakiaka Rotorua Heritage Online": 0.002,
         "Victoria and Albert Museum": 0.001,
+        "The University of Waikato Art Collection": 0.001,
     ]
 
     public func image(collection: String?, logger: @Sendable (String) -> Void = { _ in }) async -> NZRecordsResult? {

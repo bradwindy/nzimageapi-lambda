@@ -224,6 +224,22 @@ final class URLProcessor: Sendable {
             // source and hard-fail the pick — left as-is, cf. South Canterbury 29.)
             ehiveIIIFLargest(result, url)
         },
+        "The University of Waikato Art Collection": { result, url in
+            // eHive account 8668 — same IIIF master-TIFF route (ehiveIIIFLargest) as the rest of the eHive
+            // cluster. Group B ADD (new collection; also added to collectionWeights). 5th boutique-mislabel-
+            // actually-eHive (cf. Te Hikoi 31 / Te Toi Uku 32 / Te Ūaka 33 / Wyndham 34). The landing pages
+            // (ehive.com/collections/8668/…) wire up OpenSeadragon over iiif.ehive.com, and /full/full serves
+            // the native master 200 image/jpeg for every record regardless of the uniform "All rights reserved"
+            // (35/35 in survey; not rights-gated, same as Howick et al.). Uniform 78-record sample of the
+            // image-bearing records (35): IIIF native vs the 800 px `_l` = 28 win / 0 equal / 7 honest-smaller
+            // (~20% — eHive fake-upscaled the `_l` from a smaller real master; the IIIF returns the honest
+            // native, consistent with the user's eHive honest-native-always policy), area ratio median 2.25×,
+            // max 95× (biggest native 7803×5202 ≈ 40.6 MP). Pure URL build, no deploy. NB ~61.5% of the 540
+            // records are null-image at source (no large_thumbnail_url) and hard-fail the pick (HTTP 400 via
+            // checkHasTitleAndLargeImage) — pre-existing Lambda behaviour, identical for the baseline; the low
+            // weight reflects this. (cf. South Canterbury 29 / Wyndham 34 null-image hard-fails.)
+            ehiveIIIFLargest(result, url)
+        },
         "Te Papa Collections Online": { result, url in
             await tePapaLargest(result, url)
         },

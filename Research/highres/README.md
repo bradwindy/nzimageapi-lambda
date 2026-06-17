@@ -4,9 +4,9 @@ This directory is the **single source of truth** for the high-res collection swe
 A fresh Claude Code session with zero prior context can resume the work using only
 these files.
 
-## Current resume state (updated 2026-06-14)
+## Current resume state (updated 2026-06-17)
 
-**Wellington removal: done.** Collections **1–43 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+**Wellington removal: done.** Collections **1–44 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
 self-hosted JP2→JPEG converter; Canterbury 26, Auckland Art Gallery 27, Culture Waitaki 28, South
 Canterbury Museum 29, V.C. Browne 30 all no-improvement; **Te Hikoi 31 + Te Toi Uku 32 committed
 IMPROVEMENTS**, **Te Ūaka 33 + Wyndham 34 committed Group B ADDs** — all four `boutique`-mislabel-actually-
@@ -40,8 +40,13 @@ code, no deploy); harvested baseline is the small `-280` thumbnail, og-`download
 committed Group B ADD** — the V&A's own **IIIF** service (`framemark.vam.ac.uk`), new `vamIIIFLargest`
 (`/full/max/`, id == harvested filename stem; pure URL build, no deploy); the harvested `media.vam.ac.uk`
 legacy host is **404 for ~⅓ of records**, and IIIF is a **strict Pareto win** (12 win / 8 equal / **0 lose**,
-median 10.6×, up to 2500px) that also **fixes the dead-media 404s**). The per-collection sweep is **UNPAUSED
-— next is order 44 (The University of Waikato Art Collection).**
+median 10.6×, up to 2500px) that also **fixes the dead-media 404s**); **The University of Waikato Art
+Collection 44 committed Group B ADD** — 5th `boutique`-mislabel-actually-**eHive** (account 8668), **reused
+`ehiveIIIFLargest`** (no new code, no deploy); IIIF `/full/full` **not rights-gated** despite uniform "All
+rights reserved" (35/35); survey of the image-bearing records = **28 win / 0 equal / 7 honest-smaller** (~20%
+fake-upscaled `_l`), median **2.25×**, up to **40.6 MP**; **★ but 61.5% of the 540 records are null-image at
+source** → hard-fail the pick (HTTP 400, pre-existing Lambda behaviour, identical for the baseline) → weight
+set to the 0.001 floor). The per-collection sweep is **UNPAUSED — next is order 45 (Te Ahu Museum).**
 `progress.json` is authoritative; this is a human summary.
 
 > **Vendor note (corrected 2026-06-14):** **Recollect** (both the `*.recollect.co.nz` `downloadwiz`
@@ -97,6 +102,7 @@ median 10.6×, up to 2500px) that also **fixes the dead-media 404s**). The per-c
 | 41 | Far North District Libraries Rediscovery | recollect (was `boutique`) | **committed Group B ADD** — **8th `boutique`-mislabel-actually-Recollect** (`fndclibraries.recollect.co.nz`, the classic `downloadwiz` generation, Far North District Libraries, CC BY-NC/BY-NC-ND); was **NOT in the Lambda**. **The 4th NAM-style TWO-ASSET case** (cf. John Kinder 37 / Tasman 38 / Western Bay 39): the harvested thumb id is mostly master-less (`downloadwiz/<thumbId>` 200 only **31/105 ~30%**, `display/<thumbId>-600`==`-max`==`-4000` ~1000 px), while the node `og:image` points to the master-bearing primary asset (og id == thumb id for ~30%, **differs for 77/105 ~73%**, usually `+1`/small offset) whose `downloadwiz` master IS present — so **REUSED `recollectOgImageMaster`, no new strategy code, no `recollectDomainMap` entry** (the helper uses the og:image's own host), **no vanity redirect, no AWS deploy**. Uniform survey (60 recs): og present **60/60**, og-`downloadwiz` 200 = **59/60 (98%)**; pixel **58 win / 1 equal / 0 honest-smaller**, ratio **min 1.0 median 23.4× max 57.6×** (up to 7590×5042 ≈ **38 MP** from a ~1000 px baseline). **★ UA-gate red herring:** every `assets/…` URL **403s without a browser UA**, and the og:image's `display/<id>-max?u=<32-hex>` `?u=` looks like a signed token but is a **cache-buster** (works with/without) — the real gate is the User-Agent (cf. Tasman 38), which `fetchHTML`/`headStatusFollowingRedirects` both send; the master is served directly (no cross-host redirect). **~1.7% stale nodes** (no real `og:image` — the page serves the site logo) → graceful fallback to the harvested `-600`; additive (Group B), not a regression. Master = `application/octet-stream` + `Content-Disposition: attachment` + `nosniff`, **byte-identical to the approved Clutha 36 / Hastings 6 masters** (renders in `<img>`). `swift build` 0; CollectionTester ×6 HTTP 200 `downloadwiz` masters (18.3 / 0.9 / 29.5 / 21.4 / 25.0 / 28.5 MP). `collectionWeights` 0.002 (provisional). See `logs/041-far-north-district-libraries-rediscovery.md` |
 | 42 | Pakiaka Rotorua Heritage Online | recollect (was `boutique`) | **committed Group B ADD** — **9th `boutique`-mislabel-actually-Recollect** (`rotorua.recollect.co.nz`, classic `downloadwiz`, Rotorua Library — Te Aka Mauri); was **NOT in the Lambda**. **The 5th NAM-style TWO-ASSET case AND the 2nd with a Clutha/Tasman-style vanity redirect** `rotorua.recollect.co.nz` → **`pakiaka.rotorualibrary.govt.nz`** — so **REUSED `recollectOgImageMaster`, no new strategy code, no `recollectDomainMap` entry** (the helper builds the master URL from the og:image's own host = the vanity host → a **direct** probe, no cross-host redirect), **no AWS deploy**. The harvested `large_thumbnail_url` is the **small `-280` thumbnail** (≈500 px, 0.17 MP); the display pyramid extends **past 1000 px** (`-280` 499×333, `-600` 999×667, `-max` 1845×1232). The node `og:image` points to the master-bearing primary asset on the vanity host (og id differs from thumb id for **50/64 ~78%**), and `downloadwiz/<ogId>` is **≥ `-max` for every record** (a true larger master for ~40%, up to **6000×4000 = 24 MP**; == `-max` for ~60%). Uniform survey (64 recs across 16 pages): og present **64/64**, og-`downloadwiz` 200 = **64/64 (100%)**, **0 stale/dead, 0 login-walls**; pixel **63 win / 1 equal / 0 honest-smaller**, ratio **min 1.0 median 11.7× max 144×**. **★ UA-gate** (403 without a browser UA; the og:image's `?u=<32-hex>` is a cache-buster, not a signed token) **behind a cross-host vanity redirect** is exactly why `recollectLargest` is wrong (rips the master-less thumb id — `downloadwiz/<thumbId>` 404 for the two-asset ~78%, verified — and its probe would cross-host-redirect through the UA-gate), while `recollectOgImageMaster`'s direct-to-vanity probe works (64/64). Master = `application/octet-stream` + `attachment` + `nosniff`, byte-identical to approved Clutha 36 / Hastings 6 / Far North 41 (renders in `<img>`). Live `result_count` **1,571** (rawItemCount snapshot was 1,374 — collection grew; updated). `swift build` 0; CollectionTester ×6 HTTP 200 `downloadwiz` masters (0.6 / 2.2 / 9.1 / 1.1 / 10.8 / 24.0 MP). `collectionWeights` 0.002 (provisional). See `logs/042-pakiaka-rotorua-heritage-online.md` |
 | 43 | Victoria and Albert Museum | iiif (was `boutique`) | **committed Group B ADD** — the **V&A's own IIIF Image API** (`framemark.vam.ac.uk`, London); was **NOT in the Lambda**. **First non-NZ, non-CONTENTdm pure-IIIF ADD.** The harvested `large_thumbnail_url` is the V&A **legacy image host** `media.vam.ac.uk/.../collection_images/<batch>/<id>.jpg` — ~640–768 px where present, **HTTP 404 for ~⅓ of records** (host being retired). The IIIF service serves the same asset keyed by the **SAME `<id>` == the harvested filename stem** (confirmed via the V&A object API `meta.images._iiif_image`), so the IIIF URL is derivable **purely from the filename** — new **`vamIIIFLargest`** emits `framemark.vam.ac.uk/collections/<id>/full/max/0/default.jpg` (pure URL build, **no request-time fetch, no AWS deploy**). **★ Strict Pareto improvement** (head-to-head, 30 recs): IIIF `/full/max/` vs the harvested media image = **win 12 / equal 8 / lose 0** (median **10.6×**, max 17.2×), AND it **fixes the ~⅓ dead-media 404s** (framemark resolves 100%). Bimodal: ~half have a high-res master → **2500 px (4.2–4.9 MP)**, ~half are genuinely low-res → IIIF returns honest native ~640–768 px (== old media, no regression). **★ 2500 px is the hard public ceiling** (info.json `maxWidth`/`maxHeight` = 2500; profile supports `sizeAboveFull`, so `/full/max/` is used — never a fixed width — to avoid fake-upscaling the small-native records; verified a `/full/4000,` request clamps to 2500; manifest exposes nothing larger; rights "© V&A"). framemark needs **no browser UA**. Live `result_count` **564** (rawItemCount snapshot 549). `swift build` 0; CollectionTester ×6 HTTP 200 `image/jpeg` (768×576 ×3 low-res + 1797×2500 / 2500×1875 / 1676×2500 high-res). `collectionWeights` 0.001 (provisional). See `logs/043-victoria-and-albert-museum.md` |
+| 44 | The University of Waikato Art Collection | ehive (was `boutique`) | **committed Group B ADD** — **5th `boutique`-mislabel-actually-eHive** (account **8668**; landing `ehive.com/collections/8668/objects/<id>` wires up **OpenSeadragon** over `iiif.ehive.com`); was **NOT in the Lambda**. **REUSED `ehiveIIIFLargest`, no new strategy code, no AWS deploy** — builds `iiif.ehive.com/iiif/2/accounts%2f8668%2fobjects%2fimages%2f<id>.tif/full/full/0/default.jpg` from the harvested 800 px `_l` URL. **★ The IIIF `/full/full` is NOT rights-gated** despite uniform `rights: "All rights reserved"` (license null) — **35/35** served 200 `image/jpeg` (we serve exactly what the University publishes through its own public viewer). Uniform 78-record survey (35 image-bearing): native vs `_l` = **28 win / 0 equal / 7 honest-smaller** (~20% — eHive fake-upscaled the `_l` from a smaller real master → IIIF returns the **honest** smaller native, per the established eHive honest-native-always policy; cf. Howick 17), area ratio **min 0.200 / median 2.25× / max 95.2×**, biggest native **7803×5202 ≈ 40.6 MP**. **★ But 61.5% of the 540 records are null-image at source** (`large_thumbnail_url` null; per-page empty rate 16% p1 → 86% p3/p5) → those picks **hard-fail to HTTP 400** via `checkHasTitleAndLargeImage` (no retry loop) — **pre-existing Lambda behaviour, identical for the baseline**; the global DigitalNZ `category=Images` query is **not** changed (out of scope). `swift build` 0; CollectionTester 16 picks → **5 image successes / 11 null-image 400s** (Black Puriri 886×1200, Plain Song Elegy 807×1200, Te Whiti poster 848×1200, Stoneware jar 1200×922 = wins 2.25×; Back to the Future 8 512×768 & 8 of Wands 547×657 = honest-smaller), all HTTP 200 `image/jpeg`. `collectionWeights` **0.001** (floor — reflects the 61.5% null-image rate). See `logs/044-the-university-of-waikato-art-collection.md` |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -480,6 +486,33 @@ lesson); `/full/max/` returns honest native ≤ 2500 (verified: a 768-native rec
 **Lesson: a museum's harvested image host can be a retired legacy CDN — check for its IIIF service
 (`info.json`) keyed by the same asset id, which both enlarges and fixes the dead harvest.** See
 `logs/043-victoria-and-albert-museum.md`.
+
+**✅ Order 44 (The University of Waikato Art Collection) committed Group B ADD (2026-06-17).** The 5th
+`boutique`-mislabel-actually-**eHive** (account **8668**; the landing pages `ehive.com/collections/8668/…`
+wire up OpenSeadragon over `iiif.ehive.com`) — cf. Te Hikoi 31 / Te Toi Uku 32 / Te Ūaka 33 / Wyndham 34.
+Was **NOT in the Lambda**. **REUSED `ehiveIIIFLargest`, no new strategy code, no AWS deploy** — the
+account-agnostic helper builds `iiif.ehive.com/iiif/2/accounts%2f8668%2fobjects%2fimages%2f<id>.tif/full/full/0/default.jpg`
+from the harvested 800 px `_l` URL. **★ The IIIF `/full/full` is NOT rights-gated** despite a uniform
+`rights: "All rights reserved"` (license null): **35/35** image-bearing records served 200 `image/jpeg` (the
+rights gate only affects the `_xl`/`_o` derivative suffixes) — we serve exactly the image the University
+publishes through its own public viewer, at the native master. Uniform 78-record survey (35 image-bearing):
+native vs the 800 px `_l` = **28 win / 0 equal / 7 honest-smaller** (~20% — eHive **fake-upscaled the `_l`**
+to the 800 px box from a smaller real master, so the IIIF returns the **honest** smaller native; never
+upscaled, `sizeAboveFull` is NOT in the profile `supports`; consistent with the user's eHive
+honest-native-always policy, cf. Howick 17 / Te Ūaka 33), area ratio **min 0.200 / median 2.25× / max
+95.2×**, biggest native **7803×5202 ≈ 40.6 MP**. **★ But 61.5% of the 540 records are null-image at source**
+(`large_thumbnail_url` null; `thumbnail_url`/`object_url` also null — art-catalogue records with no published
+image; per-page empty rate climbs 16% p1 → 86% p3/p5): those picks throw `nullImageOrTitle` in
+`NZRecordsResult.checkHasTitleAndLargeImage()` → `NZImageApi.image()` returns nil → the handler returns
+**HTTP 400** (there is no retry loop). This is **pre-existing Lambda behaviour, identical for the baseline**;
+the global DigitalNZ `category=Images` query is **not** changed (a one-collection additive change must not
+touch it). The low weight (**0.001**, the floor) reflects this. `swift build` 0; CollectionTester 16 picks →
+**5 image successes / 11 null-image 400s** (Black Puriri 886×1200 / Plain Song Elegy 807×1200 / Te Whiti
+poster 848×1200 / Stoneware jar 1200×922 = wins 2.25×; Back to the Future 8 512×768 & 8 of Wands 547×657 =
+honest-smaller), all HTTP 200 `image/jpeg`. **Lesson: `category=Images` does NOT guarantee a published image
+— census the null-`large_thumbnail_url` rate for any art/catalogue collection; a high rate means a
+proportional HTTP 400 hard-fail rate (pre-existing) and argues for a floor weight.** See
+`logs/044-the-university-of-waikato-art-collection.md`.
 
 **★ Vendor correction (2026-06-14, user-flagged):** **Recollect is made by Recollect Ltd (spun out of NZMS —
 New Zealand Micrographic Services — in 2019), NOT Axiell.** Earlier sweep records (logs 001–010/035,

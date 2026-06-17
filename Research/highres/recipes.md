@@ -523,6 +523,28 @@ hard-coded per collection.
   ids are **32-hex** (no non-hex `cpa*` tokens → the order-33 sampling trap didn't recur; still classified by
   the drop-last-`_<size>` rule). **~1.5% (60/3,937) of records are null-image at source** (hard-fail the pick,
   no retry — left as-is, well below South Canterbury 29's ~9%). Committed (see log 034 / progress.json).
+- **The University of Waikato Art Collection (2026-06-17, order 44): Group B ADD via `ehiveIIIFLargest`.**
+  account 8668; 540 records. **5th `boutique`-mislabel-actually-eHive** (cf. 31/32/33/34). Was **NOT in
+  `collectionWeights`** → never served; **added** the registry entry + a provisional weight **0.001** (floor).
+  Landing pages `ehive.com/collections/8668/objects/<id>` wire up OpenSeadragon over `iiif.ehive.com`.
+  **★ IIIF `/full/full` is NOT rights-gated despite uniform `rights: "All rights reserved"` (license null)** —
+  35/35 image-bearing survey records served 200 `image/jpeg` (the rights gate only kills the `_xl`/`_o`
+  suffixes; the IIIF master is always public, same as Howick). Uniform 78-record survey (35 image-bearing):
+  native vs the 800 px `_l` = **28 win / 0 equal / 7 honest-smaller (~20%)** — eHive **fake-upscaled the `_l`**
+  from a smaller real master, IIIF returns the **honest** smaller native (honest-native-always, cf. Te Toi Uku
+  32 / Howick 17), area ratio **min 0.200 / median 2.25× / max 95.2×**, biggest native **7803×5202 ≈ 40.6 MP**.
+  Ids are 32-hex (drop-last-`_<size>` rule). Committed (see log 044 / progress.json).
+  - **★★★ CENSUS TRAP — `category=Images` does NOT guarantee a published image.** **61.5% (332/540) of this
+    collection is null-image at source** (`large_thumbnail_url`/`thumbnail_url`/`object_url` all null —
+    art-catalogue records with no published image; the per-page empty rate climbs 16% p1 → 86% p3/p5). Those
+    picks throw `nullImageOrTitle` in `NZRecordsResult.checkHasTitleAndLargeImage()` → `NZImageApi.image()`
+    returns nil → the handler returns **HTTP 400 with no retry loop** (`NZImageApiLambda.handle`). So a high
+    null-image rate becomes a **proportional 400 hard-fail rate** (CollectionTester: 5 successes / 11 400s of
+    16). This is **pre-existing Lambda behaviour, identical for the baseline** — and the global DigitalNZ
+    `category=Images` query must **not** be changed by a one-collection additive step (out of scope). **Always
+    census the null-`large_thumbnail_url` rate (all pages, not just p1) for any art/catalogue collection** and
+    set a floor weight when it is high. (cf. Wyndham 34 ~1.5%, South Canterbury 29 ~9% — Waikato 44 at 61.5% is
+    the worst seen.)
 
 ---
 
