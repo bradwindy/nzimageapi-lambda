@@ -1083,7 +1083,7 @@
         "px": null,
         "urlPattern": null
       },
-      "commit": null,
+      "commit": "8fe03b1",
       "log": "logs/049-picture-wairarapa.md",
       "notes": "Spydus/Civica ILS (Wairarapa Archive, masterton.spydus.co.nz) -- new platform for this sweep. Deep-dig (user asked) found no anonymous route beyond the harvested 360x226 large-thumb blob. NOT added to collectionWeights. See logs/049-picture-wairarapa.md."
     },
