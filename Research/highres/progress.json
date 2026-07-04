@@ -1092,22 +1092,22 @@
       "name": "Te Ara - The Encyclopedia of New Zealand",
       "slug": "te-ara-the-encyclopedia-of-new-zealand",
       "group": "B",
-      "platform": "boutique",
-      "rawItemCount": 25634,
+      "platform": "teara",
+      "rawItemCount": 27090,
       "weight": null,
-      "status": "todo",
+      "status": "no-improvement",
       "baseline": {
-        "method": "raw large_thumbnail_url",
-        "px": null
+        "method": "raw large_thumbnail_url (Te Ara own Drupal upload, teara.govt.nz/sites/default/files/<file>.jpg or .../large_images/<file>.jpg)",
+        "px": "~500-830px long side (varies per record/upload era), one outlier 500x295 seen"
       },
       "chosen": {
-        "method": null,
+        "method": "no-improvement, NOT added: harvested URL is Te Ara own ceiling (Cloudflare-challenge-walled landing pages block scraping; no Drupal image-style derivative or larger sibling found for any filename tested). Investigated but declined a cross-institution reference-number lookup (rights field -> DigitalNZ text search -> e.g. matching TAPUHI record) as too heterogeneous/fragile/risky (wrong-photo match risk, ~15 distinct contributing institutions, would need per-institution routes + a new model field + extra API round-trip). User decision: do not add.",
         "px": null,
         "urlPattern": null
       },
       "commit": null,
       "log": "logs/050-te-ara-the-encyclopedia-of-new-zealand.md",
-      "notes": ""
+      "notes": "Te Ara self-hosted Drupal CMS -- new platform label for this sweep (was boutique). Deep-dig found no anonymous route beyond the harvested URL. Cross-institution cross-reference idea (rights field ref number -> DigitalNZ search -> e.g. TAPUHI) found ONE verified hit but explicitly NOT pursued as a strategy (too heterogeneous / correctness risk). NOT added to collectionWeights. See logs/050-te-ara-the-encyclopedia-of-new-zealand.md."
     },
     {
       "order": 51,

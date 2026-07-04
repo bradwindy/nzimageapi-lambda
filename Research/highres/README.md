@@ -6,7 +6,7 @@ these files.
 
 ## Current resume state (updated 2026-07-04)
 
-**Wellington removal: done.** Collections **1–49 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+**Wellington removal: done.** Collections **1–50 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
 self-hosted JP2→JPEG converter; Canterbury 26, Auckland Art Gallery 27, Culture Waitaki 28, South
 Canterbury Museum 29, V.C. Browne 30 all no-improvement; **Te Hikoi 31 + Te Toi Uku 32 committed
 IMPROVEMENTS**, **Te Ūaka 33 + Wyndham 34 committed Group B ADDs** — all four `boutique`-mislabel-actually-
@@ -76,8 +76,15 @@ EXIF, page-JS `data-imgurls` enumeration, the site's own `imagebrowser` REST API
 docs, Wayback) confirmed the harvested `_lt.jpg` (**360×226 ≈0.08 MP**) is the platform's hard ceiling —
 the site's own rights text and a "Place archival request" link confirm higher-res is a manual/human
 process, not an anonymous route. **User decision: do not add** — 0.08 MP would be a clear quality outlier
-vs. the rest of the served set (next-lowest ~700–950 px). No code change. The per-collection sweep is
-**UNPAUSED — next is order 50 (Te Ara - The Encyclopedia of New Zealand).**
+vs. the rest of the served set (next-lowest ~700–950 px). No code change. **Te Ara - The Encyclopedia
+of New Zealand 50 no-improvement, NOT added** — self-hosted Drupal (`teara.govt.nz`); landing pages
+are Cloudflare-challenge-walled (can't scrape), no Drupal image-style derivative exists, harvested
+URL confirmed as Te Ara's own ceiling (~500–830 px, decent quality on its own). Found but explicitly
+declined a cross-institution reference-number lookup (Te Ara's `rights` field → DigitalNZ text
+search → e.g. a matching higher-res TAPUHI record) as too heterogeneous/risky to build (≈15 distinct
+contributing institutions, wrong-photo-match risk, would need a new model field + extra API
+round-trip + cross-platform dispatch). User decision: do not add. No code change. The per-collection
+sweep is **UNPAUSED — next is order 51 (Kete Horowhenua).**
 `progress.json` is authoritative; this is a human summary.
 
 > **Vendor note (corrected 2026-06-14):** **Recollect** (both the `*.recollect.co.nz` `downloadwiz`
@@ -139,6 +146,7 @@ vs. the rest of the served set (next-lowest ~700–950 px). No code change. The 
 | 47 | Nelson Provincial Museum | vernonBrowser (was `boutique`) | **committed Group B ADD** — the **3rd Vernon Systems "Vernon Browser"** site of the sweep (after Te Ahu 45 / VUW 46), by far the largest (`collection.nelsonmuseum.co.nz`, **~198,770** image-bearing records); was **NOT in the Lambda**. **This investigation uncovered the platform-label correction: the whole platform is Vernon Systems' "Vernon Browser" (same vendor as eHive), not "CollectiveAccess / Pawtucket" as 45/46 were originally logged** — confirmed via a Wayback Machine snapshot of the homepage showing `vernon-common.min.js` and a "Vernon Browser" modal title; corrected retroactively (no behaviour change to 45/46, only the label + the `collectiveAccessLargest`→`vernonBrowserLargest` rename). **REUSED `stringSwap` (same as Te Ahu 45), no new code, no AWS deploy** — pure path-segment swap `/records/images/large/` → `/records/images/xlarge/`. A **150-page uniform HEAD census** (spanning the full ~9,939-page range) found **0% null-image** and, critically, **0/143 "large 200 but xlarge missing"** cases (unlike VUW's 1.2%), so the plain unconditional swap is justified — no HEAD-probe needed. **7/150 (4.7%) of records are fully stale at the source** (ALL size tiers 403, confirmed on retry) — pre-existing dead assets, unaffected by the swap either way. 40-record pixel survey: `xlarge` **24 win / 13 equal / 0 smaller**, area ratio **min 1.000 / median 1.288 / max 2.251** — more modest than Te Ahu/VUW's 2.25× median since many Nelson masters (glass-plate portrait negatives) are natively narrower than the 800 px `large` box. **★★ Exhaustively confirmed `xlarge` is the true public ceiling** (per explicit user request to verify harder): tried 13 alternate derivative-name guesses (`original`/`fullsize`/`full`/`tilepic`/`xxlarge`/`master`/`preview`/`raw`/`print_preview`/`crop`/`display`/`thumbnail` + case variants, all 403); confirmed query-param resize tricks are ignored by CloudFront (byte-identical); found and inspected the real Vernon Browser vendor API (`apidocs.browser.vernonsystems.com`, `ImageDerivative` schema, requires an API key we don't have); researched Vernon Systems docs (IIIF only documented for eHive); inspected a Feb-2024 Wayback Machine snapshot of a live object page (plain `<img>` tags, no OpenSeadragon/IIIF/DZI/zoomify viewer); EXIF on a served `xlarge` confirms the true source photo is far higher-res (12 MP Olympus TG-6) but deliberately not published (S3 `AccessDenied`, not a WAF artifact). `swift build` 0; CollectionTester ×6 → **6/6 HTTP 200** `xlarge`; 5/6 measured gains (1.11×–2.25× area), 1/6 already native (1.0×, no loss). `collectionWeights` **0.002**. See `logs/047-nelson-provincial-museum.md` |
 | 48 | Puke Ariki | vernonBrowser (was `boutique`) | **committed Group B ADD** — the **4th Vernon Systems "Vernon Browser"** site of the sweep (after Te Ahu 45 / VUW 46 / Nelson 47), the largest image-bearing boutique-museum collection yet (`collection.pukeariki.com`, **134,911** records, dominated by the Swainson/Woods photographic-negative sub-collection); was **NOT in the Lambda**. Platform confirmed via the **CloudFront bot-wall signature** (403 no-UA / 202 0-byte-body challenge with a browser UA — matching Te Ahu/VUW exactly) and a re-verified derivative-name set (nano/tiny/small/medium/large/xlarge=200, display/thumbnail=403 — same published subset as Nelson); no Wayback snapshot exists for this subdomain, but the xlarge-is-ceiling finding is platform-level (established at Nelson), not per-site. **REUSED `stringSwap` (same as Te Ahu 45 / Nelson 47), no new code, no AWS deploy.** **★ API gotcha found here:** DigitalNZ's `records.json` hard-caps `page<=50000` **regardless of `per_page`**, which silently truncates a naive `per_page=1` census to the front ~37% of a 134,911-record collection; worked around with `per_page=50` (page only needs to reach 2698) to get a genuinely full-range **150-page uniform census**: **0% null-image, 0% stale/broken `large`, 0/150 "large 200 but xlarge missing"** — cleaner than Nelson (no pre-existing dead-asset rate). 40-record pixel survey: `xlarge` **5 win / 35 equal / 0 smaller**, area ratio **min 1.000 / median 1.000 / max 14.073** — the lowest win-rate of the 4 Vernon Browser sites (12.5%, since most masters here are already ≤800 px) but the single biggest gain observed on this platform (800×514 → **3000×1929, 5.79 MP**). Sample diversity confirmed across multiple sub-collections (Diana Smith, Swainson/Woods, Caleb Wyatt, Ken Fox). `swift build` 0; CollectionTester ×6 → **6/6 HTTP 200** `xlarge` dispatch confirmed. `collectionWeights` **0.002** (provisional). See `logs/048-puke-ariki.md` |
 | 49 | Picture Wairarapa | spydus (was `boutique`) | **no-improvement, NOT added** — a **new platform for the sweep**, **Spydus/Civica** ILS picture-archive module (content partner Wairarapa Archive, `masterton.spydus.co.nz`, images on Azure Blob Storage `stspydusproduction.blob.core.windows.net`); was **NOT in the Lambda**, still isn't. Harvested `large_thumbnail_url` is a `<uuid>_lt.jpg` ("large thumb") blob, **360×226 ≈0.08 MP** — a **2-tier** ladder (`_lt`/`_t` only). A deep-dig (explicitly requested) exhausted every route this sweep checks: every plausible derivative-suffix guess 404s; the blob container disables anonymous listing; no alternate containers on the same storage account; no EXIF/embedded original; the site's own front-end JS (`tabContainer.js`) reads a `data-imgurls` list that is **always** exactly the `_lt`/`_t` pair (no zoom/IIIF/DZI/OpenSeadragon anywhere in the loaded scripts); the `/api/maintenance/1.0/imagebrowser/image?blobName=` REST endpoint 302s to a **dead** `filemanager/root/` path (404); a different Spydus instance's published API docs (Salford UK) document no image-size endpoint; the landing page has an explicit **"Place archival request"** link, matching the rights text ("for higher resolution copies... please contact us") — higher-res is a manual/human process, not an anonymous route. **User decision: do not add** — 0.08 MP would be a clear quality outlier vs. the rest of the served set (next-lowest ~700–950 px, Waimate 20 / South Canterbury 29 / V.C. Browne 30). No code change. See `logs/049-picture-wairarapa.md` |
+| 50 | Te Ara - The Encyclopedia of New Zealand | teara (was `boutique`) | **no-improvement, NOT added** — self-hosted Drupal CMS (`teara.govt.nz`), images served directly from `sites/default/files/`; was **NOT in the Lambda**, still isn't. Landing pages (and Drupal `/jsonapi`/`?_format=json`/`/node/<id>` paths) are fully **Cloudflare-challenge-walled** (403, `cf-mitigated: challenge`) — cannot scrape `og:image`/embedded state at all; static assets under `sites/default/files/` are NOT behind the challenge, which is why the harvested URL always works on its own. **No Drupal image-style derivative exists** for any filename tested (`styles/{large,wide,full,original,...}/` all 404); a `large_images/` upload folder is real but per-record, not a hidden bigger sibling of every file (404 when applied to other records' plain-path filenames) — the harvested URL is confirmed the correct AND only URL per record. Baseline dimensions ~500–830 px long side (median ~650–700 px), decent quality on its own, comparable to already-accepted lower-res collections (Waimate 20 / V.C. Browne 30). **★ Found but explicitly declined a cross-institution reference-number lookup:** Te Ara's `rights` field embeds the source institution's own reference for institutionally-sourced photos (e.g. `"...Collection Reference: PA1-q-913-08-4..."`); a DigitalNZ text search on that exact reference returned the same photograph already in **TAPUHI** at genuinely higher resolution (this sweep's existing NDHA/Rosetta converter target, order 25). **Not built as a strategy** because `contributing_partner` is extremely heterogeneous (≈15 distinct institutions in a 40-record sample — Alexander Turnbull Library ≈17.5%, plus Te Papa, art galleries, Getty Images, newspapers, publishers, private photographers), the reference format is unverified beyond the ATL case, a text-search hit is not a guaranteed-correct match (risk of serving the **wrong photo**), and building it would need a new `rights` field on `NZRecordsResult` + an extra authenticated DigitalNZ round-trip + cross-platform dispatch — a materially bigger architectural departure than any strategy in this sweep. **User decision: do not add** — skip rather than add at a merely-decent, unimproved baseline. No code change. See `logs/050-te-ara-the-encyclopedia-of-new-zealand.md` |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -680,6 +688,45 @@ remaining collection (50 Te Ara, 51 Kete Horowhenua, 52 Manawatū Heritage) is c
 share this platform, so it isn't expected to recur, but if it does the `_lt`/`_t` ladder and the
 "Place archival request" manual-process pattern are platform-level facts, not Wairarapa-specific ones.
 See `logs/049-picture-wairarapa.md`.
+
+**✅ Order 50 (Te Ara - The Encyclopedia of New Zealand) no-improvement, NOT added (2026-07-04).**
+Self-hosted Drupal CMS at `teara.govt.nz`; images served directly under `sites/default/files/` (no
+CDN/DAMS layer). Was **NOT in the Lambda**. Every article/landing page — and Drupal's own
+`/jsonapi`, `/jsonapi/node/photograph`, `?_format=json`, `/node/<id>` paths — returns **HTTP 403**
+with `cf-mitigated: challenge` (a Cloudflare Turnstile bot-wall), ruling out any `og:image`/srcset/
+embedded-state scraping; the static image assets themselves are NOT behind the challenge (200
+directly), which is why the harvested URL always works on its own. Tried every plausible Drupal
+image-style path (`styles/{large,wide,full,original,hero,hires,high,extra_large,photo_full,
+media_full,1200,1000}/public/<file>`) and filename-suffix variant (`_large`/`_hi`/`_full`/`-large`/
+`-hires`) on several sampled filenames — **all 404**. A `large_images/` upload folder is real for
+some records (one later record harvested `sites/default/files/large_images/47774-ps.jpg` directly,
+830×553) but is **not a hidden bigger sibling of every file** — applying it to other records'
+plain-path filenames also 404s, confirming DigitalNZ already harvested the correct, best, and only
+URL per record; Te Ara's own upload-path convention just changed over its ~20-year history.
+Baseline dimension sample (14 records) ranged **462–830 px** long side (one 500×295 outlier), median
+~650–700 px — decent quality, comparable to already-accepted lower-resolution collections in this
+sweep (Waimate 20 ~950 px / V.C. Browne 30 ~700 px). **★ Found — and explicitly declined to build —
+a cross-institution reference-number lookup:** Te Ara's `rights` field embeds the crediting
+institution's own reference for institutionally-sourced photos (e.g. `"...Hubert Girdlestone
+Collection Reference: PA1-q-913-08-4..."`); a DigitalNZ full-text search on that exact reference
+returned, as its first hit, the **same photograph already in TAPUHI** (`"Swagging up to Mount
+Matthew's trig"`, `natlib.govt.nz/records/22886037`, served via `NLNZStreamGate` — the identical
+platform this sweep's order-25 converter already targets) at genuinely higher resolution. **Not
+pursued as a production strategy** because: `contributing_partner` across Te Ara is extremely
+heterogeneous (≈15 distinct institutions in a single 40-record sample — Alexander Turnbull Library
+≈17.5%, plus Te Papa, regional art galleries, Getty Images, Otago Daily Times, private
+photographers, publishers, film production companies — most with no known anonymous high-res route
+at all); the reference-number format is institution-specific and completely unverified beyond the
+one ATL case tested; a full-text search hit is **not a guaranteed-correct match** (a false positive
+would silently serve the **wrong photograph**, a materially worse defect than a smaller-but-correct
+image); and implementing it would require adding a new `rights` field to `NZRecordsResult`, an
+extra authenticated DigitalNZ API round-trip at request time, and dispatch logic to whichever
+*other* collection's platform-specific strategy the match landed on — a substantially bigger
+architectural departure than any strategy built so far, whose registry assumes one self-contained
+platform per collection. Recorded as a follow-up research idea in `recipes.md`, not built. **User
+decision: skip Te Ara entirely** rather than add it at a merely-decent, unimproved baseline. No
+code change; `platform` corrected `boutique` → `teara` for future reference. See
+`logs/050-te-ara-the-encyclopedia-of-new-zealand.md`.
 
 **★ Platform correction (2026-07-04, found during order 47):** Te Ahu 45 and VUW 46 (and now Nelson 47)
 were logged throughout this file as **"CollectiveAccess / Pawtucket"**. That label is **wrong** — the

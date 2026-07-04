@@ -1009,6 +1009,47 @@ picture-archive module storing images on Azure Blob Storage (`https://<account>.
 
 ---
 
+## teara (Te Ara — The Encyclopedia of New Zealand, self-hosted Drupal)
+
+Self-hosted Drupal CMS at `teara.govt.nz`; images live directly under `sites/default/files/`
+(no CDN/DAMS layer visible). Editorially-curated encyclopedia, not a digitisation-pipeline
+collection — image masters are whatever the editor uploaded, not scanned originals.
+
+### Verified findings (teara)
+- **Te Ara (50, investigated 2026-07-04, NOT added — no-improvement):** landing pages are fully
+  **Cloudflare-challenge-walled** (403 + `cf-mitigated: challenge` on every `/en/...` page AND
+  Drupal `/jsonapi`/`?_format=json`/`/node/<id>` paths) — cannot scrape `og:image`/embedded state at
+  all. Static assets under `sites/default/files/` are NOT behind the challenge (200 directly), which
+  is why the harvested URL itself always works. **No Drupal image-style derivative exists** for any
+  filename tested (`styles/{large,wide,full,original,...}/public/<file>` all 404); a `large_images/`
+  upload folder is real but **per-record, not a hidden bigger sibling of every file** (404 when
+  applied to filenames from records whose harvested path is the plain, non-`large_images/` form) —
+  the harvested URL is confirmed the correct AND only URL per record. Baseline dimensions vary
+  ~500–830 px long side depending on upload era (median ~650–700 px, comparable to several
+  already-accepted lower-res collections in this sweep).
+- **★ Cross-institution reference-number lookup — found ONE real hit, explicitly declined as a
+  strategy.** Te Ara's `rights` field for institutionally-sourced photos embeds the source
+  institution's own reference (e.g. `"...Collection Reference: PA1-q-913-08-4..."`). A DigitalNZ
+  full-text search for that exact reference returned the same photograph already in **TAPUHI**
+  (this sweep's existing NDHA/Rosetta converter target, order 25) at genuinely higher resolution.
+  **Not built** because `contributing_partner` across Te Ara is extremely heterogeneous (~15
+  distinct institutions in one 40-record sample — Alexander Turnbull Library ≈17.5%, plus Te Papa,
+  regional art galleries, Getty Images, newspapers, publishers, private photographers, film
+  companies — most with no known anonymous route at all), the reference-number format is
+  institution-specific and unverified beyond the ATL case, a full-text search hit is not a
+  guaranteed-correct match (risk of silently serving the **wrong photo**), and building it would
+  need a new `rights` field on `NZRecordsResult` plus an extra authenticated DigitalNZ round-trip
+  plus cross-platform dispatch — a materially bigger architectural departure than any strategy so
+  far (the registry assumes one self-contained platform per collection). ⇒ **Lesson: an encyclopedia/
+  editorial site that credits external institutions can have some fraction of its images
+  cross-referenceable to a higher-res original elsewhere in DigitalNZ via the credited reference
+  number — worth a quick text-search spot-check on any similar editorial/curated collection — but
+  do NOT build a general strategy around it without (a) a much larger sample measuring real
+  hit-rate per institution and (b) a way to verify a match is genuinely the same photo (dimension/
+  EXIF/visual check), not just a textual coincidence.**
+
+---
+
 # Discovery Playbook (mandatory in Step 2 for EVERY collection)
 
 The first URL that returns an image is rarely the largest. Keep asking "is there a
