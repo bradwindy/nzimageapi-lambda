@@ -1,12 +1,22 @@
 # Order 46 — Ngā Puhipuhi o Te Herenga Waka—Victoria University of Wellington Art Collection
 
+> **★ PLATFORM CORRECTION (added during order 47 investigation, 2026-07-04):** this site was
+> misidentified below as "CollectiveAccess / Pawtucket". It is actually **Vernon Systems'
+> "Vernon Browser"** (same vendor as eHive) — confirmed via a Wayback Machine snapshot of
+> `collection.nelsonmuseum.co.nz` (order 47, same platform) showing `vernon-common.min.js` and a
+> "Vernon Browser" modal title in the archived front-end HTML. The URL scheme, size ladder, and
+> all measurements/strategy below are unaffected — only the platform label was wrong. `progress.json`
+> and `URLProcessor.swift` have been updated (`vernonBrowser` platform; the helper is now named
+> `vernonBrowserLargest`, previously `collectiveAccessLargest`); this log's body is left as originally
+> written except where noted.
+
 - **Group:** B (ADD — was NOT in `collectionWeights`, so never served)
-- **Platform (progress.json):** `boutique` → **RECLASSIFIED to `collectiveAccess`** (CollectiveAccess / Pawtucket — **2nd of the sweep**, after Te Ahu 45). Te Pātaka Toi **Adam Art Gallery** (VUW university art collection).
+- **Platform (progress.json):** `boutique` → **RECLASSIFIED to `vernonBrowser`** (Vernon Systems "Vernon Browser" — **2nd of the sweep**, after Te Ahu 45). Te Pātaka Toi **Adam Art Gallery** (VUW university art collection). (Originally logged as "CollectiveAccess / Pawtucket" — see correction note above.)
 - **Host:** `universityartcollection.adamartgallery.nz` (images served from AmazonS3 behind CloudFront) · **landing:** `…/objects/<objId>`
 - **content_partner:** Te Pātaka Toi Adam Art Gallery · **rights:** "All rights reserved" (we serve the same public derivative the gallery publishes)
 - **rawItemCount (progress.json snapshot):** 488 · **live (primary_collection, category=Images):** **488**
 - **Status:** committed (user-approved 2026-06-18)
-- **Strategy:** **NEW reusable `collectiveAccessLargest`** (async, HEAD-probe + fallback) — swap
+- **Strategy:** **NEW reusable `vernonBrowserLargest`** (async, HEAD-probe + fallback) — swap
   `/records/images/large/` → `/records/images/xlarge/`, **HEAD-probe the `xlarge` and fall back to the
   harvested `large` when it is absent**. **No AWS deploy.**
 
@@ -17,11 +27,11 @@ Wellington Art Collection" (note the macron `ā` and the em-dash `—`; the Swif
 byte-for-byte). `content_partner` "Te Pataka Toi Adam Art Gallery". `object_url` null; `landing_url` =
 `https://universityartcollection.adamartgallery.nz/objects/<objId>`.
 
-## Platform detection — 2nd CollectiveAccess / Pawtucket site (cf. Te Ahu 45)
+## Platform detection — 2nd Vernon Systems "Vernon Browser" site (cf. Te Ahu 45)
 
 Harvested `large_thumbnail_url` = `…/records/images/large/<shard>/<hash40>.jpg` (`<shard>` = 1–3 digit
 dir; `<hash40>` = 40-hex SHA1); `thumbnail_url` is the `small` version. Identical to Te Ahu's
-CollectiveAccess media-version scheme; images served from **AmazonS3** behind CloudFront. The landing
+Vernon Browser media-version scheme; images served from **AmazonS3** behind CloudFront. The landing
 page is **bot-walled** (CloudFront HTTP 202 + JS challenge) but irrelevant — the `/records/images/` CDN
 is not walled, and the strategy needs no page fetch.
 
@@ -38,7 +48,7 @@ One record (`…/large/114/ade94a…3692f.jpg`):
 
 Unlike Te Ahu (0/64 xlarge-missing → safe blind swap), a **full HEAD scan of all 486 image-bearing
 records found 6 (1.2%) with a `large` (200) but NO generated `xlarge` (403)**. A blind swap would serve
-a broken 403 for those. So `collectiveAccessLargest` **HEAD-probes the `xlarge`** and falls back to the
+a broken 403 for those. So `vernonBrowserLargest` **HEAD-probes the `xlarge`** and falls back to the
 harvested `large` (always 200 for those 6) when it is absent. The HEAD probe is reliable: **HEAD == GET
 for every one of the 486 records** (0 mismatches; the 6 missing show `large` HEAD=200/GET=200, `xlarge`
 HEAD=403/GET=403). (An early manual check confused me with false 403s — that was a truncated-shard bug
@@ -58,7 +68,7 @@ unambiguous and HEAD==GET.)
 
 ## Decision
 
-**Group B ADD via NEW `collectiveAccessLargest`** (HEAD-probe `xlarge`, fall back to `large`). Strict
+**Group B ADD via NEW `vernonBrowserLargest`** (HEAD-probe `xlarge`, fall back to `large`). Strict
 1.0–2.25× improvement (median 2.25×), graceful for the ~1.2% missing-xlarge, no honest-smaller fork,
 no request-time fetch beyond a cheap HEAD. Weight 0.002 (consistent with Te Ahu 45). Te Ahu's pure
 `stringSwap` is left unchanged (0% missing there; this probing variant is for sites where `xlarge` is
@@ -66,12 +76,12 @@ not 100% present).
 
 ## Implementation
 
-- `URLProcessor.swift` — NEW `collectiveAccessLargest(_:_:) async` (HEAD-probe via
+- `URLProcessor.swift` — NEW `vernonBrowserLargest(_:_:) async` (HEAD-probe via
   `NetworkRequestManager().headStatusFollowingRedirects(endpoint:)`, fall back to the harvested URL) +
   registry entry `strategies["Ngā Puhipuhi o Te Herenga Waka—Victoria University of Wellington Art
-  Collection"]` → `await collectiveAccessLargest(result, url)`.
+  Collection"]` → `await vernonBrowserLargest(result, url)`.
 - `NZImageApi.swift` — `collectionWeights[…] = 0.002`.
-- `progress.json` — platform `boutique` → `collectiveAccess`; status; baseline / chosen / notes / weight.
+- `progress.json` — platform `boutique` → `vernonBrowser`; status; baseline / chosen / notes / weight.
 
 ## Verification
 
@@ -97,6 +107,6 @@ not 100% present).
 
 ## Commit
 
-- Change commit: "Ngā Puhipuhi … (46): committed Group B ADD …" (new `collectiveAccessLargest` + registry
+- Change commit: "Ngā Puhipuhi … (46): committed Group B ADD …" (new `vernonBrowserLargest` + registry
   + weight + `Research/highres/` bookkeeping). The SHA is recorded by the follow-up "Record SHA … for
   collection 46" commit.

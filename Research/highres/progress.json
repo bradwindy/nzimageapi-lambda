@@ -982,66 +982,66 @@
       "name": "Te Ahu Museum",
       "slug": "te-ahu-museum",
       "group": "B",
-      "platform": "collectiveAccess",
+      "platform": "vernonBrowser",
       "rawItemCount": 506,
       "weight": 0.002,
       "status": "committed",
       "baseline": {
-        "method": "raw large_thumbnail_url (collection.teahumuseum.nz/records/images/large/<NN>/<hash>.jpg = CollectiveAccess 800px \"large\" derivative)",
+        "method": "raw large_thumbnail_url (collection.teahumuseum.nz/records/images/large/<NN>/<hash>.jpg = Vernon Browser 800px \"large\" derivative)",
         "px": "800px long side (657x800 etc.; ~0.5 MP)"
       },
       "chosen": {
-        "method": "ADD via REUSE of stringSwap (first registry use): pure path-segment swap /records/images/large/ -> /records/images/xlarge/ (the largest PUBLIC CollectiveAccess media version; original/fullsize/etc. are 403-locked behind login). No request-time fetch, no deploy.",
+        "method": "ADD via REUSE of stringSwap (first registry use): pure path-segment swap /records/images/large/ -> /records/images/xlarge/ (the largest PUBLIC Vernon Browser media version; original/fullsize/etc. are 403-locked behind login). No request-time fetch, no deploy.",
         "px": "1200px long side (~1.44 MP ceiling), 1.56-2.25x area over large (median 2.25x); xlarge never exceeds the master so no honest-smaller fork",
         "urlPattern": "https://collection.teahumuseum.nz/records/images/xlarge/<NN>/<hash>.jpg"
       },
       "commit": "f490104",
       "log": "logs/045-te-ahu-museum.md",
-      "notes": "CollectiveAccess/Pawtucket museum CMS at collection.teahumuseum.nz (S3/CloudFront; server: AmazonS3 on images), NOT eHive/Recollect -- new platform for the sweep. boutique-mislabelled, was NOT in collectionWeights. REUSED stringSwap (first registry use): /records/images/large/ -> /records/images/xlarge/. Size ladder: small 123x150 / medium 328x400 / large 657x800 (harvested) / xlarge 985x1200; original/fullsize/full/huge/page/screen/tilepic/xxlarge/master/archive/etc. all 403 (CollectiveAccess gates originals behind login) so xlarge=1200px long side ~1.44 MP is the public ceiling. xlarge targets 1200 vs large 800, both capped at master (no upscale) so xlarge >= large always and never exceeds master -> NO honest-smaller fork (unlike eHive _l). Null-image census all 506 records: 0 null-image (0.0%) -- opposite of Waikato 44. Uniform 64-rec survey: xlarge 63 win / 0 equal / 0 smaller / 0 missing, area ratio min 1.562 / median 2.250 / max 2.254, biggest 1200x1199 ~1.44 MP; 1/64 (~1.6%) had a large that itself 403d (pre-broken baseline at source, swap not worse, additive). Landing page bot-walled (HTTP 202 ~2KB challenge) but irrelevant -- /records/images/ CDN not walled, swap needs no page fetch. swift build 0; CollectionTester x6 6/6 HTTP200 xlarge (Ahipara 1200x905, Greenstone Pendant 1200x494, Awanui 1200x906, Cigarette Holder 850x1200, Far North 1200x856, Peria 1200x892), each exactly 1.5x/side = 2.25x area over large. collectionWeights 0.002 (provisional)."
+      "notes": "Vernon Systems \"Vernon Browser\" museum CMS at collection.teahumuseum.nz (S3/CloudFront; server: AmazonS3 on images), NOT eHive/Recollect -- new platform for the sweep. boutique-mislabelled, was NOT in collectionWeights. REUSED stringSwap (first registry use): /records/images/large/ -> /records/images/xlarge/. Size ladder: small 123x150 / medium 328x400 / large 657x800 (harvested) / xlarge 985x1200; original/fullsize/full/huge/page/screen/tilepic/xxlarge/master/archive/etc. all 403 (Vernon Browser gates originals behind login) so xlarge=1200px long side ~1.44 MP is the public ceiling. xlarge targets 1200 vs large 800, both capped at master (no upscale) so xlarge >= large always and never exceeds master -> NO honest-smaller fork (unlike eHive _l). Null-image census all 506 records: 0 null-image (0.0%) -- opposite of Waikato 44. Uniform 64-rec survey: xlarge 63 win / 0 equal / 0 smaller / 0 missing, area ratio min 1.562 / median 2.250 / max 2.254, biggest 1200x1199 ~1.44 MP; 1/64 (~1.6%) had a large that itself 403d (pre-broken baseline at source, swap not worse, additive). Landing page bot-walled (HTTP 202 ~2KB challenge) but irrelevant -- /records/images/ CDN not walled, swap needs no page fetch. swift build 0; CollectionTester x6 6/6 HTTP200 xlarge (Ahipara 1200x905, Greenstone Pendant 1200x494, Awanui 1200x906, Cigarette Holder 850x1200, Far North 1200x856, Peria 1200x892), each exactly 1.5x/side = 2.25x area over large. collectionWeights 0.002 (provisional)."
     },
     {
       "order": 46,
       "name": "Ngā Puhipuhi o Te Herenga Waka—Victoria University of Wellington Art Collection",
       "slug": "nga-puhipuhi-o-te-herenga-waka-victoria-university-of-wellington-art-collection",
       "group": "B",
-      "platform": "collectiveAccess",
+      "platform": "vernonBrowser",
       "rawItemCount": 488,
       "weight": 0.002,
       "status": "committed",
       "baseline": {
-        "method": "raw large_thumbnail_url (universityartcollection.adamartgallery.nz/records/images/large/<shard>/<hash>.jpg = CollectiveAccess 800px \"large\")",
+        "method": "raw large_thumbnail_url (universityartcollection.adamartgallery.nz/records/images/large/<shard>/<hash>.jpg = Vernon Browser 800px \"large\")",
         "px": "800px long side (800x626 etc.; ~0.5 MP)"
       },
       "chosen": {
-        "method": "ADD via NEW collectiveAccessLargest (async HEAD-probe + fallback): swap /records/images/large/ -> /records/images/xlarge/, HEAD-probe xlarge and fall back to the harvested large when absent (~1.2% of records have large but no xlarge). xlarge is the largest PUBLIC media version (original/etc. 403-locked behind login). No deploy.",
+        "method": "ADD via NEW vernonBrowserLargest (async HEAD-probe + fallback): swap /records/images/large/ -> /records/images/xlarge/, HEAD-probe xlarge and fall back to the harvested large when absent (~1.2% of records have large but no xlarge). xlarge is the largest PUBLIC media version (original/etc. 403-locked behind login). No deploy.",
         "px": "1200px long side (~1.42 MP ceiling), 1.0-2.25x area over large (median 2.25x); xlarge never exceeds the master so no honest-smaller fork",
         "urlPattern": "https://universityartcollection.adamartgallery.nz/records/images/xlarge/<shard>/<hash>.jpg (else fall back to .../large/...)"
       },
       "commit": "4e718d4",
       "log": "logs/046-nga-puhipuhi-o-te-herenga-waka-victoria-university-of-wellington-art-collection.md",
-      "notes": "2nd CollectiveAccess/Pawtucket site of the sweep (after Te Ahu 45) -- Te Pataka Toi Adam Art Gallery (VUW university art collection) at universityartcollection.adamartgallery.nz (S3/CloudFront; landing /objects/<id> bot-walled HTTP 202 but image CDN not). boutique-mislabelled, was NOT in collectionWeights. NEW reusable collectiveAccessLargest (async): swap large->xlarge with a request-time HEAD probe + graceful fallback to the harvested large. Size ladder small 150x117 / medium 400x313 / large 800x626 (harvested) / xlarge 1200x939; original/fullsize/full/huge/tilepic/xxlarge/master/etc. all 403 (originals login-gated) so xlarge=1200px ~1.42 MP is the public ceiling. xlarge master-capped (no upscale) so xlarge >= large always, never exceeds master -> NO honest-smaller fork. ** UNLIKE Te Ahu (0% missing, pure stringSwap), a full HEAD scan of all 486 image-bearing records found 6 (1.2%) with a large (200) but NO xlarge (403) -> a blind swap would serve a broken 403, hence the HEAD probe + fallback. HEAD == GET for all 486 records (0 mismatches; reliable probe). Null-image census all 488: 2 (0.4%) -> HTTP 400 hard-fail the pick (pre-existing, negligible). Uniform 61-rec survey: xlarge 46 win / 13 equal / 0 smaller / 2 missing, area ratio min 1.000 / median 2.249 / max 2.253, biggest 1200x1187 ~1.42 MP. swift build 0; CollectionTester x6 6/6 HTTP200 xlarge (The Single Cloud 606x1200, Continuum VII 1200x493, Light Installation 1200x830, Untitled 1200x778, Untitled (Puvis) 728x944, Exotic Plant 812x1200); fallback path verified (record 50811364 xlarge 403 -> served large 800x648 200). collectionWeights 0.002 (provisional)."
+      "notes": "2nd Vernon Systems \"Vernon Browser\" site of the sweep (after Te Ahu 45) -- Te Pataka Toi Adam Art Gallery (VUW university art collection) at universityartcollection.adamartgallery.nz (S3/CloudFront; landing /objects/<id> bot-walled HTTP 202 but image CDN not). boutique-mislabelled, was NOT in collectionWeights. NEW reusable vernonBrowserLargest (async): swap large->xlarge with a request-time HEAD probe + graceful fallback to the harvested large. Size ladder small 150x117 / medium 400x313 / large 800x626 (harvested) / xlarge 1200x939; original/fullsize/full/huge/tilepic/xxlarge/master/etc. all 403 (originals login-gated) so xlarge=1200px ~1.42 MP is the public ceiling. xlarge master-capped (no upscale) so xlarge >= large always, never exceeds master -> NO honest-smaller fork. ** UNLIKE Te Ahu (0% missing, pure stringSwap), a full HEAD scan of all 486 image-bearing records found 6 (1.2%) with a large (200) but NO xlarge (403) -> a blind swap would serve a broken 403, hence the HEAD probe + fallback. HEAD == GET for all 486 records (0 mismatches; reliable probe). Null-image census all 488: 2 (0.4%) -> HTTP 400 hard-fail the pick (pre-existing, negligible). Uniform 61-rec survey: xlarge 46 win / 13 equal / 0 smaller / 2 missing, area ratio min 1.000 / median 2.249 / max 2.253, biggest 1200x1187 ~1.42 MP. swift build 0; CollectionTester x6 6/6 HTTP200 xlarge (The Single Cloud 606x1200, Continuum VII 1200x493, Light Installation 1200x830, Untitled 1200x778, Untitled (Puvis) 728x944, Exotic Plant 812x1200); fallback path verified (record 50811364 xlarge 403 -> served large 800x648 200). collectionWeights 0.002 (provisional)."
     },
     {
       "order": 47,
       "name": "Nelson Provincial Museum",
       "slug": "nelson-provincial-museum",
       "group": "B",
-      "platform": "boutique",
+      "platform": "vernonBrowser",
       "rawItemCount": 198196,
-      "weight": null,
-      "status": "todo",
+      "weight": 0.002,
+      "status": "committed",
       "baseline": {
-        "method": "raw large_thumbnail_url",
-        "px": null
+        "method": "raw large_thumbnail_url (collection.nelsonmuseum.co.nz/records/images/large/<shard>/<hash>.jpg = Vernon Browser 800px \"large\" derivative)",
+        "px": "800px long side (~0.5 MP typical, varies since some masters are natively <800px)"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "ADD via REUSE of stringSwap (pure path-segment swap /records/images/large/ -> /records/images/xlarge/, same as Te Ahu 45). No request-time fetch, no deploy. Justified by a 150-page uniform census finding 0/143 \"large 200 but xlarge missing\" cases (unlike VUW 46), so no HEAD-probe needed.",
+        "px": "1200px long side ceiling (master-capped, never upscaled); 1.0-2.25x area over large in a 40-rec pixel survey, median 1.29x (more modest than Te Ahu/VUW since many Nelson masters are natively <800px)",
+        "urlPattern": "https://collection.nelsonmuseum.co.nz/records/images/xlarge/<shard>/<hash>.jpg"
       },
       "commit": null,
       "log": "logs/047-nelson-provincial-museum.md",
-      "notes": ""
+      "notes": "Vernon Systems \"Vernon Browser\" self-hosted collection site at collection.nelsonmuseum.co.nz (S3/CloudFront) -- the 3rd Vernon Browser site in the sweep (after Te Ahu 45 / VUW 46), by far the largest (~198,770 image-bearing records vs ~500-record boutique sites). boutique-mislabelled, was NOT in collectionWeights. Confirmed platform via a Wayback Machine snapshot showing vernon-common.min.js and a 'Vernon Browser' modal title in the archived homepage HTML -- this corrects the earlier 'CollectiveAccess/Pawtucket' mislabelling applied to Te Ahu 45 and VUW 46 too (same vendor as eHive). REUSED stringSwap (no new code): /records/images/large/ -> /records/images/xlarge/. Size ladder: nano/tiny/small/medium/large(harvested)/xlarge(chosen); original/fullsize/full/tilepic/xxlarge/master/preview/raw/print_preview/crop/display/thumbnail all 403 (Vernon Browser gates originals behind login) so xlarge ~1.44 MP ceiling is the public max. xlarge master-capped (no upscale) -> NO honest-smaller fork. Null-image census (150-page uniform sample spanning the full ~9,939-page range): 0 (0.0%). Critically, 0/143 non-stale records had 'large 200 but xlarge missing' (unlike VUW's 1.2%), so the plain unconditional stringSwap is justified -- no HEAD-probe needed. 7/150 (4.7%) of records are fully stale at the source (ALL size tiers 403 on every version, confirmed on retry) -- pre-existing dead assets, not introduced or worsened by this swap. 40-rec pixel survey: xlarge 24 win / 13 equal / 0 smaller, area ratio min 1.000 / median 1.288 / max 2.251 (more modest than Te Ahu/VUW's 2.25x median -- many Nelson masters are natively <800px). Exhaustively confirmed xlarge is the true ceiling: tried 13 alternate derivative-name guesses (all 403), tested query-param resize tricks (ignored by CloudFront, byte-identical), found and inspected the real Vernon Browser vendor API (apidocs.browser.vernonsystems.com, ImageDerivative schema, requires an API key we don't have), researched Vernon Systems docs (IIIF only documented for eHive, not Vernon Browser/CMS), and inspected a Feb-2024 Wayback Machine snapshot of a live object detail page (plain <img> tags against the same 4 derivatives, no OpenSeadragon/IIIF/DZI/zoomify viewer). EXIF on a served xlarge confirms the true source photo is far higher-res (12 MP Olympus TG-6) but deliberately not published (S3 AccessDenied, not a WAF artifact). swift build 0; CollectionTester x6 6/6 HTTP200 xlarge; 5/6 measured gains (1.11x-2.25x area), 1/6 already native (1.0x, no loss). collectionWeights 0.002."
     },
     {
       "order": 48,

@@ -4,9 +4,9 @@ This directory is the **single source of truth** for the high-res collection swe
 A fresh Claude Code session with zero prior context can resume the work using only
 these files.
 
-## Current resume state (updated 2026-06-17)
+## Current resume state (updated 2026-07-04)
 
-**Wellington removal: done.** Collections **1–46 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+**Wellington removal: done.** Collections **1–47 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
 self-hosted JP2→JPEG converter; Canterbury 26, Auckland Art Gallery 27, Culture Waitaki 28, South
 Canterbury Museum 29, V.C. Browne 30 all no-improvement; **Te Hikoi 31 + Te Toi Uku 32 committed
 IMPROVEMENTS**, **Te Ūaka 33 + Wyndham 34 committed Group B ADDs** — all four `boutique`-mislabel-actually-
@@ -47,16 +47,25 @@ rights reserved" (35/35); survey of the image-bearing records = **28 win / 0 equ
 fake-upscaled `_l`), median **2.25×**, up to **40.6 MP**; **★ but 61.5% of the 540 records are null-image at
 source** → hard-fail the pick (HTTP 400, pre-existing Lambda behaviour, identical for the baseline) → weight
 set to the 0.001 floor); **Te Ahu Museum 45 committed Group B ADD** — a **new platform for the sweep**,
-**CollectiveAccess / Pawtucket** (`collection.teahumuseum.nz`, S3/CloudFront), **reused `stringSwap`** (first
-registry use) for a pure path-segment swap `/records/images/large/` → `/records/images/xlarge/`; `xlarge`
-(1200px ≈ 1.44 MP) is the largest **public** variant (originals 403-locked behind login), a strict
+**Vernon Systems "Vernon Browser"** (`collection.teahumuseum.nz`, S3/CloudFront), **reused `stringSwap`**
+(first registry use) for a pure path-segment swap `/records/images/large/` → `/records/images/xlarge/`;
+`xlarge` (1200px ≈ 1.44 MP) is the largest **public** variant (originals 403-locked behind login), a strict
 **1.56–2.25×** (median 2.25×) improvement, **100% available, 0 null-image, no honest-smaller fork**);
-**Ngā Puhipuhi o Te Herenga Waka—VUW Art Collection 46 committed Group B ADD** — the **2nd CollectiveAccess /
-Pawtucket** site (Te Pātaka Toi **Adam Art Gallery**, VUW; `universityartcollection.adamartgallery.nz`), NEW
-reusable **`collectiveAccessLargest`** (HEAD-probe `xlarge`, fall back to `large`) because **~1.2% of records
+**Ngā Puhipuhi o Te Herenga Waka—VUW Art Collection 46 committed Group B ADD** — the **2nd Vernon Browser**
+site (Te Pātaka Toi **Adam Art Gallery**, VUW; `universityartcollection.adamartgallery.nz`), NEW
+reusable **`vernonBrowserLargest`** (HEAD-probe `xlarge`, fall back to `large`) because **~1.2% of records
 have a `large` but no `xlarge`** (a blind swap would 403); strict 1.0–2.25× (median 2.25×), 1200px ceiling,
-no honest-smaller fork). The per-collection sweep is **UNPAUSED — next is order 47 (Nelson Provincial
-Museum).**
+no honest-smaller fork); **Nelson Provincial Museum 47 committed Group B ADD** — the **3rd Vernon Browser**
+site, by far the largest (**~198,770 records**), **reused `stringSwap`** (a 150-page uniform census found
+0% missing-`xlarge`, unlike VUW); strict 1.0–2.25× (median **1.29×** — more modest than Te Ahu/VUW since
+many masters are natively <800px), 0 honest-smaller fork, 4.7% pre-existing fully-stale records
+(unaffected either way). **★ Platform-label correction (found during 47's investigation): this whole
+platform is Vernon Systems' "Vernon Browser" (same vendor as eHive), not "CollectiveAccess / Pawtucket" as
+45/46 were originally logged** — confirmed via a Wayback Machine snapshot showing `vernon-common.min.js`
+and a "Vernon Browser" modal title; corrected retroactively across `URLProcessor.swift`
+(`collectiveAccessLargest` renamed `vernonBrowserLargest`), `progress.json`, `recipes.md`, this README, and
+the sweep memory — no behaviour changed, only the label. The per-collection sweep is **UNPAUSED — next is
+order 48 (Puke Ariki).**
 `progress.json` is authoritative; this is a human summary.
 
 > **Vendor note (corrected 2026-06-14):** **Recollect** (both the `*.recollect.co.nz` `downloadwiz`
@@ -113,8 +122,9 @@ Museum).**
 | 42 | Pakiaka Rotorua Heritage Online | recollect (was `boutique`) | **committed Group B ADD** — **9th `boutique`-mislabel-actually-Recollect** (`rotorua.recollect.co.nz`, classic `downloadwiz`, Rotorua Library — Te Aka Mauri); was **NOT in the Lambda**. **The 5th NAM-style TWO-ASSET case AND the 2nd with a Clutha/Tasman-style vanity redirect** `rotorua.recollect.co.nz` → **`pakiaka.rotorualibrary.govt.nz`** — so **REUSED `recollectOgImageMaster`, no new strategy code, no `recollectDomainMap` entry** (the helper builds the master URL from the og:image's own host = the vanity host → a **direct** probe, no cross-host redirect), **no AWS deploy**. The harvested `large_thumbnail_url` is the **small `-280` thumbnail** (≈500 px, 0.17 MP); the display pyramid extends **past 1000 px** (`-280` 499×333, `-600` 999×667, `-max` 1845×1232). The node `og:image` points to the master-bearing primary asset on the vanity host (og id differs from thumb id for **50/64 ~78%**), and `downloadwiz/<ogId>` is **≥ `-max` for every record** (a true larger master for ~40%, up to **6000×4000 = 24 MP**; == `-max` for ~60%). Uniform survey (64 recs across 16 pages): og present **64/64**, og-`downloadwiz` 200 = **64/64 (100%)**, **0 stale/dead, 0 login-walls**; pixel **63 win / 1 equal / 0 honest-smaller**, ratio **min 1.0 median 11.7× max 144×**. **★ UA-gate** (403 without a browser UA; the og:image's `?u=<32-hex>` is a cache-buster, not a signed token) **behind a cross-host vanity redirect** is exactly why `recollectLargest` is wrong (rips the master-less thumb id — `downloadwiz/<thumbId>` 404 for the two-asset ~78%, verified — and its probe would cross-host-redirect through the UA-gate), while `recollectOgImageMaster`'s direct-to-vanity probe works (64/64). Master = `application/octet-stream` + `attachment` + `nosniff`, byte-identical to approved Clutha 36 / Hastings 6 / Far North 41 (renders in `<img>`). Live `result_count` **1,571** (rawItemCount snapshot was 1,374 — collection grew; updated). `swift build` 0; CollectionTester ×6 HTTP 200 `downloadwiz` masters (0.6 / 2.2 / 9.1 / 1.1 / 10.8 / 24.0 MP). `collectionWeights` 0.002 (provisional). See `logs/042-pakiaka-rotorua-heritage-online.md` |
 | 43 | Victoria and Albert Museum | iiif (was `boutique`) | **committed Group B ADD** — the **V&A's own IIIF Image API** (`framemark.vam.ac.uk`, London); was **NOT in the Lambda**. **First non-NZ, non-CONTENTdm pure-IIIF ADD.** The harvested `large_thumbnail_url` is the V&A **legacy image host** `media.vam.ac.uk/.../collection_images/<batch>/<id>.jpg` — ~640–768 px where present, **HTTP 404 for ~⅓ of records** (host being retired). The IIIF service serves the same asset keyed by the **SAME `<id>` == the harvested filename stem** (confirmed via the V&A object API `meta.images._iiif_image`), so the IIIF URL is derivable **purely from the filename** — new **`vamIIIFLargest`** emits `framemark.vam.ac.uk/collections/<id>/full/max/0/default.jpg` (pure URL build, **no request-time fetch, no AWS deploy**). **★ Strict Pareto improvement** (head-to-head, 30 recs): IIIF `/full/max/` vs the harvested media image = **win 12 / equal 8 / lose 0** (median **10.6×**, max 17.2×), AND it **fixes the ~⅓ dead-media 404s** (framemark resolves 100%). Bimodal: ~half have a high-res master → **2500 px (4.2–4.9 MP)**, ~half are genuinely low-res → IIIF returns honest native ~640–768 px (== old media, no regression). **★ 2500 px is the hard public ceiling** (info.json `maxWidth`/`maxHeight` = 2500; profile supports `sizeAboveFull`, so `/full/max/` is used — never a fixed width — to avoid fake-upscaling the small-native records; verified a `/full/4000,` request clamps to 2500; manifest exposes nothing larger; rights "© V&A"). framemark needs **no browser UA**. Live `result_count` **564** (rawItemCount snapshot 549). `swift build` 0; CollectionTester ×6 HTTP 200 `image/jpeg` (768×576 ×3 low-res + 1797×2500 / 2500×1875 / 1676×2500 high-res). `collectionWeights` 0.001 (provisional). See `logs/043-victoria-and-albert-museum.md` |
 | 44 | The University of Waikato Art Collection | ehive (was `boutique`) | **committed Group B ADD** — **5th `boutique`-mislabel-actually-eHive** (account **8668**; landing `ehive.com/collections/8668/objects/<id>` wires up **OpenSeadragon** over `iiif.ehive.com`); was **NOT in the Lambda**. **REUSED `ehiveIIIFLargest`, no new strategy code, no AWS deploy** — builds `iiif.ehive.com/iiif/2/accounts%2f8668%2fobjects%2fimages%2f<id>.tif/full/full/0/default.jpg` from the harvested 800 px `_l` URL. **★ The IIIF `/full/full` is NOT rights-gated** despite uniform `rights: "All rights reserved"` (license null) — **35/35** served 200 `image/jpeg` (we serve exactly what the University publishes through its own public viewer). Uniform 78-record survey (35 image-bearing): native vs `_l` = **28 win / 0 equal / 7 honest-smaller** (~20% — eHive fake-upscaled the `_l` from a smaller real master → IIIF returns the **honest** smaller native, per the established eHive honest-native-always policy; cf. Howick 17), area ratio **min 0.200 / median 2.25× / max 95.2×**, biggest native **7803×5202 ≈ 40.6 MP**. **★ But 61.5% of the 540 records are null-image at source** (`large_thumbnail_url` null; per-page empty rate 16% p1 → 86% p3/p5) → those picks **hard-fail to HTTP 400** via `checkHasTitleAndLargeImage` (no retry loop) — **pre-existing Lambda behaviour, identical for the baseline**; the global DigitalNZ `category=Images` query is **not** changed (out of scope). `swift build` 0; CollectionTester 16 picks → **5 image successes / 11 null-image 400s** (Black Puriri 886×1200, Plain Song Elegy 807×1200, Te Whiti poster 848×1200, Stoneware jar 1200×922 = wins 2.25×; Back to the Future 8 512×768 & 8 of Wands 547×657 = honest-smaller), all HTTP 200 `image/jpeg`. `collectionWeights` **0.001** (floor — reflects the 61.5% null-image rate). See `logs/044-the-university-of-waikato-art-collection.md` |
-| 45 | Te Ahu Museum | collectiveAccess (was `boutique`) | **committed Group B ADD** — a **new platform for the sweep**: **CollectiveAccess / Pawtucket** (the museum's own CMS at `collection.teahumuseum.nz`, images on **AmazonS3** behind CloudFront), **not** eHive/Recollect; was **NOT in the Lambda**. **REUSED `stringSwap` (first registry use), no new strategy code, no AWS deploy** — pure path-segment swap `/records/images/large/` → `/records/images/xlarge/`. **★ `xlarge` (1200 px long side ≈ 1.44 MP) is the largest PUBLIC media version** — `original`/`fullsize`/`full`/`huge`/`tilepic`/`xxlarge`/`master`/… all **403** (CollectiveAccess gates originals behind login). Size ladder: small 123×150 / medium 328×400 / **large 657×800 (harvested)** / **xlarge 985×1200**. `xlarge` targets 1200 px vs `large`'s 800 px, both capped at the master (no upscale), so **`xlarge` ≥ `large` always and never exceeds the master → no honest-smaller fork**. **Null-image census all 506 records = 0 (0.0%)** (the exact opposite of Waikato 44). Uniform 64-record survey: `xlarge` **63 win / 0 equal / 0 smaller / 0 missing**, area ratio **min 1.562 / median 2.250 / max 2.254**, biggest 1200×1199 ≈ 1.44 MP; **1/64 (~1.6%) had a `large` that itself 403'd** (pre-broken baseline at source — the swap is no worse; additive ⇒ not a regression). Landing page is **bot-walled** (CloudFront HTTP 202 ~2 KB challenge) but irrelevant — the `/records/images/` CDN isn't, and the swap needs no page fetch. `swift build` 0; CollectionTester ×6 → **6/6 HTTP 200** `xlarge` (Ahipara 1200×905 / Greenstone Pendant 1200×494 / Awanui 1200×906 / Cigarette Holder 850×1200 / Far North 1200×856 / Peria 1200×892, each exactly 1.5×/side = 2.25× area). `collectionWeights` **0.002** (provisional). See `logs/045-te-ahu-museum.md` |
-| 46 | Ngā Puhipuhi o Te Herenga Waka—VUW Art Collection | collectiveAccess (was `boutique`) | **committed Group B ADD** — the **2nd CollectiveAccess / Pawtucket** site of the sweep (after Te Ahu 45): Te Pātaka Toi **Adam Art Gallery** (VUW university art collection, `universityartcollection.adamartgallery.nz`, images on **AmazonS3** behind CloudFront); was **NOT in the Lambda**. **NEW reusable `collectiveAccessLargest` (async HEAD-probe + fallback), no AWS deploy** — swap `/records/images/large/` → `/records/images/xlarge/`, **HEAD-probe the `xlarge` and fall back to the harvested `large` when it is absent**. **★ Why a probe, not Te Ahu's pure `stringSwap`:** a full HEAD scan of all 486 image-bearing records found **6 (1.2%) with a `large` (200) but NO `xlarge` (403)** — a blind swap would serve a broken 403; the HEAD is reliable (**HEAD == GET for all 486**, 0 mismatches). Same ladder as Te Ahu: small 150×117 / medium 400×313 / **large 800×626 (harvested)** / **xlarge 1200×939**; `original`/`fullsize`/etc. all **403** (login-gated) → **`xlarge` ≈ 1.42 MP is the public ceiling**. `xlarge` is master-capped (never upscaled) → **no honest-smaller fork**. Uniform 61-record survey: `xlarge` **46 win / 13 equal / 0 smaller / 2 missing**, area ratio **min 1.000 / median 2.249 / max 2.253**. Null-image census all 488 = **2 (0.4%)** → HTTP 400 hard-fail (pre-existing, negligible). `swift build` 0; CollectionTester ×6 → **6/6 HTTP 200** `xlarge` (The Single Cloud 606×1200 / Continuum VII 1200×493 / Light Installation 1200×830 / Untitled 1200×778 / Untitled (Puvis) 728×944 / Exotic Plant 812×1200); **fallback verified** (record 50811364 `xlarge` 403 → served `large` 800×648 200). `collectionWeights` **0.002** (provisional). See `logs/046-nga-puhipuhi-o-te-herenga-waka-victoria-university-of-wellington-art-collection.md` |
+| 45 | Te Ahu Museum | vernonBrowser (was `boutique`) | **committed Group B ADD** — a **new platform for the sweep**: **Vernon Systems "Vernon Browser"** (the museum's own CMS at `collection.teahumuseum.nz`, images on **AmazonS3** behind CloudFront), **not** eHive/Recollect; was **NOT in the Lambda**. **REUSED `stringSwap` (first registry use), no new strategy code, no AWS deploy** — pure path-segment swap `/records/images/large/` → `/records/images/xlarge/`. **★ `xlarge` (1200 px long side ≈ 1.44 MP) is the largest PUBLIC media version** — `original`/`fullsize`/`full`/`huge`/`tilepic`/`xxlarge`/`master`/… all **403** (Vernon Browser gates originals behind login). Size ladder: small 123×150 / medium 328×400 / **large 657×800 (harvested)** / **xlarge 985×1200**. `xlarge` targets 1200 px vs `large`'s 800 px, both capped at the master (no upscale), so **`xlarge` ≥ `large` always and never exceeds the master → no honest-smaller fork**. **Null-image census all 506 records = 0 (0.0%)** (the exact opposite of Waikato 44). Uniform 64-record survey: `xlarge` **63 win / 0 equal / 0 smaller / 0 missing**, area ratio **min 1.562 / median 2.250 / max 2.254**, biggest 1200×1199 ≈ 1.44 MP; **1/64 (~1.6%) had a `large` that itself 403'd** (pre-broken baseline at source — the swap is no worse; additive ⇒ not a regression). Landing page is **bot-walled** (CloudFront HTTP 202 ~2 KB challenge) but irrelevant — the `/records/images/` CDN isn't, and the swap needs no page fetch. `swift build` 0; CollectionTester ×6 → **6/6 HTTP 200** `xlarge` (Ahipara 1200×905 / Greenstone Pendant 1200×494 / Awanui 1200×906 / Cigarette Holder 850×1200 / Far North 1200×856 / Peria 1200×892, each exactly 1.5×/side = 2.25× area). `collectionWeights` **0.002** (provisional). See `logs/045-te-ahu-museum.md` |
+| 46 | Ngā Puhipuhi o Te Herenga Waka—VUW Art Collection | vernonBrowser (was `boutique`) | **committed Group B ADD** — the **2nd Vernon Systems "Vernon Browser"** site of the sweep (after Te Ahu 45): Te Pātaka Toi **Adam Art Gallery** (VUW university art collection, `universityartcollection.adamartgallery.nz`, images on **AmazonS3** behind CloudFront); was **NOT in the Lambda**. **NEW reusable `vernonBrowserLargest` (async HEAD-probe + fallback), no AWS deploy** — swap `/records/images/large/` → `/records/images/xlarge/`, **HEAD-probe the `xlarge` and fall back to the harvested `large` when it is absent**. **★ Why a probe, not Te Ahu's pure `stringSwap`:** a full HEAD scan of all 486 image-bearing records found **6 (1.2%) with a `large` (200) but NO `xlarge` (403)** — a blind swap would serve a broken 403; the HEAD is reliable (**HEAD == GET for all 486**, 0 mismatches). Same ladder as Te Ahu: small 150×117 / medium 400×313 / **large 800×626 (harvested)** / **xlarge 1200×939**; `original`/`fullsize`/etc. all **403** (login-gated) → **`xlarge` ≈ 1.42 MP is the public ceiling**. `xlarge` is master-capped (never upscaled) → **no honest-smaller fork**. Uniform 61-record survey: `xlarge` **46 win / 13 equal / 0 smaller / 2 missing**, area ratio **min 1.000 / median 2.249 / max 2.253**. Null-image census all 488 = **2 (0.4%)** → HTTP 400 hard-fail (pre-existing, negligible). `swift build` 0; CollectionTester ×6 → **6/6 HTTP 200** `xlarge` (The Single Cloud 606×1200 / Continuum VII 1200×493 / Light Installation 1200×830 / Untitled 1200×778 / Untitled (Puvis) 728×944 / Exotic Plant 812×1200); **fallback verified** (record 50811364 `xlarge` 403 → served `large` 800×648 200). `collectionWeights` **0.002** (provisional). See `logs/046-nga-puhipuhi-o-te-herenga-waka-victoria-university-of-wellington-art-collection.md` |
+| 47 | Nelson Provincial Museum | vernonBrowser (was `boutique`) | **committed Group B ADD** — the **3rd Vernon Systems "Vernon Browser"** site of the sweep (after Te Ahu 45 / VUW 46), by far the largest (`collection.nelsonmuseum.co.nz`, **~198,770** image-bearing records); was **NOT in the Lambda**. **This investigation uncovered the platform-label correction: the whole platform is Vernon Systems' "Vernon Browser" (same vendor as eHive), not "CollectiveAccess / Pawtucket" as 45/46 were originally logged** — confirmed via a Wayback Machine snapshot of the homepage showing `vernon-common.min.js` and a "Vernon Browser" modal title; corrected retroactively (no behaviour change to 45/46, only the label + the `collectiveAccessLargest`→`vernonBrowserLargest` rename). **REUSED `stringSwap` (same as Te Ahu 45), no new code, no AWS deploy** — pure path-segment swap `/records/images/large/` → `/records/images/xlarge/`. A **150-page uniform HEAD census** (spanning the full ~9,939-page range) found **0% null-image** and, critically, **0/143 "large 200 but xlarge missing"** cases (unlike VUW's 1.2%), so the plain unconditional swap is justified — no HEAD-probe needed. **7/150 (4.7%) of records are fully stale at the source** (ALL size tiers 403, confirmed on retry) — pre-existing dead assets, unaffected by the swap either way. 40-record pixel survey: `xlarge` **24 win / 13 equal / 0 smaller**, area ratio **min 1.000 / median 1.288 / max 2.251** — more modest than Te Ahu/VUW's 2.25× median since many Nelson masters (glass-plate portrait negatives) are natively narrower than the 800 px `large` box. **★★ Exhaustively confirmed `xlarge` is the true public ceiling** (per explicit user request to verify harder): tried 13 alternate derivative-name guesses (`original`/`fullsize`/`full`/`tilepic`/`xxlarge`/`master`/`preview`/`raw`/`print_preview`/`crop`/`display`/`thumbnail` + case variants, all 403); confirmed query-param resize tricks are ignored by CloudFront (byte-identical); found and inspected the real Vernon Browser vendor API (`apidocs.browser.vernonsystems.com`, `ImageDerivative` schema, requires an API key we don't have); researched Vernon Systems docs (IIIF only documented for eHive); inspected a Feb-2024 Wayback Machine snapshot of a live object page (plain `<img>` tags, no OpenSeadragon/IIIF/DZI/zoomify viewer); EXIF on a served `xlarge` confirms the true source photo is far higher-res (12 MP Olympus TG-6) but deliberately not published (S3 `AccessDenied`, not a WAF artifact). `swift build` 0; CollectionTester ×6 → **6/6 HTTP 200** `xlarge`; 5/6 measured gains (1.11×–2.25× area), 1/6 already native (1.0×, no loss). `collectionWeights` **0.002**. See `logs/047-nelson-provincial-museum.md` |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -527,30 +537,30 @@ proportional HTTP 400 hard-fail rate (pre-existing) and argues for a floor weigh
 `logs/044-the-university-of-waikato-art-collection.md`.
 
 **✅ Order 45 (Te Ahu Museum) committed Group B ADD (2026-06-17).** A **new platform for the sweep** —
-**CollectiveAccess / Pawtucket** (the museum's own collection CMS at `collection.teahumuseum.nz`; images on
+**Vernon Systems "Vernon Browser"** (the museum's own collection CMS at `collection.teahumuseum.nz`; images on
 **AmazonS3** behind CloudFront), **not** eHive or Recollect. Was **NOT in the Lambda**. The harvested
 `large_thumbnail_url` (`…/records/images/large/<NN>/<hash>.jpg`) is the 800 px **large** media version; the
 **xlarge** version (1200 px long side ≈ 1.44 MP) is the **largest public** one — `original`/`fullsize`/`full`/
-`huge`/`tilepic`/`xxlarge`/`master`/… all **403** (CollectiveAccess gates originals behind login). **REUSED
+`huge`/`tilepic`/`xxlarge`/`master`/… all **403** (Vernon Browser gates originals behind login). **REUSED
 `stringSwap` (its first registry use), no new strategy code, no AWS deploy** — pure path-segment swap
 `/records/images/large/` → `/records/images/xlarge/`. `xlarge` targets 1200 px vs `large`'s 800 px and both are
-**capped at the master** (CollectiveAccess does not upscale), so **`xlarge` ≥ `large` always and never exceeds
+**capped at the master** (Vernon Browser does not upscale), so **`xlarge` ≥ `large` always and never exceeds
 the master → no fake-upscale / honest-smaller fork** (unlike eHive's `_l`). **Null-image census all 506 records
 = 0 (0.0%)** — the exact opposite of Waikato 44. Uniform 64-record survey: `xlarge` **63 win / 0 equal / 0
 smaller / 0 missing**, area ratio **min 1.562 / median 2.250 / max 2.254**; **1/64 (~1.6%) had a `large` that
 itself 403'd** (pre-broken at source; the swap is no worse; additive ⇒ not a regression). The landing page is
 bot-walled (CloudFront HTTP 202 challenge) but irrelevant — the `/records/images/` CDN is not, and the swap
 needs no page fetch. `swift build` 0; CollectionTester ×6 → 6/6 HTTP 200 `xlarge`, each 2.25× area over
-`large`. **Lesson: for a self-hosted CollectiveAccess/Pawtucket site, the harvested `…/images/large/…` is one
+`large`. **Lesson: for a self-hosted Vernon Systems "Vernon Browser" site, the harvested `…/images/large/…` is one
 of a named media-version ladder — probe `xlarge` (and only that is public; `original` is login-gated) and swap
 the path segment; no upscale risk because the versions are master-capped.** See `logs/045-te-ahu-museum.md`.
 
 **✅ Order 46 (Ngā Puhipuhi o Te Herenga Waka—Victoria University of Wellington Art Collection) committed
-Group B ADD (2026-06-18).** The **2nd CollectiveAccess / Pawtucket** site (after Te Ahu 45) — Te Pātaka Toi
+Group B ADD (2026-06-18).** The **2nd Vernon Systems "Vernon Browser"** site (after Te Ahu 45) — Te Pātaka Toi
 **Adam Art Gallery** (VUW's university art collection, `universityartcollection.adamartgallery.nz`, images on
 **AmazonS3** behind CloudFront). Was **NOT in the Lambda**. Same media-version ladder as Te Ahu (small/medium/
 **large 800**/**xlarge 1200**; `original`/etc. **403** login-gated → `xlarge` ≈ 1.42 MP is the public
-ceiling). **NEW reusable `collectiveAccessLargest` (async), no AWS deploy** — swaps `large` → `xlarge` but
+ceiling). **NEW reusable `vernonBrowserLargest` (async), no AWS deploy** — swaps `large` → `xlarge` but
 **HEAD-probes the `xlarge` and falls back to the harvested `large`** when it's absent. **★ Why a probe and not
 Te Ahu's pure `stringSwap`:** a full HEAD scan of all 486 image-bearing records found **6 (1.2%) with a
 `large` (200) but NO generated `xlarge` (403)** — a blind swap would serve a broken 403 for those. The HEAD
@@ -560,9 +570,52 @@ fork**. Uniform 61-record survey: `xlarge` **46 win / 13 equal / 0 smaller / 2 m
 1.000 / median 2.249 / max 2.253**. Null-image census all 488 = **2 (0.4%)** → HTTP 400 hard-fail (pre-existing,
 negligible). `swift build` 0; CollectionTester ×6 → 6/6 HTTP 200 `xlarge`; fallback verified (record 50811364
 `xlarge` 403 → served `large` 200). Te Ahu 45's cheaper synchronous `stringSwap` is left unchanged (0% missing
-there). **Lesson: CollectiveAccess `xlarge` availability is per-site — full-scan the missing-`xlarge` rate; if
->0, use the HEAD-probe `collectiveAccessLargest` (HEAD == GET on this CDN) rather than a blind `stringSwap`.**
+there). **Lesson: Vernon Browser `xlarge` availability is per-site — full-scan the missing-`xlarge` rate; if
+>0, use the HEAD-probe `vernonBrowserLargest` (HEAD == GET on this CDN) rather than a blind `stringSwap`.**
 See `logs/046-nga-puhipuhi-o-te-herenga-waka-victoria-university-of-wellington-art-collection.md`.
+
+**✅ Order 47 (Nelson Provincial Museum) committed Group B ADD (2026-07-04).** The **3rd Vernon Systems
+"Vernon Browser"** site (after Te Ahu 45 / VUW 46), by far the largest —
+`collection.nelsonmuseum.co.nz`, **~198,770** image-bearing records vs the ~500-record boutique sites.
+Was **NOT in the Lambda**. **This investigation is what uncovered the platform-label correction** (see
+below): a Wayback Machine snapshot of the homepage showed `vernon-common.min.js` and a "Vernon Browser"
+modal title, proving the platform is **Vernon Systems' "Vernon Browser"**, not "CollectiveAccess /
+Pawtucket" as 45/46 were originally logged (same vendor as eHive; corrected retroactively, no behaviour
+change). **REUSED `stringSwap`** (same as Te Ahu 45) — pure path-segment swap
+`/records/images/large/` → `/records/images/xlarge/`, no new code, no deploy. A **150-page uniform HEAD
+census** (spanning the collection's full ~9,939-page range) found **0% null-image** and **0/143 "large
+200 but xlarge missing"** cases (unlike VUW's 1.2%), so the plain unconditional swap is justified — no
+HEAD-probe needed. **7/150 (4.7%) fully stale at source** (ALL size tiers 403 on retry) — pre-existing,
+unaffected by the swap either way. 40-record pixel survey: `xlarge` **24 win / 13 equal / 0 smaller**,
+area ratio **min 1.000 / median 1.288 / max 2.251** — more modest than Te Ahu/VUW's 2.25× median since
+many Nelson masters (glass-plate portrait negatives) are natively narrower than the 800 px `large` box.
+**★★ The user pushed back and asked for real verification that `xlarge` is genuinely the ceiling** — so
+this investigation went further than usual: tried 13 alternate derivative-name guesses (all 403),
+confirmed query-param resize tricks are ignored by CloudFront (byte-identical response), found and
+inspected the real Vernon Browser vendor API (`apidocs.browser.vernonsystems.com` — a documented
+`ImageDerivative` schema, but gated by an API key we don't have), researched Vernon Systems docs (IIIF
+is only documented for eHive, not Vernon Browser), and inspected a Feb-2024 Wayback Machine snapshot of
+a live object page (plain `<img>` tags, no OpenSeadragon/IIIF/DZI/zoomify viewer anywhere). EXIF on a
+served `xlarge` confirms the true source photo is far higher-res (shot on a 12 MP Olympus TG-6) but
+deliberately not published (S3 `AccessDenied`, not a WAF artifact) — same login-gated-originals policy
+as Te Ahu/VUW. `swift build` 0; CollectionTester ×6 → 6/6 HTTP 200 `xlarge`; 5/6 measured gains
+(1.11×–2.25× area), 1/6 already native (no loss). **Lesson: even a ~200k-record Vernon Browser site can
+have a 0% missing-`xlarge` rate — still worth a wide uniform census (not a small sample) before
+committing to the cheaper `stringSwap` over the HEAD-probe variant; and when a user asks "is this
+really the ceiling," there's real due diligence available beyond guessing derivative names — check the
+vendor's actual API/docs and archived snapshots of live pages for hidden zoom/tile viewers.** See
+`logs/047-nelson-provincial-museum.md`.
+
+**★ Platform correction (2026-07-04, found during order 47):** Te Ahu 45 and VUW 46 (and now Nelson 47)
+were logged throughout this file as **"CollectiveAccess / Pawtucket"**. That label is **wrong** — the
+platform is **Vernon Systems' "Vernon Browser"** (the same NZ company that makes eHive), confirmed via a
+Wayback Machine snapshot of `collection.nelsonmuseum.co.nz` showing `vernon-common.min.js` and a
+"Vernon Browser" modal title in the archived front-end HTML. All URL schemes, size ladders, and
+measurements recorded for 45/46 are unaffected — only the platform name was wrong. Corrected in
+`URLProcessor.swift` (comments + the `collectiveAccessLargest` helper renamed `vernonBrowserLargest`),
+`progress.json` (`platform` field), `recipes.md` (section renamed `collectiveAccess` →
+`vernonBrowser`), this README, the individual `logs/045-*.md` / `logs/046-*.md` files (correction notes
+added), and the sweep memory.
 
 **★ Vendor correction (2026-06-14, user-flagged):** **Recollect is made by Recollect Ltd (spun out of NZMS —
 New Zealand Micrographic Services — in 2019), NOT Axiell.** Earlier sweep records (logs 001–010/035,

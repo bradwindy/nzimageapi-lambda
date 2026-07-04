@@ -240,21 +240,24 @@ final class URLProcessor: Sendable {
             // weight reflects this. (cf. South Canterbury 29 / Wyndham 34 null-image hard-fails.)
             ehiveIIIFLargest(result, url)
         },
-        // CollectiveAccess (Pawtucket) collection site at collection.teahumuseum.nz; was `boutique`-
-        // mislabelled and NOT in the Lambda (Group B ADD). The harvested large_thumbnail_url
-        // (`…/records/images/large/<NN>/<hash>.jpg`, S3/CloudFront) is the 800 px "large" derivative;
-        // the "xlarge" media version (1200 px long side) is the largest PUBLIC one — `original`/
-        // `fullsize`/`full`/`tilepic`/etc. all 403 (not public; CollectiveAccess gates originals behind
-        // login). Strict 1.56–2.25× improvement (median 2.25×), present for 100% of the 506 records
-        // (uniform survey: 0 null-image, xlarge 63 win / 0 equal / 0 smaller / 0 missing; ceiling
+        // Vernon Systems "Vernon Browser" collection site at collection.teahumuseum.nz; was `boutique`-
+        // mislabelled and NOT in the Lambda (Group B ADD). (Originally misidentified in this sweep as
+        // "CollectiveAccess / Pawtucket" — corrected during the order-47 Nelson Provincial Museum
+        // investigation, which found the "Vernon Browser" branding in the site's front-end JS via a
+        // Wayback Machine snapshot; the URL scheme/behaviour below is unaffected.) The harvested
+        // large_thumbnail_url (`…/records/images/large/<NN>/<hash>.jpg`, S3/CloudFront) is the 800 px
+        // "large" derivative; the "xlarge" media version (1200 px long side) is the largest PUBLIC one —
+        // `original`/`fullsize`/`full`/`tilepic`/etc. all 403 (not public; Vernon Browser gates originals
+        // behind login). Strict 1.56–2.25× improvement (median 2.25×), present for 100% of the 506
+        // records (uniform survey: 0 null-image, xlarge 63 win / 0 equal / 0 smaller / 0 missing; ceiling
         // 1200 px ≈ 1.44 MP, since originals are 403-locked). `xlarge` never exceeds the master, so no
         // upscale/honest-smaller fork. Pure path-segment swap, no request-time fetch; a non-matching URL
         // (the substring is absent) passes through unchanged. The landing page is bot-walled (HTTP 202
         // challenge) but irrelevant — the /records/images/ CDN is not, and the swap needs no page fetch.
         "Te Ahu Museum": stringSwap(from: "/records/images/large/", to: "/records/images/xlarge/"),
         // Te Pātaka Toi Adam Art Gallery (the VUW university art collection) at
-        // universityartcollection.adamartgallery.nz — the SAME CollectiveAccess/Pawtucket platform as
-        // Te Ahu 45 (S3/CloudFront; `…/records/images/<version>/<shard>/<hash>.jpg`; landing
+        // universityartcollection.adamartgallery.nz — the SAME Vernon Systems "Vernon Browser" platform
+        // as Te Ahu 45 (S3/CloudFront; `…/records/images/<version>/<shard>/<hash>.jpg`; landing
         // `…/objects/<id>` is bot-walled with an HTTP 202 challenge but the image CDN is not). Group B
         // ADD. Identical size ladder (small 150 / medium 400 / large 800 / xlarge 1200;
         // original/fullsize/etc. all 403-locked behind login), so `xlarge` (≈1.4 MP) is the public
@@ -265,8 +268,29 @@ final class URLProcessor: Sendable {
         // (never upscaled) → no honest-smaller fork. (~0.4% of records are null-image and hard-fail the
         // pick, pre-existing.)
         "Ngā Puhipuhi o Te Herenga Waka—Victoria University of Wellington Art Collection": { result, url in
-            await collectiveAccessLargest(result, url)
+            await vernonBrowserLargest(result, url)
         },
+        // Nelson Provincial Museum's own collection site (collection.nelsonmuseum.co.nz) — the
+        // 3rd Vernon Systems "Vernon Browser" site in the sweep (after Te Ahu 45 / VUW 46), and by far
+        // the largest (≈198,770 image-bearing records vs the ~500-record boutique sites). Group B ADD.
+        // Same size ladder and 403-locked-original pattern; `xlarge` is master-capped so it's never
+        // smaller than `large` (ratio 1.0–2.25×, median 1.29× in a 40-rec pixel survey — more modest
+        // than Te Ahu/VUW's 2.25× median because many masters here are already <800 px). A 150-page
+        // uniform HEAD census (spanning the full page range) found 0% null-image and, critically,
+        // 0/143 "large 200 but xlarge missing" cases — unlike VUW, so the plain unconditional
+        // `stringSwap` (Te Ahu's approach) is justified here, no HEAD-probe needed. 7/150 (4.7%) of
+        // records are fully stale at the source (ALL size tiers 403, confirmed on retry) — pre-existing
+        // dead assets, not something this swap introduces or worsens (the harvested URL 403s already).
+        // Confirmed exhaustively that xlarge is the true public ceiling: 13 alternate derivative-name
+        // guesses (original/fullsize/full/tilepic/xxlarge/master/preview/raw/print_preview/crop/display/
+        // thumbnail + case variants) all 403; query-param resize tricks are ignored by CloudFront
+        // (byte-identical response); the vendor's documented Vernon Browser API (apidocs.browser.
+        // vernonsystems.com) exposes an ImageDerivative schema but requires an API key we don't have;
+        // no IIIF/OpenSeadragon/DZI zoom viewer is wired up anywhere (checked a Feb-2024 Wayback Machine
+        // snapshot of a live object page); EXIF on a served xlarge confirms the true source photo is far
+        // higher-res (shot on a 12 MP Olympus TG-6) but deliberately not published (S3 AccessDenied, not
+        // a WAF artifact).
+        "Nelson Provincial Museum": stringSwap(from: "/records/images/large/", to: "/records/images/xlarge/"),
         "Te Papa Collections Online": { result, url in
             await tePapaLargest(result, url)
         },
@@ -829,21 +853,25 @@ final class URLProcessor: Sendable {
         { _, url in url.absoluteString.replacingOccurrences(of: from, with: to) }
     }
 
-    /// CollectiveAccess / Pawtucket self-hosted collection sites (e.g. the Adam Art Gallery university
-    /// art collection at `universityartcollection.adamartgallery.nz`). The harvested
+    /// Vernon Systems "Vernon Browser" self-hosted collection sites (e.g. the Adam Art Gallery university
+    /// art collection at `universityartcollection.adamartgallery.nz`). (Originally misidentified as
+    /// "CollectiveAccess / Pawtucket" — corrected during the order-47 Nelson Provincial Museum
+    /// investigation, which found the vendor's own "Vernon Browser" branding in the front-end JS; the
+    /// URL scheme and behaviour documented here are unaffected by the label.) The harvested
     /// `large_thumbnail_url` is the 800 px `large` media version
     /// (`…/records/images/large/<shard>/<hash>.jpg`); the `xlarge` version (1200 px long side — the
     /// public ceiling, since `original`/`fullsize`/etc. are 403-locked behind login) is a strict
-    /// improvement where it exists. CollectiveAccess generates each version capped at the master (no
+    /// improvement where it exists. Vernon Browser generates each version capped at the master (no
     /// upscaling), so `xlarge` ≥ `large` and never exceeds the master (no fake-upscale / honest-smaller
     /// fork). A small fraction of records (~1.2% for Adam Art Gallery) have a `large` but no generated
     /// `xlarge` (HTTP 403), so we HEAD-probe the `xlarge` (HEAD matches GET on this S3/CloudFront CDN)
     /// and fall back to the harvested `large` when it is absent — never serving a broken 403. Returns the
     /// URL unchanged if it is not of the expected `…/records/images/large/…` shape.
     ///
-    /// (Te Ahu 45 — the same platform with 0% missing `xlarge` — uses the cheaper synchronous
-    /// `stringSwap` instead; this probing variant is for sites where `xlarge` is not 100% present.)
-    private static func collectiveAccessLargest(_ result: NZRecordsResult, _ url: URL) async -> String {
+    /// (Te Ahu 45 and Nelson Provincial Museum 47 — the same platform with 0% missing `xlarge` — use the
+    /// cheaper synchronous `stringSwap` instead; this probing variant is for sites where `xlarge` is not
+    /// 100% present.)
+    private static func vernonBrowserLargest(_ result: NZRecordsResult, _ url: URL) async -> String {
         let urlString = url.absoluteString
         guard urlString.contains("/records/images/large/") else { return urlString }
 

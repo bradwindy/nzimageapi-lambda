@@ -548,33 +548,57 @@ hard-coded per collection.
 
 ---
 
-## collectiveAccess (CollectiveAccess / Pawtucket self-hosted CMS)
+## vernonBrowser (Vernon Systems "Vernon Browser" self-hosted CMS)
+
+> **★ Platform correction (2026-07-04, during order 47):** this platform was originally logged in the
+> sweep as "CollectiveAccess / Pawtucket" for orders 45 and 46. That label is **wrong** — it is actually
+> **Vernon Systems' "Vernon Browser"** (the same NZ company that makes **eHive**), confirmed via a
+> Wayback Machine snapshot of `collection.nelsonmuseum.co.nz` showing `vernon-common.min.js` and a
+> "Vernon Browser" modal title. The URL scheme and all findings below are unaffected — only the name was
+> corrected (`progress.json` `platform` field, the `collectiveAccessLargest` helper renamed to
+> `vernonBrowserLargest`, this section renamed from `collectiveAccess`).
+
 - **Detect:** harvested `large_thumbnail_url` of the shape
   `https://<host>/records/images/<version>/<shard>/<40-hex-sha1>.jpg` where `<version>` ∈
-  {`small`,`medium`,`large`,`xlarge`} and `<shard>` is a 1–3 digit dir. Images served from
+  {`small`,`medium`,`large`,`xlarge`} and `<shard>` is a 1–6 digit dir. Images served from
   **AmazonS3** (`server: AmazonS3`) behind CloudFront; the landing page is `…/objects/<objId>`. This
-  is the **CollectiveAccess** media-version scheme (Pawtucket front-end). The landing page may be
-  **bot-walled** (CloudFront returns **HTTP 202** + a small JS-challenge page) — but the
-  `/records/images/` CDN is **not** walled, so a pure URL swap works without a page fetch.
+  is the **Vernon Browser** media-version scheme. The landing page may be **bot-walled** (CloudFront/
+  AWS WAF returns **HTTP 202** + a small JS-challenge page — confirmed platform-wide, even Vernon's own
+  public demo site `browser.vernonsystems.com` hits the identical block) — but the `/records/images/`
+  CDN is **not** walled, so a pure URL swap works without a page fetch.
 - **Extract:** swap the `<version>` path segment `large` → **`xlarge`** (the largest **public** media
   version). `xlarge` ≈ 1200 px long side; `large` ≈ 800 px. **Originals are login-gated:**
-  `original`/`fullsize`/`full`/`huge`/`page`/`screen`/`tilepic`/`xxlarge`/`master`/`archive`/… all
-  **403** (S3 "access denied" for a non-public key). So **`xlarge` (~1.44 MP) is the public ceiling.**
-- **★ No upscale risk:** CollectiveAccess generates each version capped at the master and **does not
+  `original`/`fullsize`/`full`/`huge`/`page`/`screen`/`tilepic`/`xxlarge`/`master`/`archive`/`preview`/
+  `raw`/`print_preview`/`crop`/`display`/`thumbnail`/… all **403** (S3 "AccessDenied" for a non-public
+  key — a real S3 ACL denial, not a WAF artifact). So **`xlarge` (~1.44 MP) is the public ceiling.**
+  Vernon's own docs list 8 default derivatives (Nano/Tiny/Small/Medium/Large/XLarge/Display/Thumbnail);
+  in practice sites only publish the subset they've configured (`nano`/`tiny` also exist as smaller
+  tiers below `small` — confirmed on Nelson, unused by any strategy since they're smaller). Query-param
+  resize tricks (`?w=`, `?width=`, `?size=full`, etc.) are **ignored** by CloudFront (byte-identical
+  response) — no dynamic-resize route exists. There IS a real, documented Vernon Browser vendor API
+  (`apidocs.browser.vernonsystems.com`, Swagger `basePath: /api/v3`, an `ImageDerivative` schema with
+  `identifier`/`url`/`width`/`height`) mounted per-institution at `<host>/api/v3/...`, but it requires an
+  API key (`401` without one) — not usable for this sweep. No IIIF/OpenSeadragon/DZI zoom-tile viewer is
+  wired up on Vernon Browser object pages (checked a live Wayback Machine snapshot) — unlike eHive
+  (same vendor), which does expose a public IIIF endpoint (`ehiveIIIFLargest`).
+- **★ No upscale risk:** Vernon Browser generates each version capped at the master and **does not
   upscale by default**, so `xlarge` ≥ `large` for every record and never exceeds the master → **no
   honest-smaller fork** (unlike eHive's `_l`). Safe as a blind path swap.
 - **Swift strategy (two variants — pick per-site by the missing-`xlarge` rate):**
   - **`stringSwap(from: "/records/images/large/", to: "/records/images/xlarge/")`** when `xlarge` is
-    **100% present** (e.g. Te Ahu 45) — the generic registry helper; pure `replacingOccurrences`, no
-    request-time fetch; a URL lacking the substring passes through unchanged.
-  - **`collectiveAccessLargest` (async HEAD-probe + fallback)** when `xlarge` is **not 100% present**
+    **100% present** (e.g. Te Ahu 45, Nelson Provincial Museum 47) — the generic registry helper; pure
+    `replacingOccurrences`, no request-time fetch; a URL lacking the substring passes through unchanged.
+  - **`vernonBrowserLargest` (async HEAD-probe + fallback)** when `xlarge` is **not 100% present**
     (e.g. Adam Art Gallery 46, ~1.2% missing) — swaps `large`→`xlarge`, **HEAD-probes the `xlarge`**
     (`headStatusFollowingRedirects`) and **falls back to the harvested `large`** on a non-200 so it
     never serves a broken 403. HEAD == GET on this S3/CloudFront CDN (verified), so the probe is exact.
-  - **Always full-scan the missing-`xlarge` rate** (HEAD every record's `xlarge`) before choosing — a
-    page-1 or 60-record sample can miss it; if the rate is >0, use the probing variant.
+  - **Always full-scan (or at minimum, uniformly sample ≥100 records of) the missing-`xlarge` rate**
+    before choosing — a page-1 or small sample can miss it; if the rate is >0, use the probing variant.
+    Separately, expect a small "fully stale at source" rate (ALL size tiers 403, a pre-existing dead
+    asset unrelated to the swap) — this is not a reason to use the probing variant, since both `large`
+    and `xlarge` already fail identically for those records.
 
-### Verified findings (collectiveAccess)
+### Verified findings (vernonBrowser)
 - **Te Ahu Museum (2026-06-17, order 45): Group B ADD via `stringSwap` (first registry use of the
   helper).** Host `collection.teahumuseum.nz`; 506 records. `boutique`-mislabelled, was **NOT in
   `collectionWeights`** → never served; **added** the registry entry + weight **0.002**. Size ladder
@@ -584,16 +608,16 @@ hard-coded per collection.
   / median 2.250 / max 2.254**, biggest 1200×1199 ≈ 1.44 MP; **1/64 (~1.6%) had a `large` that itself
   403'd** (pre-broken baseline at source — swap no worse; additive ⇒ not a regression). `swift build`
   0; CollectionTester ×6 → 6/6 HTTP 200 `xlarge` (each 2.25× area over `large`). Committed (see log 045
-  / progress.json). ⇒ **For any future CollectiveAccess/Pawtucket site, probe the `xlarge` media
-  version and swap the path segment; `original` will be login-gated (403), so don't chase it.**
+  / progress.json). ⇒ **For any future Vernon Browser site, probe the `xlarge` media version and swap
+  the path segment; `original` will be login-gated (403), so don't chase it.**
 - **Ngā Puhipuhi o Te Herenga Waka—VUW Art Collection (2026-06-18, order 46): Group B ADD via NEW
-  `collectiveAccessLargest` (async HEAD-probe + fallback).** Host
+  `vernonBrowserLargest` (async HEAD-probe + fallback).** Host
   `universityartcollection.adamartgallery.nz` (Te Pātaka Toi **Adam Art Gallery**, VUW); 488 records.
-  **2nd CollectiveAccess site** (cf. Te Ahu 45). Same ladder (small 150×117 / medium 400×313 / large
+  **2nd Vernon Browser site** (cf. Te Ahu 45). Same ladder (small 150×117 / medium 400×313 / large
   800×626 / xlarge 1200×939; all other version names 403). **★ UNLIKE Te Ahu, `xlarge` is NOT 100%
   present:** a **full HEAD scan of all 486 image-bearing records found 6 (1.2%) with a `large` (200) but
   NO `xlarge` (403)** → a blind `stringSwap` would serve a broken 403, so this collection uses the
-  **HEAD-probe `collectiveAccessLargest`** with graceful fallback to `large`. **HEAD == GET for all 486**
+  **HEAD-probe `vernonBrowserLargest`** with graceful fallback to `large`. **HEAD == GET for all 486**
   (0 mismatches), so the probe is exact. (★ Debug gotcha: a `xl[-46:]` print shows only the *last digit*
   of a multi-digit shard dir — don't reconstruct URLs from it; use the full `large_thumbnail_url`.)
   Null-image census all 488 = 2 (0.4%; HTTP 400 hard-fail, pre-existing). Uniform 61-rec survey: `xlarge`
@@ -601,6 +625,25 @@ hard-coded per collection.
   1200×1187 ≈ 1.42 MP. `swift build` 0; CollectionTester ×6 → 6/6 HTTP 200 `xlarge`; fallback verified
   (record 50811364 `xlarge` 403 → served `large` 800×648 200). Weight 0.002. Committed (see log 046 /
   progress.json). ⇒ **`xlarge` availability is per-site; full-scan it and use the probe variant when >0.**
+- **Nelson Provincial Museum (2026-07-04, order 47): Group B ADD via REUSE of `stringSwap`.** Host
+  `collection.nelsonmuseum.co.nz`; **~198,770 records — by far the largest Vernon Browser site in the
+  sweep** (vs ~500-record boutique sites). **3rd Vernon Browser site** (cf. Te Ahu 45 / VUW 46) — this is
+  the collection whose investigation uncovered the CollectiveAccess→Vernon Browser platform-label
+  correction above. `boutique`-mislabelled, was **NOT in `collectionWeights`** → never served; **added**
+  the registry entry + weight **0.002**. Same ladder as Te Ahu/VUW; all other version names 403
+  (exhaustively re-confirmed with 13 name guesses + query-param tricks + the vendor API + Wayback
+  Machine archive inspection — see log 047 for the full ceiling-verification writeup). **150-page
+  uniform HEAD census** (spanning the collection's full ~9,939-page range): null-image **0 (0.0%)**;
+  **0/143 "large 200 but xlarge missing"** (unlike VUW's 1.2%) → plain `stringSwap` is safe here, no
+  probe needed; **7/150 (4.7%) fully stale at source** (ALL size tiers 403, confirmed on retry — a
+  pre-existing dead-asset rate, unaffected by the swap either way). 40-rec pixel survey: `xlarge` 24 win
+  / 13 equal / 0 smaller, area ratio min 1.000 / median **1.288** / max 2.251 — a more modest median gain
+  than Te Ahu/VUW because many Nelson masters (glass-plate portrait negatives) are natively narrower
+  than the 800 px `large` box. `swift build` 0; CollectionTester ×6 → 6/6 HTTP 200 `xlarge`; 5/6 measured
+  gains (1.11×–2.25× area), 1/6 already native (no loss). Weight 0.002. Committed (see log 047 /
+  progress.json). ⇒ **A Vernon Browser site can have a 0% missing-`xlarge` rate even at ~200k records —
+  still worth a wide uniform census (not just a small sample) before committing to the cheaper
+  `stringSwap` over the probing variant.**
 
 ---
 
