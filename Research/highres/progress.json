@@ -1127,7 +1127,7 @@
         "px": "0 honest-smaller, median 2.44x, max 67.76x (up to ~56.5MP)",
         "urlPattern": "https://horowhenua.kete.net.nz/item/<uuid>/files/<fileId>/download?variant=original"
       },
-      "commit": null,
+      "commit": "627f1ba",
       "log": "logs/051-kete-horowhenua.md",
       "notes": "Recollect signed-IIIF -- same curtis-production2-cache platform as Feilding Library (35). Unlike Feilding, ALL originals are plain JPEG (flatbed HP ScanJet scans) -- pure Swift strategy, no converter, no deploy. Census 24/24 JPEG. Survey 15/16: 0 smaller, median 2.44x, max 67.76x. CollectionTester HEAD-based validator false-negatives 403 (S3 presigned-GET rejects HEAD) -- manually verified 6/6 real GET 200. User-approved 2026-07-04. See logs/051-kete-horowhenua.md."
     },
