@@ -186,7 +186,7 @@
     },
     {
       "order": 9,
-      "name": "T\u0101miro",
+      "name": "Tāmiro",
       "slug": "tamiro",
       "group": "A",
       "platform": "recollect",
@@ -226,7 +226,7 @@
       },
       "commit": "ac56f8f",
       "log": "logs/010-he-purapura-marara-scattered-seeds.md",
-      "notes": "COMMITTED ac56f8f (user-approved 2026-06-06). dunedin.recollect.co.nz. Uniform 100-record sample (pages 2-1070): CAT1 ~90% (downloadwiz master 200, 3-23x the ~1000px display tier; -600==-max byte-identical), restricted/login-walled ~10% (node->users/login, all asset endpoints 404, unfixable anonymously), CAT2 ~0.6% (downloadwiz 302->404 but -600/-max 200). NOT T\u0101miro-like: T\u0101miro had 0 CAT2 so the bare-downloadwiz no-fallback was safe; He Purapura HAS CAT2 that the current strategy serves as a broken 404. Migrated to recollectLargest = strict improvement: identical master on CAT1, fixes CAT2 (serves -max), no regression on restricted; also unifies with Tauranga/Hastings/Lower Hutt and removes He Purapura from the legacy switch (T\u0101miro left as sole occupant). NOTE: resolution on the common CAT1 path is UNCHANGED (baseline already served the master); the delta is correctness (CAT2 fix) + the HEAD-probe round-trip cost on every request. CollectionTester x3: 3/3 HTTP200 masters (422907=4.7MP, 451175=2.7MP, 202327=2.5MP) vs -600 0.7-1.5MP."
+      "notes": "COMMITTED ac56f8f (user-approved 2026-06-06). dunedin.recollect.co.nz. Uniform 100-record sample (pages 2-1070): CAT1 ~90% (downloadwiz master 200, 3-23x the ~1000px display tier; -600==-max byte-identical), restricted/login-walled ~10% (node->users/login, all asset endpoints 404, unfixable anonymously), CAT2 ~0.6% (downloadwiz 302->404 but -600/-max 200). NOT Tāmiro-like: Tāmiro had 0 CAT2 so the bare-downloadwiz no-fallback was safe; He Purapura HAS CAT2 that the current strategy serves as a broken 404. Migrated to recollectLargest = strict improvement: identical master on CAT1, fixes CAT2 (serves -max), no regression on restricted; also unifies with Tauranga/Hastings/Lower Hutt and removes He Purapura from the legacy switch (Tāmiro left as sole occupant). NOTE: resolution on the common CAT1 path is UNCHANGED (baseline already served the master); the delta is correctness (CAT2 fix) + the HEAD-probe round-trip cost on every request. CollectionTester x3: 3/3 HTTP200 masters (422907=4.7MP, 451175=2.7MP, 202327=2.5MP) vs -600 0.7-1.5MP."
     },
     {
       "order": 11,
@@ -583,7 +583,7 @@
     },
     {
       "order": 27,
-      "name": "Auckland Art Gallery Toi o T\u0101maki",
+      "name": "Auckland Art Gallery Toi o Tāmaki",
       "slug": "auckland-art-gallery-toi-o-tamaki",
       "group": "A",
       "platform": "stringSwap",
@@ -715,7 +715,7 @@
     },
     {
       "order": 33,
-      "name": "Te \u016aaka The Lyttelton Museum",
+      "name": "Te Ūaka The Lyttelton Museum",
       "slug": "te-uaka-the-lyttelton-museum",
       "group": "B",
       "platform": "ehiveIIIF",
@@ -733,7 +733,7 @@
       },
       "commit": "cf52ec4",
       "log": "logs/033-te-uaka-the-lyttelton-museum.md",
-      "notes": "PLATFORM IDENTIFIED (was boutique->ehiveIIIF): LIVE eHive account 5362 -- 3rd boutique-mislabel-actually-eHive in a row (cf. Te Hikoi 31 / Te Toi Uku 32). GROUP B ADD: Te Uaka was NOT in collectionWeights (weightedRandomPick at DigitalNZAPIDataSource.swift:50 only picks weighted keys), so it was NEVER served in production. 'Te Uaka' is a recent rebrand of the Lyttelton Museum, added to DigitalNZ after the original 2024 collectionWeights snapshot -> hence absent. ADDED via the existing proven ehiveIIIFLargest (registry entry) AND to collectionWeights at provisional 0.009 (= 18588 / 1998395 rawItemCount share of current in-Lambda corpus; renormalize in the final weights pass). DISTRIBUTION is MIXED (unlike Te Hikoi 1000-cap / Te Toi Uku 1200-cap): 120-record sample spread across the FULL 18588-record collection -> min 800, max 4000, median 1000, mean 1370; buckets <=800:48 (40%, parity), 1000:54 (45%, x1.56), 4000:18 (15%, x25 area). 72/120 (60%) gain, 0 worse, 0 failures, 0 honest-smaller. *** SAMPLING TRAP (recorded): an initial hex-only regex ([0-9a-f]+) BIASED the sample to the 1000px-capped newer uploads and MISSED the older non-hex ids (e.g. ji3o28_cpap, 13jcqnp_97mc) which carry the 4000px/12MP masters -- corrected by using the actual ehiveIIIFLargest logic (drop only the LAST _<size> segment). The 4000px masters are REAL native: info.json sizes max 4000 + full pyramid 125..4000 + 6 scaleFactors; full/full==full/max==4000x3000; full/6000, upscales to fake -> 4000 is the true ceiling for that batch. ehiveIIIFLargest handles both id styles (ji3o28_cpap_l.jpg -> ji3o28_cpap.tif = 4000x3000; 13jcqnp_97mc_l.jpg -> 800x600). HEADERS: image/jpeg, no Content-Disposition (inline), CORS *, 1yr cache, CloudFront. CODE: added strategies registry entry -> ehiveIIIFLargest; added 'Te \u016aaka The Lyttelton Museum': 0.009 to collectionWeights. VERIFICATION: swift build 0; CollectionTester x4 HTTP200 image/jpeg -- 972x1000, 800x600 (non-hex parity record 13jcqnp_97mc), 1000x765, 997x1000 vs _l ~800; plus verified 4000x3000 cpa master. User-approved ADD 2026-06-12. FOLLOW-UP: recompute weight 0.009 in the final renormalization pass; route any future eHive collection through ehiveIIIFLargest."
+      "notes": "PLATFORM IDENTIFIED (was boutique->ehiveIIIF): LIVE eHive account 5362 -- 3rd boutique-mislabel-actually-eHive in a row (cf. Te Hikoi 31 / Te Toi Uku 32). GROUP B ADD: Te Uaka was NOT in collectionWeights (weightedRandomPick at DigitalNZAPIDataSource.swift:50 only picks weighted keys), so it was NEVER served in production. 'Te Uaka' is a recent rebrand of the Lyttelton Museum, added to DigitalNZ after the original 2024 collectionWeights snapshot -> hence absent. ADDED via the existing proven ehiveIIIFLargest (registry entry) AND to collectionWeights at provisional 0.009 (= 18588 / 1998395 rawItemCount share of current in-Lambda corpus; renormalize in the final weights pass). DISTRIBUTION is MIXED (unlike Te Hikoi 1000-cap / Te Toi Uku 1200-cap): 120-record sample spread across the FULL 18588-record collection -> min 800, max 4000, median 1000, mean 1370; buckets <=800:48 (40%, parity), 1000:54 (45%, x1.56), 4000:18 (15%, x25 area). 72/120 (60%) gain, 0 worse, 0 failures, 0 honest-smaller. *** SAMPLING TRAP (recorded): an initial hex-only regex ([0-9a-f]+) BIASED the sample to the 1000px-capped newer uploads and MISSED the older non-hex ids (e.g. ji3o28_cpap, 13jcqnp_97mc) which carry the 4000px/12MP masters -- corrected by using the actual ehiveIIIFLargest logic (drop only the LAST _<size> segment). The 4000px masters are REAL native: info.json sizes max 4000 + full pyramid 125..4000 + 6 scaleFactors; full/full==full/max==4000x3000; full/6000, upscales to fake -> 4000 is the true ceiling for that batch. ehiveIIIFLargest handles both id styles (ji3o28_cpap_l.jpg -> ji3o28_cpap.tif = 4000x3000; 13jcqnp_97mc_l.jpg -> 800x600). HEADERS: image/jpeg, no Content-Disposition (inline), CORS *, 1yr cache, CloudFront. CODE: added strategies registry entry -> ehiveIIIFLargest; added 'Te Ūaka The Lyttelton Museum': 0.009 to collectionWeights. VERIFICATION: swift build 0; CollectionTester x4 HTTP200 image/jpeg -- 972x1000, 800x600 (non-hex parity record 13jcqnp_97mc), 1000x765, 997x1000 vs _l ~800; plus verified 4000x3000 cpa master. User-approved ADD 2026-06-12. FOLLOW-UP: recompute weight 0.009 in the final renormalization pass; route any future eHive collection through ehiveIIIFLargest."
     },
     {
       "order": 34,
@@ -745,12 +745,12 @@
       "weight": 0.002,
       "status": "committed",
       "baseline": {
-        "method": "eHive _l (800px) passthrough \u2014 but NOT in Lambda (no weight); never served",
+        "method": "eHive _l (800px) passthrough — but NOT in Lambda (no weight); never served",
         "px": "800 long-side cap"
       },
       "chosen": {
         "method": "ehiveIIIFLargest (IIIF full/full master TIFF, iiif.ehive.com account 3102)",
-        "px": "~98% 1000px (\u00d71.56 area over 800px _l); ~2% large native masters up to ~4242\u00d77065 (30 MP)",
+        "px": "~98% 1000px (×1.56 area over 800px _l); ~2% large native masters up to ~4242×7065 (30 MP)",
         "urlPattern": "https://iiif.ehive.com/iiif/2/accounts%2f3102%2fobjects%2fimages%2f<id>.tif/full/full/0/default.jpg"
       },
       "commit": "f6bbb15",
@@ -1001,7 +1001,7 @@
     },
     {
       "order": 46,
-      "name": "Ng\u0101 Puhipuhi o Te Herenga Waka\u2014Victoria University of Wellington Art Collection",
+      "name": "Ngā Puhipuhi o Te Herenga Waka—Victoria University of Wellington Art Collection",
       "slug": "nga-puhipuhi-o-te-herenga-waka-victoria-university-of-wellington-art-collection",
       "group": "B",
       "platform": "vernonBrowser",
@@ -1133,25 +1133,25 @@
     },
     {
       "order": 52,
-      "name": "Manawat\u016b Heritage",
+      "name": "Manawatū Heritage",
       "slug": "manawatu-heritage",
       "group": "B",
-      "platform": "boutique",
-      "rawItemCount": 22365,
-      "weight": null,
-      "status": "todo",
+      "platform": "recollectIIIF",
+      "rawItemCount": 26021,
+      "weight": 0.002,
+      "status": "committed",
       "baseline": {
-        "method": "raw large_thumbnail_url",
-        "px": null
+        "method": "raw large_thumbnail_url (CloudFront-signed IIIF derivative, curtis-production2-cache)",
+        "px": "!880,1024 signed box (<=880x1024, ~0.9 MP)"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "ADD via manawatuHeritageOriginal: resolve download?variant=original, ranged-GET Content-Type probe, direct-serve JPEG or route TIFF through the self-hosted Pillow converter",
+        "px": "7/10 pixel-survey sample resolved (0 honest-smaller, 4.07x-32.28x, median ~29x); ~15-20% multi-page/compound records fall back to the !880,1024 baseline (unfixable -- files live on child pages, not the harvested parent)",
+        "urlPattern": "https://manawatuheritage.pncc.govt.nz/item/<uuid>/files/<fileId>/download?variant=original (JPEG direct) OR <JP2_CONVERTER_URL>/?url=<encoded download endpoint> (TIFF)"
       },
       "commit": null,
       "log": "logs/052-manawatu-heritage.md",
-      "notes": ""
+      "notes": "Same curtis-production2-cache Recollect signed-IIIF platform as Feilding (35) and Kete Horowhenua (51), confirmed via oai:curtis dc_identifier + identical IIIF path shape. UNLIKE either sibling, this collection is genuinely mixed-format (20-rec census: 14 TIFF, 3 JPEG, 3 no-download-link/compound-album records) -- new manawatuHeritageOriginal strategy probes Content-Type per record via a ranged GET (HEAD 403s the S3 leg) and branches direct-serve vs converter. Required a live AWS redeploy (manawatuheritage.pncc.govt.nz added to the converter's ALLOWED_HOSTS) -- user confirmed the exact CloudFormation changeset (3 Modify/0 replace) before a non-interactive apply. swift build 0; sam build+deploy succeeded; CollectionTester x12 local + 6 live deployed-endpoint picks confirmed all three code paths (fallback/direct-JPEG/converter-TIFF). User-approved both a direct-JPEG and a converter-routed live URL."
     }
   ]
 }

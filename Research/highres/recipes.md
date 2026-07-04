@@ -300,10 +300,6 @@ hard-coded per collection.
   Macarthur St **4000×3000 (12 MP)**, panorama **4000×1682 (6.7 MP)**, Power Board **3397×1845 (6.3 MP, honest
   native)**; 6/6 local + 4/4 live picks HTTP 200 `image/jpeg`, never upscaled. TAPUHI regression unchanged
   (FL73782300 → 3737×2148, 8.0 MP).
-- **Likely reuse — Manawatū Heritage (order 52)** is run by the **same Manawatu District Libraries** and is
-  very likely the identical Recollect Ltd signed-IIIF pipeline; **Kete Horowhenua (51)** and other "Heritage"
-  todo sites may be too. Reuse = add the landing domain to `ALLOWED_HOSTS` + one registry entry on a shared
-  helper (generalize `feildingConverter`). **Confirm per-collection; do not assume.**
 - **★ Kete Horowhenua (order 51, COMMITTED 2026-07-04) — confirmed reuse, but NO converter/deploy needed.**
   `horowhenua.kete.net.nz` ("Kete"-branded front-end, but the media pipeline is Recollect's, not the
   classic open-source Kete platform) — confirmed the SAME `curtis-production2-cache` platform via the
@@ -326,6 +322,27 @@ hard-coded per collection.
   — and expect `CollectionTester`'s own HEAD-based validator to report a **false-negative 403** on these
   URLs (manually confirm with a real GET instead; this is a known tester-tool limitation, not a served-URL
   defect). Pixel survey (16 recs): 0 honest-smaller, median **2.44×**, max **67.76×** (up to ~56.5 MP).
+- **★ Manawatū Heritage (order 52, COMMITTED 2026-07-04) — confirmed reuse, and a THIRD outcome: neither
+  always-TIFF (Feilding) nor always-JPEG (Kete Horowhenua), but genuinely MIXED-FORMAT.**
+  `manawatuheritage.pncc.govt.nz` (Palmerston North City Library) — same `oai:curtis/<uuid>` tell, same
+  IIIF path shape, `/full/max/` 403-ing identically. A 20-record census of the resolved
+  `download?variant=original` endpoints found **14 TIFF, 3 JPEG, 3 no-download-link** — so **the format
+  must be checked per record at request time**, not assumed from the collection. Recipe: resolve the
+  download link (same regex as Feilding/Kete), then a **ranged-GET Content-Type probe** (`Range:
+  bytes=0-0`, never HEAD — the S3 leg 403s that) decides direct-serve (JPEG) vs converter-routing (TIFF/
+  anything else). Needed a new `NetworkRequestManager.rangeContentType(endpoint:)` helper (status +
+  `Content-Type`, alongside the existing status-only `rangeStatusFollowingRedirects`). **This DID require
+  a live AWS redeploy** (`manawatuheritage.pncc.govt.nz` added to the converter's `ALLOWED_HOSTS` in
+  `template.yaml`) — `sam build && sam deploy` (in-place update, 3 `Modify`/0 replace); the user confirmed
+  the exact CloudFormation changeset before a non-interactive `--no-confirm-changeset` apply (no tty for
+  the normal y/N prompt in this environment). The **"no download link" ~15-20%** are multi-page/compound
+  "album" parent records (`?child=<uuid>` sibling pages hold the actual files; the parent's own Download
+  modal is a genuinely empty `<div>`) — a real site-structure limitation, not a bug; falls back to the
+  harvested baseline (never chase an arbitrary child page — that would silently substitute a different
+  image). Pixel survey (7/10 resolved): 0 honest-smaller, **4.07×–32.28×**, median **≈29×**. ⇒ **Lesson:
+  don't assume format uniformity even within ONE collection on this platform — always census a proper
+  spread (not just a handful) and be ready to branch per-record, exactly as `warArtConverter` already does
+  for its own bimodal baseline.**
 
 ---
 

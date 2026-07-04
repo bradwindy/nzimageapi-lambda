@@ -32,9 +32,10 @@ Resources:
       Environment:
         Variables:
           # Host allowlist for the master->JPEG proxy (comma-separated). NDHA for TAPUHI's
-          # JP2 FL streams; feildingheritage.nz for Feilding Library's TIFF originals (the
-          # download endpoint 302-redirects to its own presigned S3 store, followed transparently).
-          ALLOWED_HOSTS: "ndhadeliver.natlib.govt.nz,www.feildingheritage.nz,feildingheritage.nz"
+          # JP2 FL streams; feildingheritage.nz for Feilding Library's TIFF originals; also
+          # War Art Online (ndhadeliver, already listed) and Manawatū Heritage's TIFF originals
+          # (the download endpoint 302-redirects to its own presigned S3 store, followed transparently).
+          ALLOWED_HOSTS: "ndhadeliver.natlib.govt.nz,www.feildingheritage.nz,feildingheritage.nz,manawatuheritage.pncc.govt.nz"
           MAX_DIM: "4000"
       FunctionUrlConfig:
         AuthType: NONE

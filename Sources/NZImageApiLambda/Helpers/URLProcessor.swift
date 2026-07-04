@@ -361,6 +361,21 @@ final class URLProcessor: Sendable {
             // it directly; falls back to the harvested signed IIIF JPEG on any failure.
             await keteHorowhenuaOriginal(result, url)
         },
+        "Manawatū Heritage": { result, url in
+            // Recollect signed-IIIF — the SAME `curtis-production2-cache` platform as Feilding
+            // Library (35) and Kete Horowhenua (51): identical CloudFront IIIF path shape, the same
+            // `oai:curtis` dc_identifier, and `/full/max/` 403-ing with the harvested signature.
+            // UNLIKE either sibling, a mixed-format census (14 TIFF, 3 JPEG, 3 no-download-link of
+            // 20 sampled) found this collection's originals are NEITHER uniformly TIFF nor uniformly
+            // JPEG, so the per-record format must be checked at request time: resolve the download
+            // link, probe it with a ranged GET to read `Content-Type` (never HEAD — the S3 leg 403s
+            // it), then either return a plain JPEG original directly (Kete-style) or route a TIFF (or
+            // anything else) through the self-hosted Pillow converter (Feilding-style). Falls back to
+            // the harvested signed IIIF JPEG on any failure, including the ~15-20% of records that are
+            // multi-page/compound "album" parents whose own landing page has no direct file (only its
+            // child pages do) — never a broken image, never a raw undisplayable TIFF.
+            await manawatuHeritageOriginal(result, url)
+        },
         "War Art Online": { result, url in
             // NDHA/Rosetta (Archives NZ war-art paintings) — the same delivery platform as TAPUHI, but the
             // preservation master is a TIFF (not JP2). Resolve the IE → Rosetta METS → the largest image/tiff
@@ -1013,6 +1028,56 @@ final class URLProcessor: Sendable {
 
         let status = await NetworkRequestManager().rangeStatusFollowingRedirects(endpoint: downloadURL)
         return (status == 200 || status == 206) ? downloadURL : url.absoluteString
+    }
+
+    /// Manawatū Heritage (Recollect signed-IIIF, same `curtis-production2-cache` platform as Feilding
+    /// Library and Kete Horowhenua). Resolve the item page's original-download endpoint, then probe it
+    /// with a **1-byte ranged GET** (not HEAD — the S3 leg 403s that) to read the resolved `Content-Type`
+    /// without downloading the body: a plain JPEG original is returned directly (Kete-style — already
+    /// browser-displayable, no need to spend a converter round-trip), while anything else (TIFF, etc.) is
+    /// routed through the self-hosted Pillow converter (Feilding-style — `<JP2_CONVERTER_URL>/?url=<encoded
+    /// download endpoint>`), which decodes and downscales it to a displayable ≤ 4000 px JPEG.
+    ///
+    /// Unlike Feilding (always TIFF) or Kete Horowhenua (always JPEG), a census found this collection's
+    /// originals are genuinely mixed, so the format can't be assumed from the collection alone and must be
+    /// checked per record at request time.
+    ///
+    /// Graceful, non-throwing: any failure (no landing URL / not a `manawatuheritage.pncc.govt.nz` page /
+    /// fetch throws / no download link in the HTML — including the multi-page/compound "album" parent
+    /// records whose own landing page has no direct file / the ranged-GET probe fails / converter
+    /// unconfigured) degrades to the harvested `url` — the CloudFront-signed ≤ 880 px IIIF JPEG, which
+    /// renders everywhere. Never weserv, never a raw TIFF.
+    private static func manawatuHeritageOriginal(_ result: NZRecordsResult, _ url: URL) async -> String {
+        guard let landing = result.landingUrl,
+              let host = landing.host, host.hasSuffix("manawatuheritage.pncc.govt.nz"),
+              let html = try? await NetworkRequestManager().fetchHTML(endpoint: landing.absoluteString),
+              let pathRange = html.range(
+                  of: #"/item/[0-9a-f-]+/files/[0-9a-f-]+/download\?variant=original"#,
+                  options: .regularExpression
+              )
+        else {
+            return url.absoluteString
+        }
+
+        let downloadURL = "\(landing.scheme ?? "https")://\(host)\(html[pathRange])"
+
+        let (status, contentType) = await NetworkRequestManager().rangeContentType(endpoint: downloadURL)
+        guard status == 200 || status == 206 else {
+            return url.absoluteString
+        }
+
+        if let contentType, contentType.contains("jpeg") {
+            return downloadURL
+        }
+
+        guard let base = ProcessInfo.processInfo.environment["JP2_CONVERTER_URL"], !base.isEmpty,
+              let encoded = downloadURL.addingPercentEncoding(withAllowedCharacters: .alphanumerics)
+        else {
+            return url.absoluteString
+        }
+
+        let trimmed = base.hasSuffix("/") ? String(base.dropLast()) : base
+        return "\(trimmed)/?url=\(encoded)"
     }
 
     /// War Art Online (Archives NZ via NDHA/Rosetta). Resolve the TIFF preservation master's FL stream and

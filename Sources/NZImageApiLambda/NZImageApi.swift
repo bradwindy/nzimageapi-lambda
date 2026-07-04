@@ -75,6 +75,7 @@ public struct NZImageApi: Sendable {
         "Nelson Provincial Museum": 0.002,
         "Puke Ariki": 0.002,
         "Kete Horowhenua": 0.002,
+        "Manawatū Heritage": 0.002,
     ]
 
     public func image(collection: String?, logger: @Sendable (String) -> Void = { _ in }) async -> NZRecordsResult? {

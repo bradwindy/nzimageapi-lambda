@@ -140,6 +140,27 @@ final class NetworkRequestManager: ValidatedRequestManager {
         return response.response?.statusCode ?? 0
     }
 
+    /// Returns the final HTTP status code AND `Content-Type` of a **1-byte ranged GET**
+    /// (`Range: bytes=0-0`) following redirects, or `(0, nil)` on failure. Same rationale as
+    /// `rangeStatusFollowingRedirects` (works where HEAD is rejected, e.g. presigned S3 URLs signed
+    /// for GET only), but also surfaces the MIME type so a caller can branch on the resolved
+    /// original's actual format (e.g. `image/jpeg` vs `image/tiff`) without downloading the body.
+    func rangeContentType(endpoint: String) async -> (status: Int, contentType: String?) {
+        let configuration = URLSessionConfiguration.default
+        configuration.httpAdditionalHeaders = [
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+            "Range": "bytes=0-0",
+        ]
+        configuration.timeoutIntervalForRequest = 15
+
+        let session = Session(configuration: configuration)
+        let response = await session.request(endpoint, method: .get).serializingData().response
+
+        let status = response.response?.statusCode ?? 0
+        let contentType = response.response?.value(forHTTPHeaderField: "Content-Type")
+        return (status, contentType)
+    }
+
     func headRequest(endpoint: String) async throws -> (contentType: String, contentLength: Int64) {
         let configuration = URLSessionConfiguration.default
         configuration.httpAdditionalHeaders = [
