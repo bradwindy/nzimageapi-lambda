@@ -304,6 +304,28 @@ hard-coded per collection.
   very likely the identical Recollect Ltd signed-IIIF pipeline; **Kete Horowhenua (51)** and other "Heritage"
   todo sites may be too. Reuse = add the landing domain to `ALLOWED_HOSTS` + one registry entry on a shared
   helper (generalize `feildingConverter`). **Confirm per-collection; do not assume.**
+- **★ Kete Horowhenua (order 51, COMMITTED 2026-07-04) — confirmed reuse, but NO converter/deploy needed.**
+  `horowhenua.kete.net.nz` ("Kete"-branded front-end, but the media pipeline is Recollect's, not the
+  classic open-source Kete platform) — confirmed the SAME `curtis-production2-cache` platform via the
+  identical CloudFront IIIF path shape, the same `!440,512`/`!880,1024` signed tiers, and `/full/max/`
+  403-ing with the harvested signature. The `dc_identifier` field (`oai:curtis/<uuid>`) is a fast
+  platform tell — check it before even probing the image URL shape. **Unlike Feilding, a wide census
+  (24/24 records) found every original is a plain JPEG** (flatbed-scanner donated-photo digitisation,
+  `model=HP ScanJet 5590` EXIF) — **never TIFF** — so **no Pillow converter is needed at all**: a pure
+  Swift strategy (`keteHorowhenuaOriginal`) resolves the same `download?variant=original` link and
+  returns the resolved S3 original URL **directly**, with **zero AWS deployment**. ⇒ **Lesson: "same
+  platform" does NOT imply "same converter need" — always census the actual original file FORMAT
+  per-collection (a few bytes' magic-number check is enough) before assuming a TIFF-oriented converter
+  route is required; if originals are already browser-displayable, a direct-URL strategy is strictly
+  simpler and needs no redeploy.**
+- **★ HEAD vs. ranged-GET on presigned S3 URLs (found at Kete Horowhenua, same family as Te Papa's
+  `rangeStatusFollowingRedirects`):** the resolved `download?variant=original` redirects to an S3 URL
+  presigned for `GET` only — a `HEAD` request against it returns **403 Forbidden**, even though a real
+  `GET` (or a 1-byte ranged `GET`, `Range: bytes=0-0`) succeeds (200 full / 206 ranged). **Always verify
+  a constructed S3-presigned URL with `rangeStatusFollowingRedirects`, never `headStatusFollowingRedirects`**
+  — and expect `CollectionTester`'s own HEAD-based validator to report a **false-negative 403** on these
+  URLs (manually confirm with a real GET instead; this is a known tester-tool limitation, not a served-URL
+  defect). Pixel survey (16 recs): 0 honest-smaller, median **2.44×**, max **67.76×** (up to ~56.5 MP).
 
 ---
 

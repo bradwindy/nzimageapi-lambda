@@ -74,6 +74,7 @@ public struct NZImageApi: Sendable {
         "Ngā Puhipuhi o Te Herenga Waka—Victoria University of Wellington Art Collection": 0.002,
         "Nelson Provincial Museum": 0.002,
         "Puke Ariki": 0.002,
+        "Kete Horowhenua": 0.002,
     ]
 
     public func image(collection: String?, logger: @Sendable (String) -> Void = { _ in }) async -> NZRecordsResult? {

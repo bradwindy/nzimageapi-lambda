@@ -1114,22 +1114,22 @@
       "name": "Kete Horowhenua",
       "slug": "kete-horowhenua",
       "group": "B",
-      "platform": "boutique",
-      "rawItemCount": 24104,
-      "weight": null,
-      "status": "todo",
+      "platform": "recollectIIIF",
+      "rawItemCount": 24375,
+      "weight": 0.002,
+      "status": "committed",
       "baseline": {
-        "method": "raw large_thumbnail_url",
-        "px": null
+        "method": "passthrough (large_thumbnail_url = CloudFront-signed IIIF derivative, curtis-production2-cache, /full/!880,1024/)",
+        "px": "~880px long side (signed, box-constrained; sizes cannot be forged, /full/max/ 403s)"
       },
       "chosen": {
-        "method": null,
-        "px": null,
-        "urlPattern": null
+        "method": "keteHorowhenuaOriginal (NEW): resolve item page download?variant=original link, verify with a ranged-GET probe (rangeStatusFollowingRedirects, reused from Te Papa), return the resolved S3 original URL directly. NO converter needed (originals always plain JPEG, unlike Feilding 35 TIFF masters) -> NO AWS deploy. Falls back to harvested !880,1024 IIIF JPEG on any failure.",
+        "px": "0 honest-smaller, median 2.44x, max 67.76x (up to ~56.5MP)",
+        "urlPattern": "https://horowhenua.kete.net.nz/item/<uuid>/files/<fileId>/download?variant=original"
       },
       "commit": null,
       "log": "logs/051-kete-horowhenua.md",
-      "notes": ""
+      "notes": "Recollect signed-IIIF -- same curtis-production2-cache platform as Feilding Library (35). Unlike Feilding, ALL originals are plain JPEG (flatbed HP ScanJet scans) -- pure Swift strategy, no converter, no deploy. Census 24/24 JPEG. Survey 15/16: 0 smaller, median 2.44x, max 67.76x. CollectionTester HEAD-based validator false-negatives 403 (S3 presigned-GET rejects HEAD) -- manually verified 6/6 real GET 200. User-approved 2026-07-04. See logs/051-kete-horowhenua.md."
     },
     {
       "order": 52,

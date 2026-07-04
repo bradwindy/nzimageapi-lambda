@@ -347,6 +347,20 @@ final class URLProcessor: Sendable {
             // with no public original, converter unconfigured, or fetch failure); never serves a raw TIFF.
             await feildingConverter(result, url)
         },
+        "Kete Horowhenua": { result, url in
+            // Recollect signed-IIIF — the SAME `curtis-production2-cache` platform as Feilding
+            // Library (35): confirmed via the identical CloudFront IIIF path shape, the same
+            // `/full/!880,1024/` signed derivative, and `/full/max/` 403-ing with the harvested
+            // signature (sizes are individually signed, can't be forged). The true original is
+            // reached the same way (`…/files/<fileId>/download?variant=original` → presigned S3),
+            // but unlike Feilding's ~25 MP TIFF masters, a wide census (24/24) and pixel survey
+            // (15/16) found Kete Horowhenua's originals are ALWAYS plain JPEG (donated-photo flatbed
+            // scans, mostly HP ScanJet 5590 EXIF) — already browser-displayable, so NO converter
+            // proxy is needed here (unlike Feilding). Resolve the download link, verify it with a
+            // 1-byte ranged GET (HEAD 403s on the S3 leg — presigned for GET, not HEAD), and return
+            // it directly; falls back to the harvested signed IIIF JPEG on any failure.
+            await keteHorowhenuaOriginal(result, url)
+        },
         "War Art Online": { result, url in
             // NDHA/Rosetta (Archives NZ war-art paintings) — the same delivery platform as TAPUHI, but the
             // preservation master is a TIFF (not JP2). Resolve the IE → Rosetta METS → the largest image/tiff
@@ -969,6 +983,36 @@ final class URLProcessor: Sendable {
 
         let trimmed = base.hasSuffix("/") ? String(base.dropLast()) : base
         return "\(trimmed)/?url=\(encoded)"
+    }
+
+    /// Kete Horowhenua (Recollect signed-IIIF, same `curtis-production2-cache` platform as Feilding
+    /// Library). Resolve the item page's original-download endpoint
+    /// (`/item/<uuid>/files/<fileId>/download?variant=original`) and return it directly — the
+    /// original is always a plain JPEG here (verified across a wide census), so unlike Feilding
+    /// there's no TIFF to convert and no need for the self-hosted Pillow converter.
+    ///
+    /// Verifies the constructed URL with a **1-byte ranged GET** (not HEAD: the S3 presigned target
+    /// is signed for GET and returns 403 to HEAD) before returning it, so a dead/login-walled record
+    /// never surfaces a broken image — falls back to the harvested signed IIIF JPEG instead.
+    ///
+    /// Graceful, non-throwing: any failure (no landing URL / not a `kete.net.nz` page / fetch throws
+    /// / no download link in the HTML / the ranged-GET probe fails) degrades to the harvested `url`.
+    private static func keteHorowhenuaOriginal(_ result: NZRecordsResult, _ url: URL) async -> String {
+        guard let landing = result.landingUrl,
+              let host = landing.host, host.hasSuffix("kete.net.nz"),
+              let html = try? await NetworkRequestManager().fetchHTML(endpoint: landing.absoluteString),
+              let pathRange = html.range(
+                  of: #"/item/[0-9a-f-]+/files/[0-9a-f-]+/download\?variant=original"#,
+                  options: .regularExpression
+              )
+        else {
+            return url.absoluteString
+        }
+
+        let downloadURL = "\(landing.scheme ?? "https")://\(host)\(html[pathRange])"
+
+        let status = await NetworkRequestManager().rangeStatusFollowingRedirects(endpoint: downloadURL)
+        return (status == 200 || status == 206) ? downloadURL : url.absoluteString
     }
 
     /// War Art Online (Archives NZ via NDHA/Rosetta). Resolve the TIFF preservation master's FL stream and

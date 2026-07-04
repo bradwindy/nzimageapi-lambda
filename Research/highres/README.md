@@ -6,7 +6,7 @@ these files.
 
 ## Current resume state (updated 2026-07-04)
 
-**Wellington removal: done.** Collections **1–50 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+**Wellington removal: done.** Collections **1–51 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
 self-hosted JP2→JPEG converter; Canterbury 26, Auckland Art Gallery 27, Culture Waitaki 28, South
 Canterbury Museum 29, V.C. Browne 30 all no-improvement; **Te Hikoi 31 + Te Toi Uku 32 committed
 IMPROVEMENTS**, **Te Ūaka 33 + Wyndham 34 committed Group B ADDs** — all four `boutique`-mislabel-actually-
@@ -83,8 +83,14 @@ URL confirmed as Te Ara's own ceiling (~500–830 px, decent quality on its own)
 declined a cross-institution reference-number lookup (Te Ara's `rights` field → DigitalNZ text
 search → e.g. a matching higher-res TAPUHI record) as too heterogeneous/risky to build (≈15 distinct
 contributing institutions, wrong-photo-match risk, would need a new model field + extra API
-round-trip + cross-platform dispatch). User decision: do not add. No code change. The per-collection
-sweep is **UNPAUSED — next is order 51 (Kete Horowhenua).**
+round-trip + cross-platform dispatch). User decision: do not add. No code change. **Kete Horowhenua 51
+committed Group B ADD** — confirmed the SAME Recollect signed-IIIF `curtis-production2-cache` platform
+as Feilding Library (35), but a census found every original is a plain **JPEG** (not TIFF), so **no
+converter/AWS deploy needed** — new pure-Swift `keteHorowhenuaOriginal` resolves the item page's
+`download?variant=original` link and returns it directly (verified via a ranged-GET probe, since HEAD
+403s on the presigned S3 leg); 0 honest-smaller, median 2.44×, max 67.76×. User-approved. The
+per-collection sweep is **PAUSED after order 51 (user asked not to auto-advance) — next is order 52
+(Manawatū Heritage).**
 `progress.json` is authoritative; this is a human summary.
 
 > **Vendor note (corrected 2026-06-14):** **Recollect** (both the `*.recollect.co.nz` `downloadwiz`
@@ -147,6 +153,7 @@ sweep is **UNPAUSED — next is order 51 (Kete Horowhenua).**
 | 48 | Puke Ariki | vernonBrowser (was `boutique`) | **committed Group B ADD** — the **4th Vernon Systems "Vernon Browser"** site of the sweep (after Te Ahu 45 / VUW 46 / Nelson 47), the largest image-bearing boutique-museum collection yet (`collection.pukeariki.com`, **134,911** records, dominated by the Swainson/Woods photographic-negative sub-collection); was **NOT in the Lambda**. Platform confirmed via the **CloudFront bot-wall signature** (403 no-UA / 202 0-byte-body challenge with a browser UA — matching Te Ahu/VUW exactly) and a re-verified derivative-name set (nano/tiny/small/medium/large/xlarge=200, display/thumbnail=403 — same published subset as Nelson); no Wayback snapshot exists for this subdomain, but the xlarge-is-ceiling finding is platform-level (established at Nelson), not per-site. **REUSED `stringSwap` (same as Te Ahu 45 / Nelson 47), no new code, no AWS deploy.** **★ API gotcha found here:** DigitalNZ's `records.json` hard-caps `page<=50000` **regardless of `per_page`**, which silently truncates a naive `per_page=1` census to the front ~37% of a 134,911-record collection; worked around with `per_page=50` (page only needs to reach 2698) to get a genuinely full-range **150-page uniform census**: **0% null-image, 0% stale/broken `large`, 0/150 "large 200 but xlarge missing"** — cleaner than Nelson (no pre-existing dead-asset rate). 40-record pixel survey: `xlarge` **5 win / 35 equal / 0 smaller**, area ratio **min 1.000 / median 1.000 / max 14.073** — the lowest win-rate of the 4 Vernon Browser sites (12.5%, since most masters here are already ≤800 px) but the single biggest gain observed on this platform (800×514 → **3000×1929, 5.79 MP**). Sample diversity confirmed across multiple sub-collections (Diana Smith, Swainson/Woods, Caleb Wyatt, Ken Fox). `swift build` 0; CollectionTester ×6 → **6/6 HTTP 200** `xlarge` dispatch confirmed. `collectionWeights` **0.002** (provisional). See `logs/048-puke-ariki.md` |
 | 49 | Picture Wairarapa | spydus (was `boutique`) | **no-improvement, NOT added** — a **new platform for the sweep**, **Spydus/Civica** ILS picture-archive module (content partner Wairarapa Archive, `masterton.spydus.co.nz`, images on Azure Blob Storage `stspydusproduction.blob.core.windows.net`); was **NOT in the Lambda**, still isn't. Harvested `large_thumbnail_url` is a `<uuid>_lt.jpg` ("large thumb") blob, **360×226 ≈0.08 MP** — a **2-tier** ladder (`_lt`/`_t` only). A deep-dig (explicitly requested) exhausted every route this sweep checks: every plausible derivative-suffix guess 404s; the blob container disables anonymous listing; no alternate containers on the same storage account; no EXIF/embedded original; the site's own front-end JS (`tabContainer.js`) reads a `data-imgurls` list that is **always** exactly the `_lt`/`_t` pair (no zoom/IIIF/DZI/OpenSeadragon anywhere in the loaded scripts); the `/api/maintenance/1.0/imagebrowser/image?blobName=` REST endpoint 302s to a **dead** `filemanager/root/` path (404); a different Spydus instance's published API docs (Salford UK) document no image-size endpoint; the landing page has an explicit **"Place archival request"** link, matching the rights text ("for higher resolution copies... please contact us") — higher-res is a manual/human process, not an anonymous route. **User decision: do not add** — 0.08 MP would be a clear quality outlier vs. the rest of the served set (next-lowest ~700–950 px, Waimate 20 / South Canterbury 29 / V.C. Browne 30). No code change. See `logs/049-picture-wairarapa.md` |
 | 50 | Te Ara - The Encyclopedia of New Zealand | teara (was `boutique`) | **no-improvement, NOT added** — self-hosted Drupal CMS (`teara.govt.nz`), images served directly from `sites/default/files/`; was **NOT in the Lambda**, still isn't. Landing pages (and Drupal `/jsonapi`/`?_format=json`/`/node/<id>` paths) are fully **Cloudflare-challenge-walled** (403, `cf-mitigated: challenge`) — cannot scrape `og:image`/embedded state at all; static assets under `sites/default/files/` are NOT behind the challenge, which is why the harvested URL always works on its own. **No Drupal image-style derivative exists** for any filename tested (`styles/{large,wide,full,original,...}/` all 404); a `large_images/` upload folder is real but per-record, not a hidden bigger sibling of every file (404 when applied to other records' plain-path filenames) — the harvested URL is confirmed the correct AND only URL per record. Baseline dimensions ~500–830 px long side (median ~650–700 px), decent quality on its own, comparable to already-accepted lower-res collections (Waimate 20 / V.C. Browne 30). **★ Found but explicitly declined a cross-institution reference-number lookup:** Te Ara's `rights` field embeds the source institution's own reference for institutionally-sourced photos (e.g. `"...Collection Reference: PA1-q-913-08-4..."`); a DigitalNZ text search on that exact reference returned the same photograph already in **TAPUHI** at genuinely higher resolution (this sweep's existing NDHA/Rosetta converter target, order 25). **Not built as a strategy** because `contributing_partner` is extremely heterogeneous (≈15 distinct institutions in a 40-record sample — Alexander Turnbull Library ≈17.5%, plus Te Papa, art galleries, Getty Images, newspapers, publishers, private photographers), the reference format is unverified beyond the ATL case, a text-search hit is not a guaranteed-correct match (risk of serving the **wrong photo**), and building it would need a new `rights` field on `NZRecordsResult` + an extra authenticated DigitalNZ round-trip + cross-platform dispatch — a materially bigger architectural departure than any strategy in this sweep. **User decision: do not add** — skip rather than add at a merely-decent, unimproved baseline. No code change. See `logs/050-te-ara-the-encyclopedia-of-new-zealand.md` |
+| 51 | Kete Horowhenua | recollectIIIF (was `boutique`) | **committed Group B ADD** — confirmed the SAME **Recollect signed-IIIF `curtis-production2-cache`** platform as **Feilding Library (35)** (`horowhenua.kete.net.nz`; a "Kete"-branded front-end, but the media pipeline is Recollect's, not the classic open-source Kete platform — the `dc_identifier` `oai:curtis/<uuid>` was the tell); was **NOT in the Lambda**. Identical CloudFront IIIF path shape, `!440,512`/`!880,1024` signed tiers, and `/full/max/` 403s with the harvested signature (sizes can't be forged). **Unlike Feilding, a wide census (24/24 records) found every original is a plain JPEG** (flatbed-scanner donated-photo digitisation, `HP ScanJet 5590` EXIF) — never TIFF — so **NO Pillow converter and NO AWS deployment are needed**: new pure-Swift `keteHorowhenuaOriginal` resolves the item page's `download?variant=original` link and returns the resolved S3 original URL **directly**. **★ HEAD 403s on the presigned-S3 leg** (signed for GET only) — verified instead with a **1-byte ranged GET** (reusing `rangeStatusFollowingRedirects`, originally built for Te Papa); falls back to the harvested `!880,1024` signed IIIF JPEG on any failure. Pixel survey (16 recs): **0 honest-smaller**, median **2.44×**, max **67.76×** (up to ~56.5 MP). `swift build` 0; CollectionTester ×6 dispatch confirmed — **its own HEAD-based validator false-negatives HTTP 403** on these URLs (known tester-tool limitation, same family as the Te Papa/Auckland Museum artifacts already documented); manually verified **6/6 HTTP 200** via real GET. `collectionWeights` **0.002** (provisional). **User-approved 2026-07-04.** See `logs/051-kete-horowhenua.md` |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -727,6 +734,36 @@ platform per collection. Recorded as a follow-up research idea in `recipes.md`, 
 decision: skip Te Ara entirely** rather than add it at a merely-decent, unimproved baseline. No
 code change; `platform` corrected `boutique` → `teara` for future reference. See
 `logs/050-te-ara-the-encyclopedia-of-new-zealand.md`.
+
+**✅ Order 51 (Kete Horowhenua) committed Group B ADD (2026-07-04).** Confirmed the SAME
+**Recollect signed-IIIF `curtis-production2-cache`** platform as **Feilding Library (35)** —
+`horowhenua.kete.net.nz` is a "Kete"-branded front-end, but the media pipeline is Recollect's, not
+the classic open-source Kete platform (the `dc_identifier` field, `oai:curtis/<uuid>`, was the
+platform tell, confirmed before even checking the image URL shape). Was **NOT in the Lambda**.
+Identical CloudFront IIIF path shape, `!440,512`/`!880,1024` signed derivative tiers, and
+`/full/max/` returns 403 with the harvested signature — sizes are individually signed and can't be
+forged, exactly as at Feilding. The item page's `/item/<uuid>/files/<fileId>/download?variant=
+original` link (302 → presigned S3) resolves the true original here too. **★ Unlike Feilding,
+though, a wide census (24 records sampled across the full ~24,104-record range) found every
+original is a plain JPEG** — never TIFF — EXIF showing `model=HP ScanJet 5590` (a flatbed-scanner
+donated-community-photo digitisation workflow, not Feilding's archival TIFF scanning pipeline).
+Since the original is already browser-displayable, **no Pillow converter and no AWS deployment are
+needed at all**: a new pure-Swift strategy, `keteHorowhenuaOriginal`, does one bounded HTML GET of
+the item page, regexes out the download link, and returns the resolved S3 original URL directly —
+falling back to the harvested `!880,1024` signed IIIF JPEG on any failure (no landing URL,
+non-`kete.net.nz` host, fetch failure, no download link found, or a failed verification probe).
+**★ Verification gotcha:** the resolved S3 URL is presigned for `GET` only — a `HEAD` request
+against it returns **403 Forbidden**. Verified instead with a **1-byte ranged GET**
+(`rangeStatusFollowingRedirects`, the same helper originally built for Te Papa's HEAD-hostile
+media host) before returning the URL. A 16-record pixel-dimension survey found **0
+honest-smaller**, median **2.44×**, max **67.76×** (one outlier ~923×8419 ≈ 7.8 MP tall scan, one
+~6837×8269 ≈ 56.5 MP). `swift build` 0; CollectionTester ×6 all dispatched correctly to the new
+strategy — but **CollectionTester's own HEAD-based `validateImageURL` false-negatived HTTP 403 on
+every pick** (the exact same S3 presigned-for-GET limitation, a known tester-tool artifact already
+seen with Te Papa/Auckland Museum in this sweep, not a defect in the served URL); manually verified
+**6/6 HTTP 200** via a real `curl -L` GET, valid `image/jpeg`, dimensions 650×487 up to 1692×1290.
+`collectionWeights` **0.002** (provisional). **User tested the live URL in a browser and approved,
+2026-07-04.** See `logs/051-kete-horowhenua.md`.
 
 **★ Platform correction (2026-07-04, found during order 47):** Te Ahu 45 and VUW 46 (and now Nelson 47)
 were logged throughout this file as **"CollectiveAccess / Pawtucket"**. That label is **wrong** — the

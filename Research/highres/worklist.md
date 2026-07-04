@@ -6,7 +6,7 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 ## Removal
 - [x] REMOVE Wellington City Recollect — done
 
-## Collections (50/52 terminal)
+## Collections (51/52 terminal)
 
 ### recollect
 - [x] (01) Tauranga City Libraries Other Collection — group A — platform recollect — committed
@@ -68,7 +68,6 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 
 ### boutique
 - [x] (30) V.C. Browne & Son NZ Aerial Photograph Collection — group A — platform boutique — no-improvement
-- [ ] (51) Kete Horowhenua — group B — platform boutique — todo
 - [ ] (52) Manawatū Heritage — group B — platform boutique — todo
 
 ### ndha
@@ -80,6 +79,7 @@ Regenerate with `python3 Research/highres/gen_worklist.py`.
 
 ### recollectIIIF
 - [x] (35) Feilding Library — group B — platform recollectIIIF — committed
+- [x] (51) Kete Horowhenua — group B — platform recollectIIIF — committed
 
 ### ehive
 - [x] (44) The University of Waikato Art Collection — group B — platform ehive — committed
