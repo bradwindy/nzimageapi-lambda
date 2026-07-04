@@ -1149,7 +1149,7 @@
         "px": "7/10 pixel-survey sample resolved (0 honest-smaller, 4.07x-32.28x, median ~29x); ~15-20% multi-page/compound records fall back to the !880,1024 baseline (unfixable -- files live on child pages, not the harvested parent)",
         "urlPattern": "https://manawatuheritage.pncc.govt.nz/item/<uuid>/files/<fileId>/download?variant=original (JPEG direct) OR <JP2_CONVERTER_URL>/?url=<encoded download endpoint> (TIFF)"
       },
-      "commit": null,
+      "commit": "b2bd166",
       "log": "logs/052-manawatu-heritage.md",
       "notes": "Same curtis-production2-cache Recollect signed-IIIF platform as Feilding (35) and Kete Horowhenua (51), confirmed via oai:curtis dc_identifier + identical IIIF path shape. UNLIKE either sibling, this collection is genuinely mixed-format (20-rec census: 14 TIFF, 3 JPEG, 3 no-download-link/compound-album records) -- new manawatuHeritageOriginal strategy probes Content-Type per record via a ranged GET (HEAD 403s the S3 leg) and branches direct-serve vs converter. Required a live AWS redeploy (manawatuheritage.pncc.govt.nz added to the converter's ALLOWED_HOSTS) -- user confirmed the exact CloudFormation changeset (3 Modify/0 replace) before a non-interactive apply. swift build 0; sam build+deploy succeeded; CollectionTester x12 local + 6 live deployed-endpoint picks confirmed all three code paths (fallback/direct-JPEG/converter-TIFF). User-approved both a direct-JPEG and a converter-routed live URL."
     }
