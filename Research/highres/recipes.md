@@ -982,6 +982,33 @@ hard-coded per collection.
 
 ---
 
+## spydus (Civica ILS picture-archive module)
+
+Integrated library system by Civica; some instances (e.g. `<subdomain>.spydus.co.nz`) run a
+picture-archive module storing images on Azure Blob Storage (`https://<account>.blob.core.windows
+.net/<container>/<uuid>_<tier>.jpg`).
+
+### Verified findings (spydus)
+- **Picture Wairarapa (49, investigated 2026-07-04, NOT added — no-improvement):** only a
+  **2-tier** ladder exists anywhere: `_lt.jpg` ("large thumb", 360×226 ≈0.08 MP, harvested as
+  `large_thumbnail_url`) and `_t.jpg` ("thumb", 120×75). Confirmed no larger route via: every
+  plausible suffix guess 404; container listing disabled (`ResourceNotFound` on
+  `?restype=container&comp=list`); no alternate containers on the same storage account (guessed
+  `-priv`/`-hr`/`-archive`/`-full` variants, all 404); no EXIF/embedded original; the site's own
+  front-end JS (`tabContainer.js` `loadImages()`) reads a `data-imgurls` attribute that is **always**
+  exactly the `_lt`/`_t` pair — no third/larger entry, no zoom/IIIF/DZI/OpenSeadragon anywhere in
+  the loaded scripts; the `/api/maintenance/1.0/imagebrowser/image?blobName=` REST endpoint 302s to
+  a **dead** `filemanager/root/<blob>` path (404) — a staff-tool dead end, not a public route; a
+  different Spydus instance's public API docs (Salford UK) don't document any image-size endpoint;
+  the landing page has an explicit **"Place archival request"** link — higher-res copies are a
+  manual/human enquiry process, matching the rights text ("for higher resolution copies... please
+  contact us") verbatim. ⇒ **Lesson: Spydus/Civica's picture-archive module appears to cap the
+  public web derivative at whatever the library configured as the "large thumb" tier — check the
+  `data-imgurls`/`imgsc` list in the page JS first (it enumerates every derivative the platform
+  will ever try) before spending time on blob/container guessing.**
+
+---
+
 # Discovery Playbook (mandatory in Step 2 for EVERY collection)
 
 The first URL that returns an image is rarely the largest. Keep asking "is there a

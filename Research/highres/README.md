@@ -6,7 +6,7 @@ these files.
 
 ## Current resume state (updated 2026-07-04)
 
-**Wellington removal: done.** Collections **1–48 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+**Wellington removal: done.** Collections **1–49 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
 self-hosted JP2→JPEG converter; Canterbury 26, Auckland Art Gallery 27, Culture Waitaki 28, South
 Canterbury Museum 29, V.C. Browne 30 all no-improvement; **Te Hikoi 31 + Te Toi Uku 32 committed
 IMPROVEMENTS**, **Te Ūaka 33 + Wyndham 34 committed Group B ADDs** — all four `boutique`-mislabel-actually-
@@ -69,8 +69,15 @@ the sweep memory — no behaviour changed, only the label. **Puke Ariki 48 commi
 (**134,911 records**, `collection.pukeariki.com`), **reused `stringSwap`** (a full-range 150-page census —
 worked around DigitalNZ's `page<=50000` cap via `per_page=50` — found 0% null-image, 0% stale, 0/150
 missing-`xlarge`); strict 1.0–14.07× (median **1.00×** — the lowest win-rate yet, 12.5% of a 40-rec survey,
-since most masters here are already ≤800px), 0 smaller, no honest-smaller fork. The per-collection sweep is
-**UNPAUSED — next is order 49 (Picture Wairarapa).**
+since most masters here are already ≤800px), 0 smaller, no honest-smaller fork. **Picture Wairarapa 49
+no-improvement, NOT added** — a **new platform for the sweep**, **Spydus/Civica** ILS picture-archive
+module (`masterton.spydus.co.nz`, Azure Blob Storage); a deep-dig (derivative-name/container guesses,
+EXIF, page-JS `data-imgurls` enumeration, the site's own `imagebrowser` REST API, published Spydus API
+docs, Wayback) confirmed the harvested `_lt.jpg` (**360×226 ≈0.08 MP**) is the platform's hard ceiling —
+the site's own rights text and a "Place archival request" link confirm higher-res is a manual/human
+process, not an anonymous route. **User decision: do not add** — 0.08 MP would be a clear quality outlier
+vs. the rest of the served set (next-lowest ~700–950 px). No code change. The per-collection sweep is
+**UNPAUSED — next is order 50 (Te Ara - The Encyclopedia of New Zealand).**
 `progress.json` is authoritative; this is a human summary.
 
 > **Vendor note (corrected 2026-06-14):** **Recollect** (both the `*.recollect.co.nz` `downloadwiz`
@@ -131,6 +138,7 @@ since most masters here are already ≤800px), 0 smaller, no honest-smaller fork
 | 46 | Ngā Puhipuhi o Te Herenga Waka—VUW Art Collection | vernonBrowser (was `boutique`) | **committed Group B ADD** — the **2nd Vernon Systems "Vernon Browser"** site of the sweep (after Te Ahu 45): Te Pātaka Toi **Adam Art Gallery** (VUW university art collection, `universityartcollection.adamartgallery.nz`, images on **AmazonS3** behind CloudFront); was **NOT in the Lambda**. **NEW reusable `vernonBrowserLargest` (async HEAD-probe + fallback), no AWS deploy** — swap `/records/images/large/` → `/records/images/xlarge/`, **HEAD-probe the `xlarge` and fall back to the harvested `large` when it is absent**. **★ Why a probe, not Te Ahu's pure `stringSwap`:** a full HEAD scan of all 486 image-bearing records found **6 (1.2%) with a `large` (200) but NO `xlarge` (403)** — a blind swap would serve a broken 403; the HEAD is reliable (**HEAD == GET for all 486**, 0 mismatches). Same ladder as Te Ahu: small 150×117 / medium 400×313 / **large 800×626 (harvested)** / **xlarge 1200×939**; `original`/`fullsize`/etc. all **403** (login-gated) → **`xlarge` ≈ 1.42 MP is the public ceiling**. `xlarge` is master-capped (never upscaled) → **no honest-smaller fork**. Uniform 61-record survey: `xlarge` **46 win / 13 equal / 0 smaller / 2 missing**, area ratio **min 1.000 / median 2.249 / max 2.253**. Null-image census all 488 = **2 (0.4%)** → HTTP 400 hard-fail (pre-existing, negligible). `swift build` 0; CollectionTester ×6 → **6/6 HTTP 200** `xlarge` (The Single Cloud 606×1200 / Continuum VII 1200×493 / Light Installation 1200×830 / Untitled 1200×778 / Untitled (Puvis) 728×944 / Exotic Plant 812×1200); **fallback verified** (record 50811364 `xlarge` 403 → served `large` 800×648 200). `collectionWeights` **0.002** (provisional). See `logs/046-nga-puhipuhi-o-te-herenga-waka-victoria-university-of-wellington-art-collection.md` |
 | 47 | Nelson Provincial Museum | vernonBrowser (was `boutique`) | **committed Group B ADD** — the **3rd Vernon Systems "Vernon Browser"** site of the sweep (after Te Ahu 45 / VUW 46), by far the largest (`collection.nelsonmuseum.co.nz`, **~198,770** image-bearing records); was **NOT in the Lambda**. **This investigation uncovered the platform-label correction: the whole platform is Vernon Systems' "Vernon Browser" (same vendor as eHive), not "CollectiveAccess / Pawtucket" as 45/46 were originally logged** — confirmed via a Wayback Machine snapshot of the homepage showing `vernon-common.min.js` and a "Vernon Browser" modal title; corrected retroactively (no behaviour change to 45/46, only the label + the `collectiveAccessLargest`→`vernonBrowserLargest` rename). **REUSED `stringSwap` (same as Te Ahu 45), no new code, no AWS deploy** — pure path-segment swap `/records/images/large/` → `/records/images/xlarge/`. A **150-page uniform HEAD census** (spanning the full ~9,939-page range) found **0% null-image** and, critically, **0/143 "large 200 but xlarge missing"** cases (unlike VUW's 1.2%), so the plain unconditional swap is justified — no HEAD-probe needed. **7/150 (4.7%) of records are fully stale at the source** (ALL size tiers 403, confirmed on retry) — pre-existing dead assets, unaffected by the swap either way. 40-record pixel survey: `xlarge` **24 win / 13 equal / 0 smaller**, area ratio **min 1.000 / median 1.288 / max 2.251** — more modest than Te Ahu/VUW's 2.25× median since many Nelson masters (glass-plate portrait negatives) are natively narrower than the 800 px `large` box. **★★ Exhaustively confirmed `xlarge` is the true public ceiling** (per explicit user request to verify harder): tried 13 alternate derivative-name guesses (`original`/`fullsize`/`full`/`tilepic`/`xxlarge`/`master`/`preview`/`raw`/`print_preview`/`crop`/`display`/`thumbnail` + case variants, all 403); confirmed query-param resize tricks are ignored by CloudFront (byte-identical); found and inspected the real Vernon Browser vendor API (`apidocs.browser.vernonsystems.com`, `ImageDerivative` schema, requires an API key we don't have); researched Vernon Systems docs (IIIF only documented for eHive); inspected a Feb-2024 Wayback Machine snapshot of a live object page (plain `<img>` tags, no OpenSeadragon/IIIF/DZI/zoomify viewer); EXIF on a served `xlarge` confirms the true source photo is far higher-res (12 MP Olympus TG-6) but deliberately not published (S3 `AccessDenied`, not a WAF artifact). `swift build` 0; CollectionTester ×6 → **6/6 HTTP 200** `xlarge`; 5/6 measured gains (1.11×–2.25× area), 1/6 already native (1.0×, no loss). `collectionWeights` **0.002**. See `logs/047-nelson-provincial-museum.md` |
 | 48 | Puke Ariki | vernonBrowser (was `boutique`) | **committed Group B ADD** — the **4th Vernon Systems "Vernon Browser"** site of the sweep (after Te Ahu 45 / VUW 46 / Nelson 47), the largest image-bearing boutique-museum collection yet (`collection.pukeariki.com`, **134,911** records, dominated by the Swainson/Woods photographic-negative sub-collection); was **NOT in the Lambda**. Platform confirmed via the **CloudFront bot-wall signature** (403 no-UA / 202 0-byte-body challenge with a browser UA — matching Te Ahu/VUW exactly) and a re-verified derivative-name set (nano/tiny/small/medium/large/xlarge=200, display/thumbnail=403 — same published subset as Nelson); no Wayback snapshot exists for this subdomain, but the xlarge-is-ceiling finding is platform-level (established at Nelson), not per-site. **REUSED `stringSwap` (same as Te Ahu 45 / Nelson 47), no new code, no AWS deploy.** **★ API gotcha found here:** DigitalNZ's `records.json` hard-caps `page<=50000` **regardless of `per_page`**, which silently truncates a naive `per_page=1` census to the front ~37% of a 134,911-record collection; worked around with `per_page=50` (page only needs to reach 2698) to get a genuinely full-range **150-page uniform census**: **0% null-image, 0% stale/broken `large`, 0/150 "large 200 but xlarge missing"** — cleaner than Nelson (no pre-existing dead-asset rate). 40-record pixel survey: `xlarge` **5 win / 35 equal / 0 smaller**, area ratio **min 1.000 / median 1.000 / max 14.073** — the lowest win-rate of the 4 Vernon Browser sites (12.5%, since most masters here are already ≤800 px) but the single biggest gain observed on this platform (800×514 → **3000×1929, 5.79 MP**). Sample diversity confirmed across multiple sub-collections (Diana Smith, Swainson/Woods, Caleb Wyatt, Ken Fox). `swift build` 0; CollectionTester ×6 → **6/6 HTTP 200** `xlarge` dispatch confirmed. `collectionWeights` **0.002** (provisional). See `logs/048-puke-ariki.md` |
+| 49 | Picture Wairarapa | spydus (was `boutique`) | **no-improvement, NOT added** — a **new platform for the sweep**, **Spydus/Civica** ILS picture-archive module (content partner Wairarapa Archive, `masterton.spydus.co.nz`, images on Azure Blob Storage `stspydusproduction.blob.core.windows.net`); was **NOT in the Lambda**, still isn't. Harvested `large_thumbnail_url` is a `<uuid>_lt.jpg` ("large thumb") blob, **360×226 ≈0.08 MP** — a **2-tier** ladder (`_lt`/`_t` only). A deep-dig (explicitly requested) exhausted every route this sweep checks: every plausible derivative-suffix guess 404s; the blob container disables anonymous listing; no alternate containers on the same storage account; no EXIF/embedded original; the site's own front-end JS (`tabContainer.js`) reads a `data-imgurls` list that is **always** exactly the `_lt`/`_t` pair (no zoom/IIIF/DZI/OpenSeadragon anywhere in the loaded scripts); the `/api/maintenance/1.0/imagebrowser/image?blobName=` REST endpoint 302s to a **dead** `filemanager/root/` path (404); a different Spydus instance's published API docs (Salford UK) document no image-size endpoint; the landing page has an explicit **"Place archival request"** link, matching the rights text ("for higher resolution copies... please contact us") — higher-res is a manual/human process, not an anonymous route. **User decision: do not add** — 0.08 MP would be a clear quality outlier vs. the rest of the served set (next-lowest ~700–950 px, Waimate 20 / South Canterbury 29 / V.C. Browne 30). No code change. See `logs/049-picture-wairarapa.md` |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -643,6 +651,35 @@ code bug) — fixed by re-exporting in the same command, 6/6 clean afterward. **
 any DigitalNZ-backed collection above ~50,000 records, check for the `page<=50000` cap first — use a
 larger `per_page` to reach deep pages rather than `per_page=1`, or the census will silently only cover
 the front of the collection.** See `logs/048-puke-ariki.md`.
+
+**✅ Order 49 (Picture Wairarapa) no-improvement, NOT added (2026-07-04).** A **new platform for the
+sweep**: **Spydus/Civica**, an integrated library system whose picture-archive module (content
+partner Wairarapa Archive, `masterton.spydus.co.nz`) stores images on Azure Blob Storage
+(`stspydusproduction.blob.core.windows.net/smartlive-mp-pub/`). Was **NOT in the Lambda**. The
+harvested `large_thumbnail_url` is a `<uuid>_lt.jpg` ("large thumb") blob — only **360×226 ≈0.08 MP**
+— and only a **2-tier** derivative ladder exists at all (`_lt`/`_t`, the latter 120×75). User asked to
+dig deeper before deciding; exhausted every route this sweep normally checks: every plausible
+derivative-suffix guess (`_sm/_md/_lg/_full/_orig/_hr/_xl`/etc.) 404s; the blob container disables
+anonymous listing (`ResourceNotFound`); no alternate containers on the same storage account
+(`-priv`/`-hr`/`-archive`/`-full` guesses all 404); the `_lt.jpg` has no EXIF/embedded larger original;
+the site's own front-end JS (`docs/OPAC/js/tabContainer.js`, `loadImages()`) reads a `data-imgurls`
+attribute that is **always** exactly the `_lt`/`_t` pair for every record inspected — confirming
+client-side there is no third, larger entry, and no zoom/lightbox/IIIF/DZI/OpenSeadragon code exists
+in any loaded script (`spydus.js`/`enrich.js`/`gq.js`/`modal.js`/`searchAutoComplete.js`/
+`modernizr-spydus.js`/`cookie.js`, all fetched and grepped); the site's own
+`/api/maintenance/1.0/imagebrowser/image?blobName=` REST endpoint 302-redirects to a **dead**
+`filemanager/root/<blob>` path (404 on the blob store) — a staff-tool dead end; a different Spydus
+instance's published API docs (Salford UK, `salfordlibraries.spydus.co.uk`) document no image-size
+endpoint; and the landing page has an explicit **"Place archival request"** link, matching the site's
+rights text verbatim ("for higher resolution copies of these images... please contact us") — higher-
+res copies are a manual/human enquiry process, not an anonymous download route. **User decision: do
+not add to `collectionWeights`** — 0.08 MP would be a clear quality outlier vs. every other collection
+in the served set (next-lowest ~700–950 px long side: Waimate 20 / South Canterbury 29 / V.C. Browne
+30). No code change; `platform` corrected `boutique` → `spydus` for future reference. No other
+remaining collection (50 Te Ara, 51 Kete Horowhenua, 52 Manawatū Heritage) is currently believed to
+share this platform, so it isn't expected to recur, but if it does the `_lt`/`_t` ladder and the
+"Place archival request" manual-process pattern are platform-level facts, not Wairarapa-specific ones.
+See `logs/049-picture-wairarapa.md`.
 
 **★ Platform correction (2026-07-04, found during order 47):** Te Ahu 45 and VUW 46 (and now Nelson 47)
 were logged throughout this file as **"CollectiveAccess / Pawtucket"**. That label is **wrong** — the

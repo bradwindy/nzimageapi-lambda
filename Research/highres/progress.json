@@ -1070,22 +1070,22 @@
       "name": "Picture Wairarapa",
       "slug": "picture-wairarapa",
       "group": "B",
-      "platform": "boutique",
-      "rawItemCount": 25949,
+      "platform": "spydus",
+      "rawItemCount": 26313,
       "weight": null,
-      "status": "todo",
+      "status": "no-improvement",
       "baseline": {
-        "method": "raw large_thumbnail_url",
-        "px": null
+        "method": "raw large_thumbnail_url (Spydus/Civica \"large thumb\" blob, stspydusproduction.blob.core.windows.net/smartlive-mp-pub/<uuid>_lt.jpg)",
+        "px": "360x226 (~0.08MP)"
       },
       "chosen": {
-        "method": null,
+        "method": "no-improvement, NOT added: 360x226 is the Spydus/Civica platform ceiling (only _lt/_t derivatives exist anywhere; container listing disabled; no EXIF; page JS confirms only 2-tier data-imgurls fallback; imagebrowser API redirects to a dead path; site has a manual \"Place archival request\" form, not an anonymous download). User decision: do not add -- 0.08MP would be a quality outlier vs the rest of the served set (next-lowest ~700-950px).",
         "px": null,
         "urlPattern": null
       },
       "commit": null,
       "log": "logs/049-picture-wairarapa.md",
-      "notes": ""
+      "notes": "Spydus/Civica ILS (Wairarapa Archive, masterton.spydus.co.nz) -- new platform for this sweep. Deep-dig (user asked) found no anonymous route beyond the harvested 360x226 large-thumb blob. NOT added to collectionWeights. See logs/049-picture-wairarapa.md."
     },
     {
       "order": 50,
