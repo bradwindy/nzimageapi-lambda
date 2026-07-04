@@ -1105,7 +1105,7 @@
         "px": null,
         "urlPattern": null
       },
-      "commit": null,
+      "commit": "815effa",
       "log": "logs/050-te-ara-the-encyclopedia-of-new-zealand.md",
       "notes": "Te Ara self-hosted Drupal CMS -- new platform label for this sweep (was boutique). Deep-dig found no anonymous route beyond the harvested URL. Cross-institution cross-reference idea (rights field ref number -> DigitalNZ search -> e.g. TAPUHI) found ONE verified hit but explicitly NOT pursued as a strategy (too heterogeneous / correctness risk). NOT added to collectionWeights. See logs/050-te-ara-the-encyclopedia-of-new-zealand.md."
     },
