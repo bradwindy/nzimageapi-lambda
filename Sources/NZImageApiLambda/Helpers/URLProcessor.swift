@@ -291,6 +291,28 @@ final class URLProcessor: Sendable {
         // higher-res (shot on a 12 MP Olympus TG-6) but deliberately not published (S3 AccessDenied, not
         // a WAF artifact).
         "Nelson Provincial Museum": stringSwap(from: "/records/images/large/", to: "/records/images/xlarge/"),
+        // Puke Ariki's own collection site (collection.pukeariki.com) — the 4th Vernon Systems
+        // "Vernon Browser" site in the sweep (after Te Ahu 45 / VUW 46 / Nelson 47), ≈134,911
+        // image-bearing records (largest single-museum site yet; dominated by the Swainson/Woods
+        // Collection of black-and-white photographic negatives). Group B ADD. Same URL scheme,
+        // S3/CloudFront serving, and bot-walled landing page (HTTP 202 challenge with a
+        // browser-like UA, matching Te Ahu/VUW/Nelson exactly) confirming the same platform without
+        // needing to re-run the full vendor-API/Wayback/EXIF ceiling investigation done at Nelson —
+        // that was a platform-level finding (xlarge is Vernon Browser's public ceiling), not a
+        // per-site one. Re-verified the derivative-name set directly on this site anyway: nano/
+        // tiny/small/medium/large/xlarge all 200, display/thumbnail both 403 — identical published
+        // subset to Nelson. A 150-page uniform census across the FULL record range (worked around
+        // the DigitalNZ API's hard `page<=50000` cap by using `per_page=50` and reading the first
+        // record of each page, since the naive per_page=1 approach can only reach the front ~37% of
+        // a 134k-record collection) found 0% null-image, 0 stale/broken `large`, and 0/150 "large
+        // 200 but xlarge missing" cases — cleaner than any other Vernon Browser site so far — so the
+        // plain unconditional `stringSwap` (no HEAD-probe) is justified. A 40-record pixel-dimension
+        // subsample found 0 smaller (never a regression) but only 5/40 (12.5%) actual wins (ratio
+        // 2.25×–14.07×); the other 35/40 (87.5%) are byte-identical, since most masters here
+        // (photographic negative scans) are already <=800 px, at or below the harvested `large`
+        // tier. Still a strict improvement collection-wide, just a smaller expected fraction of
+        // requests benefit than at Te Ahu/VUW/Nelson.
+        "Puke Ariki": stringSwap(from: "/records/images/large/", to: "/records/images/xlarge/"),
         "Te Papa Collections Online": { result, url in
             await tePapaLargest(result, url)
         },

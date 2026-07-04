@@ -6,7 +6,7 @@ these files.
 
 ## Current resume state (updated 2026-07-04)
 
-**Wellington removal: done.** Collections **1–47 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
+**Wellington removal: done.** Collections **1–48 terminal** (Howick 17 RE-DONE; TAPUHI 25 committed via a
 self-hosted JP2→JPEG converter; Canterbury 26, Auckland Art Gallery 27, Culture Waitaki 28, South
 Canterbury Museum 29, V.C. Browne 30 all no-improvement; **Te Hikoi 31 + Te Toi Uku 32 committed
 IMPROVEMENTS**, **Te Ūaka 33 + Wyndham 34 committed Group B ADDs** — all four `boutique`-mislabel-actually-
@@ -64,8 +64,13 @@ platform is Vernon Systems' "Vernon Browser" (same vendor as eHive), not "Collec
 45/46 were originally logged** — confirmed via a Wayback Machine snapshot showing `vernon-common.min.js`
 and a "Vernon Browser" modal title; corrected retroactively across `URLProcessor.swift`
 (`collectiveAccessLargest` renamed `vernonBrowserLargest`), `progress.json`, `recipes.md`, this README, and
-the sweep memory — no behaviour changed, only the label. The per-collection sweep is **UNPAUSED — next is
-order 48 (Puke Ariki).**
+the sweep memory — no behaviour changed, only the label. **Puke Ariki 48 committed Group B ADD** — the
+**4th Vernon Browser** site, the largest image-bearing boutique-museum collection in the sweep
+(**134,911 records**, `collection.pukeariki.com`), **reused `stringSwap`** (a full-range 150-page census —
+worked around DigitalNZ's `page<=50000` cap via `per_page=50` — found 0% null-image, 0% stale, 0/150
+missing-`xlarge`); strict 1.0–14.07× (median **1.00×** — the lowest win-rate yet, 12.5% of a 40-rec survey,
+since most masters here are already ≤800px), 0 smaller, no honest-smaller fork. The per-collection sweep is
+**UNPAUSED — next is order 49 (Picture Wairarapa).**
 `progress.json` is authoritative; this is a human summary.
 
 > **Vendor note (corrected 2026-06-14):** **Recollect** (both the `*.recollect.co.nz` `downloadwiz`
@@ -125,6 +130,7 @@ order 48 (Puke Ariki).**
 | 45 | Te Ahu Museum | vernonBrowser (was `boutique`) | **committed Group B ADD** — a **new platform for the sweep**: **Vernon Systems "Vernon Browser"** (the museum's own CMS at `collection.teahumuseum.nz`, images on **AmazonS3** behind CloudFront), **not** eHive/Recollect; was **NOT in the Lambda**. **REUSED `stringSwap` (first registry use), no new strategy code, no AWS deploy** — pure path-segment swap `/records/images/large/` → `/records/images/xlarge/`. **★ `xlarge` (1200 px long side ≈ 1.44 MP) is the largest PUBLIC media version** — `original`/`fullsize`/`full`/`huge`/`tilepic`/`xxlarge`/`master`/… all **403** (Vernon Browser gates originals behind login). Size ladder: small 123×150 / medium 328×400 / **large 657×800 (harvested)** / **xlarge 985×1200**. `xlarge` targets 1200 px vs `large`'s 800 px, both capped at the master (no upscale), so **`xlarge` ≥ `large` always and never exceeds the master → no honest-smaller fork**. **Null-image census all 506 records = 0 (0.0%)** (the exact opposite of Waikato 44). Uniform 64-record survey: `xlarge` **63 win / 0 equal / 0 smaller / 0 missing**, area ratio **min 1.562 / median 2.250 / max 2.254**, biggest 1200×1199 ≈ 1.44 MP; **1/64 (~1.6%) had a `large` that itself 403'd** (pre-broken baseline at source — the swap is no worse; additive ⇒ not a regression). Landing page is **bot-walled** (CloudFront HTTP 202 ~2 KB challenge) but irrelevant — the `/records/images/` CDN isn't, and the swap needs no page fetch. `swift build` 0; CollectionTester ×6 → **6/6 HTTP 200** `xlarge` (Ahipara 1200×905 / Greenstone Pendant 1200×494 / Awanui 1200×906 / Cigarette Holder 850×1200 / Far North 1200×856 / Peria 1200×892, each exactly 1.5×/side = 2.25× area). `collectionWeights` **0.002** (provisional). See `logs/045-te-ahu-museum.md` |
 | 46 | Ngā Puhipuhi o Te Herenga Waka—VUW Art Collection | vernonBrowser (was `boutique`) | **committed Group B ADD** — the **2nd Vernon Systems "Vernon Browser"** site of the sweep (after Te Ahu 45): Te Pātaka Toi **Adam Art Gallery** (VUW university art collection, `universityartcollection.adamartgallery.nz`, images on **AmazonS3** behind CloudFront); was **NOT in the Lambda**. **NEW reusable `vernonBrowserLargest` (async HEAD-probe + fallback), no AWS deploy** — swap `/records/images/large/` → `/records/images/xlarge/`, **HEAD-probe the `xlarge` and fall back to the harvested `large` when it is absent**. **★ Why a probe, not Te Ahu's pure `stringSwap`:** a full HEAD scan of all 486 image-bearing records found **6 (1.2%) with a `large` (200) but NO `xlarge` (403)** — a blind swap would serve a broken 403; the HEAD is reliable (**HEAD == GET for all 486**, 0 mismatches). Same ladder as Te Ahu: small 150×117 / medium 400×313 / **large 800×626 (harvested)** / **xlarge 1200×939**; `original`/`fullsize`/etc. all **403** (login-gated) → **`xlarge` ≈ 1.42 MP is the public ceiling**. `xlarge` is master-capped (never upscaled) → **no honest-smaller fork**. Uniform 61-record survey: `xlarge` **46 win / 13 equal / 0 smaller / 2 missing**, area ratio **min 1.000 / median 2.249 / max 2.253**. Null-image census all 488 = **2 (0.4%)** → HTTP 400 hard-fail (pre-existing, negligible). `swift build` 0; CollectionTester ×6 → **6/6 HTTP 200** `xlarge` (The Single Cloud 606×1200 / Continuum VII 1200×493 / Light Installation 1200×830 / Untitled 1200×778 / Untitled (Puvis) 728×944 / Exotic Plant 812×1200); **fallback verified** (record 50811364 `xlarge` 403 → served `large` 800×648 200). `collectionWeights` **0.002** (provisional). See `logs/046-nga-puhipuhi-o-te-herenga-waka-victoria-university-of-wellington-art-collection.md` |
 | 47 | Nelson Provincial Museum | vernonBrowser (was `boutique`) | **committed Group B ADD** — the **3rd Vernon Systems "Vernon Browser"** site of the sweep (after Te Ahu 45 / VUW 46), by far the largest (`collection.nelsonmuseum.co.nz`, **~198,770** image-bearing records); was **NOT in the Lambda**. **This investigation uncovered the platform-label correction: the whole platform is Vernon Systems' "Vernon Browser" (same vendor as eHive), not "CollectiveAccess / Pawtucket" as 45/46 were originally logged** — confirmed via a Wayback Machine snapshot of the homepage showing `vernon-common.min.js` and a "Vernon Browser" modal title; corrected retroactively (no behaviour change to 45/46, only the label + the `collectiveAccessLargest`→`vernonBrowserLargest` rename). **REUSED `stringSwap` (same as Te Ahu 45), no new code, no AWS deploy** — pure path-segment swap `/records/images/large/` → `/records/images/xlarge/`. A **150-page uniform HEAD census** (spanning the full ~9,939-page range) found **0% null-image** and, critically, **0/143 "large 200 but xlarge missing"** cases (unlike VUW's 1.2%), so the plain unconditional swap is justified — no HEAD-probe needed. **7/150 (4.7%) of records are fully stale at the source** (ALL size tiers 403, confirmed on retry) — pre-existing dead assets, unaffected by the swap either way. 40-record pixel survey: `xlarge` **24 win / 13 equal / 0 smaller**, area ratio **min 1.000 / median 1.288 / max 2.251** — more modest than Te Ahu/VUW's 2.25× median since many Nelson masters (glass-plate portrait negatives) are natively narrower than the 800 px `large` box. **★★ Exhaustively confirmed `xlarge` is the true public ceiling** (per explicit user request to verify harder): tried 13 alternate derivative-name guesses (`original`/`fullsize`/`full`/`tilepic`/`xxlarge`/`master`/`preview`/`raw`/`print_preview`/`crop`/`display`/`thumbnail` + case variants, all 403); confirmed query-param resize tricks are ignored by CloudFront (byte-identical); found and inspected the real Vernon Browser vendor API (`apidocs.browser.vernonsystems.com`, `ImageDerivative` schema, requires an API key we don't have); researched Vernon Systems docs (IIIF only documented for eHive); inspected a Feb-2024 Wayback Machine snapshot of a live object page (plain `<img>` tags, no OpenSeadragon/IIIF/DZI/zoomify viewer); EXIF on a served `xlarge` confirms the true source photo is far higher-res (12 MP Olympus TG-6) but deliberately not published (S3 `AccessDenied`, not a WAF artifact). `swift build` 0; CollectionTester ×6 → **6/6 HTTP 200** `xlarge`; 5/6 measured gains (1.11×–2.25× area), 1/6 already native (1.0×, no loss). `collectionWeights` **0.002**. See `logs/047-nelson-provincial-museum.md` |
+| 48 | Puke Ariki | vernonBrowser (was `boutique`) | **committed Group B ADD** — the **4th Vernon Systems "Vernon Browser"** site of the sweep (after Te Ahu 45 / VUW 46 / Nelson 47), the largest image-bearing boutique-museum collection yet (`collection.pukeariki.com`, **134,911** records, dominated by the Swainson/Woods photographic-negative sub-collection); was **NOT in the Lambda**. Platform confirmed via the **CloudFront bot-wall signature** (403 no-UA / 202 0-byte-body challenge with a browser UA — matching Te Ahu/VUW exactly) and a re-verified derivative-name set (nano/tiny/small/medium/large/xlarge=200, display/thumbnail=403 — same published subset as Nelson); no Wayback snapshot exists for this subdomain, but the xlarge-is-ceiling finding is platform-level (established at Nelson), not per-site. **REUSED `stringSwap` (same as Te Ahu 45 / Nelson 47), no new code, no AWS deploy.** **★ API gotcha found here:** DigitalNZ's `records.json` hard-caps `page<=50000` **regardless of `per_page`**, which silently truncates a naive `per_page=1` census to the front ~37% of a 134,911-record collection; worked around with `per_page=50` (page only needs to reach 2698) to get a genuinely full-range **150-page uniform census**: **0% null-image, 0% stale/broken `large`, 0/150 "large 200 but xlarge missing"** — cleaner than Nelson (no pre-existing dead-asset rate). 40-record pixel survey: `xlarge` **5 win / 35 equal / 0 smaller**, area ratio **min 1.000 / median 1.000 / max 14.073** — the lowest win-rate of the 4 Vernon Browser sites (12.5%, since most masters here are already ≤800 px) but the single biggest gain observed on this platform (800×514 → **3000×1929, 5.79 MP**). Sample diversity confirmed across multiple sub-collections (Diana Smith, Swainson/Woods, Caleb Wyatt, Ken Fox). `swift build` 0; CollectionTester ×6 → **6/6 HTTP 200** `xlarge` dispatch confirmed. `collectionWeights` **0.002** (provisional). See `logs/048-puke-ariki.md` |
 
 **✅ Order 25 (TAPUHI) committed (2026-06-09) — sweep UNPAUSED.** The broken weserv-JP2 pipeline (weserv
 **cannot decode JP2 → HTTP 404**) was replaced by a self-hosted **Python+Pillow JP2→JPEG converter Lambda**
@@ -605,6 +611,38 @@ committing to the cheaper `stringSwap` over the HEAD-probe variant; and when a u
 really the ceiling," there's real due diligence available beyond guessing derivative names — check the
 vendor's actual API/docs and archived snapshots of live pages for hidden zoom/tile viewers.** See
 `logs/047-nelson-provincial-museum.md`.
+
+**✅ Order 48 (Puke Ariki) committed Group B ADD (2026-07-04).** The **4th Vernon Systems "Vernon
+Browser"** site (after Te Ahu 45 / VUW 46 / Nelson 47) — `collection.pukeariki.com`, **134,911**
+image-bearing records, the largest boutique-museum collection in the sweep, dominated by the
+Swainson/Woods photographic-negative sub-collection. Was **NOT in the Lambda**. Confirmed the platform
+independently (no Wayback snapshot exists for this subdomain) via the **CloudFront bot-wall signature**
+(plain `curl` → 403 "Request blocked"; browser-UA `curl` → 202 with a 0-byte body — the exact same
+"202 challenge" fingerprint as Te Ahu/VUW's landing pages) plus identical S3/CloudFront image headers
+and a re-verified derivative-name set (nano/tiny/small/medium/large/xlarge all 200, display/thumbnail
+both 403 — the same published subset as Nelson). **REUSED `stringSwap`** (same as Te Ahu 45 / Nelson
+47) — pure path-segment swap, no new code, no deploy. **★ Discovered a DigitalNZ API gotcha along the
+way:** `records.json` hard-caps the `page` parameter at **50,000 regardless of `per_page`**
+(`page=50000` succeeds, `page=69000` → `{"errors":["The page parameter can not exceed 50000"]}`) — a
+naive `per_page=1` census only reaches the front **~37%** of a 134,911-record collection and silently
+under-samples the rest. Worked around by using `per_page=50` (so `page` only needs to reach `⌈134911/
+50⌉ = 2698`, well under the cap) to get a genuinely full-range **150-page uniform census**: **0%
+null-image, 0% stale/broken `large`, 0/150 "large 200 but xlarge missing"** — even cleaner than Nelson
+(no pre-existing dead-asset rate at all). 40-record pixel survey: `xlarge` **5 win / 35 equal / 0
+smaller**, area ratio **min 1.000 / median 1.000 / max 14.073** — the lowest win-rate of the 4 Vernon
+Browser sites (12.5%, since most of this collection's masters are already ≤800 px — mostly digitised
+photographic negatives) but the single biggest gain measured on this platform (800×514 0.41 MP →
+**3000×1929, 5.79 MP**). Spot-checked `collection_title` diversity across the census sample (Diana
+Smith Collection, Swainson/Woods Collection, Caleb Wyatt, Ken Fox Collection) to confirm it wasn't
+skewed by one donor sub-collection. `swift build` 0; CollectionTester ×6 → 6/6 HTTP 200 `xlarge`
+dispatch confirmed (3/6 spot-checked at pixel level landed on `large`==`xlarge` records, consistent
+with the measured 87.5% equal rate — never a regression). **Debugging note:** the first 2
+CollectionTester runs failed with HTTP 400 (`nonJsonResponse`) because `DIGITALNZ_API_KEY` wasn't
+re-exported in the same shell invocation as `swift run` (a session/tooling gotcha, not a platform or
+code bug) — fixed by re-exporting in the same command, 6/6 clean afterward. **Lesson: when censusing
+any DigitalNZ-backed collection above ~50,000 records, check for the `page<=50000` cap first — use a
+larger `per_page` to reach deep pages rather than `per_page=1`, or the census will silently only cover
+the front of the collection.** See `logs/048-puke-ariki.md`.
 
 **★ Platform correction (2026-07-04, found during order 47):** Te Ahu 45 and VUW 46 (and now Nelson 47)
 were logged throughout this file as **"CollectiveAccess / Pawtucket"**. That label is **wrong** — the

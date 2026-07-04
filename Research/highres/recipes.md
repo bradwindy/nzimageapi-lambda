@@ -644,6 +644,28 @@ hard-coded per collection.
   progress.json). ⇒ **A Vernon Browser site can have a 0% missing-`xlarge` rate even at ~200k records —
   still worth a wide uniform census (not just a small sample) before committing to the cheaper
   `stringSwap` over the probing variant.**
+- **Puke Ariki (2026-07-04, order 48): Group B ADD via REUSE of `stringSwap`.** Host
+  `collection.pukeariki.com`; **134,911 records — 4th Vernon Browser site** (cf. Te Ahu 45 / VUW 46 /
+  Nelson 47), dominated by the Swainson/Woods photographic-negative sub-collection. `boutique`-
+  mislabelled, was **NOT in `collectionWeights`** → never served; **added** the registry entry +
+  weight **0.002**. Platform confirmed via the CloudFront bot-wall signature (403 no-UA / 202
+  0-byte-body challenge with a browser UA — matching Te Ahu/VUW exactly) and a re-verified
+  derivative-name set (nano/tiny/small/medium/large/xlarge=200, display/thumbnail=403 — same
+  published subset as Nelson); no Wayback snapshot exists for this subdomain, but the
+  xlarge-is-ceiling finding is platform-level (established at Nelson), not per-site. **★ API gotcha
+  found here:** DigitalNZ's `records.json` hard-caps `page<=50000` **regardless of `per_page`** —
+  a naive `per_page=1` census silently truncates to the front ~37% of a 134,911-record collection.
+  Worked around with `per_page=50` (page only needs to reach 2698) to get a genuinely full-range
+  150-sample census: null-image **0 (0.0%)**, stale/broken `large` **0 (0.0%)** (healthier than
+  Nelson's 4.7%), **0/150 missing-`xlarge`** → plain `stringSwap` justified, no probe needed. 40-rec
+  pixel survey: `xlarge` **5 win / 35 equal / 0 smaller**, area ratio min 1.000 / median **1.000** /
+  max **14.073** — the lowest win-rate (12.5%) of the 4 Vernon Browser sites (most masters here are
+  already ≤800 px) but the single biggest observed gain in the sweep for this platform (800×514 →
+  3000×1929, 5.79 MP). `swift build` 0; CollectionTester ×6 → 6/6 HTTP 200 `xlarge`. Weight 0.002.
+  Committed (see log 048 / progress.json). ⇒ **When censusing a Vernon Browser (or any DigitalNZ-
+  backed) collection above ~50,000 records, check for the `page<=50000` cap first — use a larger
+  `per_page` to reach deep pages, not `per_page=1`, or the census will silently only cover the front
+  of the collection.**
 
 ---
 
