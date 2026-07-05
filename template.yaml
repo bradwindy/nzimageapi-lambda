@@ -14,10 +14,24 @@ Parameters:
     Description: >
       DigitalNZ API key (sent as the Authentication-Token header). Pass at deploy time
       via --parameter-overrides or the gitignored samconfig.toml. NEVER commit it.
-  ApiSecret:
+  ApiClientSecrets:
     Type: String
     NoEcho: true
-    Description: Shared secret the Swift Lambda requires in the `secret` request header.
+    Description: >
+      Comma-separated "name:secret" pairs, one per approved consumer of the `/image` API
+      (e.g. "site:AbC123...,mobile:XyZ789..."). The Swift Lambda requires the `secret`
+      request header to constant-time-match one entry's secret; the matching entry's name
+      is logged as the authorized consumer. Generate each secret with `openssl rand -hex 32`
+      (hex only -- ":" and "," are the field/entry delimiters). See docs/ACCESS-CONTROL.md
+      for onboarding/revoking a consumer. Pass at deploy time via --parameter-overrides or
+      the gitignored samconfig.toml. NEVER commit it.
+  AlarmEmail:
+    Type: String
+    Description: >
+      Email address subscribed to the cost/abuse CloudWatch alarms and the monthly Budget
+      notification (see docs/ACCESS-CONTROL.md, "Cost controls"). AWS sends a subscription-
+      confirmation email to this address after the first deploy -- it must be confirmed
+      before notifications will deliver.
   ConverterSigningKey:
     Type: String
     NoEcho: true
@@ -28,6 +42,50 @@ Parameters:
       gitignored samconfig.toml. NEVER commit it.
 
 Resources:
+  # --- Cost/abuse notifications: one SNS topic, emailed on any alarm or budget breach ---
+  AlarmTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: nzimageapi-cost-alarms
+
+  AlarmEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref AlarmTopic
+      Protocol: email
+      Endpoint: !Ref AlarmEmail
+
+  # A $1/month trip-wire: this stack is meant to run entirely within AWS's perpetual free
+  # tiers, so ANY real spend means something is misbehaving (see docs/ACCESS-CONTROL.md,
+  # "Cost controls"). Notifies at 100% of the $1 limit, both actual and forecasted.
+  MonthlyCostBudget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: nzimageapi-monthly-cost-tripwire
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit:
+          Amount: 1
+          Unit: USD
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 100
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref AlarmEmail
+        - Notification:
+            NotificationType: FORECASTED
+            ComparisonOperator: GREATER_THAN
+            Threshold: 100
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref AlarmEmail
+
   # --- JP2 -> JPEG converter (container image + public Function URL) ------------------
   Jp2ConverterFunction:
     Type: AWS::Serverless::Function
@@ -37,6 +95,12 @@ Resources:
         - arm64
       MemorySize: 2048          # Lambda CPU scales with memory; headroom for large JP2 masters
       Timeout: 60               # large masters: download + reduced-level decode
+      # No ReservedConcurrentExecutions: this account's total Lambda concurrency quota is only
+      # 10 (not the usual 1000 default), shared with NZImageApiFunction, and is already fully
+      # unreserved -- setting any reservation here would violate that floor. The account-wide
+      # limit itself is currently a tighter concurrency ceiling than a per-function reservation
+      # would be. If the quota is ever increased (see docs/ACCESS-CONTROL.md, "Cost controls"),
+      # reintroduce a reservation here to subdivide the larger pool between both functions.
       Environment:
         Variables:
           # Host allowlist for the master->JPEG proxy (comma-separated). NDHA for TAPUHI's
@@ -58,6 +122,28 @@ Resources:
       DockerContext: ./converter
       DockerTag: latest
 
+  # Fires if the converter -- the expensive function -- is invoked more than 100 times in
+  # any 1-hour window. Tune the threshold to expected legitimate traffic; the point is to
+  # notice a leaked/abused converter URL as a notification, not a surprise bill.
+  Jp2ConverterInvocationsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: nzimageapi-converter-invocations-high
+      AlarmDescription: Jp2ConverterFunction invoked more than 100 times in 1 hour.
+      Namespace: AWS/Lambda
+      MetricName: Invocations
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref Jp2ConverterFunction
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 100
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmTopic
+
   # --- Swift NZ Image API (provided.al2 custom runtime, built via the Makefile) -------
   NZImageApiFunction:
     Type: AWS::Serverless::Function
@@ -69,10 +155,13 @@ Resources:
         - arm64
       MemorySize: 512
       Timeout: 60
+      # No ReservedConcurrentExecutions: see the matching comment on Jp2ConverterFunction --
+      # this account's total Lambda concurrency quota is only 10, already fully unreserved,
+      # and is itself the binding concurrency ceiling right now.
       Environment:
         Variables:
           DIGITALNZ_API_KEY: !Ref DigitalNzApiKey
-          SECRET: !Ref ApiSecret
+          API_CLIENT_SECRETS: !Ref ApiClientSecrets
           CONVERTER_SIGNING_KEY: !Ref ConverterSigningKey
           LOG_LEVEL: info
           # Injected from the converter's Function URL (no hardcoding / chicken-and-egg).
@@ -87,6 +176,40 @@ Resources:
     Metadata:
       BuildMethod: makefile
 
+  # Fires if the Swift API is invoked more than 200 times in any 1-hour window. Since the
+  # secret check happens before any DigitalNZ call, an unauthorized flood is cheap per-call
+  # but this still flags unexpected volume from an authorized-but-misbehaving consumer.
+  NZImageApiInvocationsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: nzimageapi-api-invocations-high
+      AlarmDescription: NZImageApiFunction invoked more than 200 times in 1 hour.
+      Namespace: AWS/Lambda
+      MetricName: Invocations
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref NZImageApiFunction
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 200
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmTopic
+
+  # Explicit declaration of the implicit HTTP API (must keep the logical id "ServerlessHttpApi"
+  # so SAM customizes -- rather than replaces -- the API the Image event already targets; the
+  # live URL is unaffected). DefaultRouteSettings caps request *rate*; the account's total Lambda
+  # concurrency quota (currently 10 -- see the comments on Jp2ConverterFunction/NZImageApiFunction)
+  # currently caps *parallelism* -- together they bound worst-case cost even for a valid caller.
+  ServerlessHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      DefaultRouteSettings:
+        ThrottlingRateLimit: 10    # steady-state requests/sec; tune to expected legitimate traffic
+        ThrottlingBurstLimit: 20   # token-bucket burst capacity
+
 Outputs:
   ImageApiEndpoint:
     Description: Random-image endpoint (send the `secret` header) — the new SAM HTTP API URL.
@@ -94,3 +217,8 @@ Outputs:
   Jp2ConverterUrl:
     Description: JP2->JPEG converter Function URL (wired into the Swift Lambda's JP2_CONVERTER_URL).
     Value: !GetAtt Jp2ConverterFunctionUrl.FunctionUrl
+  AlarmTopicArn:
+    Description: >
+      SNS topic for cost/abuse alarms and the monthly budget tripwire. Confirm the subscription
+      email sent to AlarmEmail after the first deploy, or notifications won't deliver.
+    Value: !Ref AlarmTopic

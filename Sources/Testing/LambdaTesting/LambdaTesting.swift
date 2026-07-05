@@ -120,7 +120,7 @@ public actor LambdaServerManager {
         process.executableURL = URL(fileURLWithPath: ".build/debug/NZImageApiLambda")
 
         var environment = ProcessInfo.processInfo.environment
-        environment["SECRET"] = "super_secret_secret"
+        environment["API_CLIENT_SECRETS"] = "dev:super_secret_secret"
         environment["LOCAL_LAMBDA_SERVER_ENABLED"] = "true"
         environment["PORT"] = "\(port)"
         process.environment = environment

@@ -25,8 +25,8 @@ This project is WIP. I intend to publish this as a public API and website where 
 # Find your API endpoint
 aws apigatewayv2 get-apis --query 'Items[*].[Name,ApiEndpoint]' --output table
 
-# Get a random image
-curl "https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/image"
+# Get a random image (the secret header is required -- see "Access Control" below)
+curl -H "secret: YOUR_CONSUMER_SECRET" "https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/image"
 ```
 
 **For local development:**
@@ -58,7 +58,7 @@ Returns a random image from a randomly selected collection.
 
 **Example:**
 ```bash
-curl "https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/image"
+curl -H "secret: YOUR_CONSUMER_SECRET" "https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/image"
 ```
 
 **Response:**
@@ -80,7 +80,7 @@ Returns a random image from a specific collection.
 
 **Example:**
 ```bash
-curl "https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/image?collection=Te%20Papa%20Collections%20Online"
+curl -H "secret: YOUR_CONSUMER_SECRET" "https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/image?collection=Te%20Papa%20Collections%20Online"
 ```
 
 **Note:** Collection names must be URL-encoded.
@@ -130,7 +130,7 @@ See `Sources/NZImageApiLambda/NZImageApi.swift:30-55` for the complete weighted 
 3. **Run the Lambda locally:**
    ```bash
    DIGITALNZ_API_KEY=$DIGITALNZ_API_KEY \
-   SECRET=super_secret_secret \
+   API_CLIENT_SECRETS=dev:super_secret_secret \
    LOCAL_LAMBDA_SERVER_ENABLED=true \
    ./.build/debug/NZImageApiLambda
    ```
@@ -285,7 +285,7 @@ aws lambda update-function-code \
 
 aws lambda update-function-configuration \
   --function-name YOUR_FUNCTION_NAME \
-  --environment "Variables={DIGITALNZ_API_KEY=your_api_key,SECRET=your_secret,LOG_LEVEL=info}"
+  --environment "Variables={DIGITALNZ_API_KEY=your_api_key,API_CLIENT_SECRETS=site:your_secret,LOG_LEVEL=info}"
 ```
 
 **Create new function:**
@@ -299,7 +299,7 @@ aws lambda create-function \
   --timeout 60 \
   --memory-size 256 \
   --architectures arm64 \
-  --environment "Variables={DIGITALNZ_API_KEY=your_api_key,SECRET=your_secret,LOG_LEVEL=info}"
+  --environment "Variables={DIGITALNZ_API_KEY=your_api_key,API_CLIENT_SECRETS=site:your_secret,LOG_LEVEL=info}"
 ```
 
 ### Verifying Deployment
@@ -323,15 +323,18 @@ cat response.json
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
 | `DIGITALNZ_API_KEY` | Yes | Your DigitalNZ API key | `abc123xyz` |
-| `SECRET` | Yes (AWS) | Authentication secret for API Gateway | `your_secret_value` |
+| `API_CLIENT_SECRETS` | Yes (AWS) | Comma-separated `name:secret` pairs, one per approved consumer of `/image` (see [Access Control](#access-control) below). The Swift Lambda requires the `secret` request header to match one entry. | `site:3f9a...,mobile:7bc1...` |
 | `CONVERTER_SIGNING_KEY` | Yes (if deploying via `template.yaml`) | HMAC key shared between the Swift Lambda and the JP2/TIFF converter Lambda; the Swift Lambda signs every converter URL it emits and the converter rejects any request without a valid signature, so its public Function URL can't be driven directly. Generate a random value and set it as the `ConverterSigningKey` SAM parameter (in the gitignored `samconfig.toml`) — it is injected as this env var into both Lambdas. | `openssl rand -hex 32` |
 | `LOCAL_LAMBDA_SERVER_ENABLED` | Yes (Local) | Enables local development server | `true` |
 | `LOG_LEVEL` | No | Logging verbosity | `info`, `debug`, or `trace` |
 
+The `AlarmEmail` SAM parameter (not a Lambda env var) is also required at deploy time — see
+[Access Control](#access-control).
+
 ### Security Best Practices
 
-- **Never commit API keys** - Use environment variables or AWS Secrets Manager
-- **Use strong secrets** - The example `super_secret_secret` is for local testing only
+- **Never commit API keys or consumer secrets** - Use environment variables or AWS Secrets Manager
+- **Use strong secrets** - Generate each `API_CLIENT_SECRETS` entry with `openssl rand -hex 32`; the example `dev:super_secret_secret` is for local testing only
 - **Enable CloudWatch Logs** - Monitor your Lambda function
 - **Set minimal IAM permissions** - Lambda only needs basic execution permissions
 
@@ -340,7 +343,29 @@ cat response.json
 Your Lambda expects APIGatewayV2Request format. Ensure your API Gateway:
 - Uses HTTP API (API Gateway v2)
 - Routes `GET /image` to your Lambda function
-- Passes the `secret` header (if authentication is required)
+- Passes the `secret` header (required — every request is checked against `API_CLIENT_SECRETS`)
+- Has stage throttling configured (`ThrottlingRateLimit`/`ThrottlingBurstLimit` on the
+  `ServerlessHttpApi` resource in `template.yaml`) as a cost ceiling — see [Access Control](#access-control)
+
+## Access Control
+
+`/image` requires a per-consumer secret in the `secret` request header — there is no single
+shared password and no public/unauthenticated path. Each approved consumer (a website, a mobile
+app's backend, etc.) gets its own secret and can be revoked independently. Combined with API
+Gateway stage throttling, per-function reserved concurrency, and CloudWatch/budget alarms, this is
+designed to run entirely within AWS's perpetual free tiers — see
+[`docs/ACCESS-CONTROL.md`](docs/ACCESS-CONTROL.md) for:
+
+- The full architecture and threat model
+- How to onboard or revoke a consumer
+- Reference proxy implementations for a web front-end and a mobile app (neither a browser nor an
+  app binary can safely hold a secret directly — each needs a small backend/edge component that
+  holds it)
+- What each cost control caps and how to tune it
+- The operational runbook for alarm/budget emails
+
+The design rationale (why free static secrets instead of Amazon Cognito) is recorded in
+[`docs/adr/0001-free-per-consumer-secrets.md`](docs/adr/0001-free-per-consumer-secrets.md).
 
 ## Build Details
 

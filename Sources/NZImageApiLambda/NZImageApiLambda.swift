@@ -14,14 +14,17 @@ struct NZImageApiLambda {
     let api = NZImageApi()
 
     func handle(_ event: APIGatewayV2Request, context: LambdaContext) async throws -> APIGatewayV2Response {
-        guard let expected = ProcessInfo.processInfo.environment["SECRET"], !expected.isEmpty else {
-            context.logger.log(level: .error, "SECRET env var not configured; refusing request")
+        guard let clients = ProcessInfo.processInfo.environment["API_CLIENT_SECRETS"], !clients.isEmpty else {
+            context.logger.log(level: .error, "API_CLIENT_SECRETS env var not configured; refusing request")
             return APIGatewayV2Response(statusCode: .internalServerError)
         }
 
-        guard let provided = event.headers.first(name: "secret"), Self.constantTimeEquals(provided, expected) else {
+        guard let provided = event.headers.first(name: "secret"),
+              let consumer = Self.authorizedConsumer(presented: provided, allowed: clients)
+        else {
             return APIGatewayV2Response(statusCode: .unauthorized)
         }
+        context.logger.log(level: .info, "Authorized consumer: \(consumer)")
 
         switch (event.context.http.path, event.context.http.method) {
         case ("/image", .get):
@@ -49,12 +52,28 @@ struct NZImageApiLambda {
     }
 
     /// Compares two strings in constant time (independent of where they first differ), to avoid
-    /// leaking the secret's value through response-timing side channels.
+    /// leaking a secret's value through response-timing side channels.
     private static func constantTimeEquals(_ a: String, _ b: String) -> Bool {
         let x = Array(a.utf8), y = Array(b.utf8)
         guard x.count == y.count else { return false }
         var diff: UInt8 = 0
         for i in x.indices { diff |= x[i] ^ y[i] }
         return diff == 0
+    }
+
+    /// `allowed` is `API_CLIENT_SECRETS`: a comma-separated list of `name:secret` pairs, one per
+    /// approved consumer (e.g. `"site:AbC…,mobile:XyZ…"`). Returns the name of the consumer whose
+    /// secret matches `presented`, or nil if none match. Checks every entry rather than returning on
+    /// the first match, so response timing doesn't reveal which -- or how many -- entries matched.
+    /// Not private, so it's directly unit-testable via `@testable import`.
+    static func authorizedConsumer(presented: String, allowed: String) -> String? {
+        var matched: String?
+        for entry in allowed.split(separator: ",") {
+            guard let separator = entry.firstIndex(of: ":") else { continue }
+            let name = String(entry[..<separator])
+            let secret = String(entry[entry.index(after: separator)...])
+            if constantTimeEquals(presented, secret) { matched = name }
+        }
+        return matched
     }
 }

@@ -21,6 +21,10 @@ response.json
 samconfig.toml
 .aws-sam/
 
+# Generated consumer secrets (see docs/ACCESS-CONTROL.md) -- plaintext credential material,
+# never commit
+.consumer-secrets/
+
 # Python (converter/) bytecode + local venvs
 __pycache__/
 *.pyc
