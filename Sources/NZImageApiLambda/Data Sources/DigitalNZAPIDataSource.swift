@@ -77,7 +77,11 @@ final class DigitalNZAPIDataSource: Sendable {
             .checkNonNull()
             .resultCount!
 
-        let pageCount = validatedResultCount / secondRequestResultsPerPage
+        // DigitalNZ hard-caps `page` at 50000 regardless of how many results actually exist.
+        let pageCount = min(
+            Self.pageCount(forResultCount: validatedResultCount, perPage: secondRequestResultsPerPage),
+            50_000
+        )
 
         guard pageCount > 0 else { throw DigitalNZAPIDataSourceError(
             kind: .noResults,
@@ -106,15 +110,30 @@ final class DigitalNZAPIDataSource: Sendable {
         logger("Got second response, result count \(String(describing: secondaryResponse.search?.resultCount))")
 
         let validatedSearch = try secondaryResponse.checkNonNull().search!.checkNonNull()
+        let results = validatedSearch.results!
 
-        let chosenResultPosition = Int.random(in: 0 ..< secondRequestResultsPerPage)
+        guard !results.isEmpty else { throw DigitalNZAPIDataSourceError(
+            kind: .noResults,
+            data: ["secondary response": secondaryResponse.customDescription()]
+        ) }
 
-        let chosenResult = try validatedSearch
-            .results!
+        // The last page is usually not full, so pick within the ACTUAL returned page size
+        // rather than assuming every page has `secondRequestResultsPerPage` results.
+        let chosenResultPosition = Int.random(in: 0 ..< results.count)
+
+        let chosenResult = try results
             .throwingAccess(chosenResultPosition)
             .checkHasTitleAndLargeImage()
 
         return try await self.urlProcessor.getLargerImage(for: chosenResult)
+    }
+
+    /// Ceiling-divides `resultCount` by `perPage` to get the number of pages, so collections with
+    /// fewer than `perPage` results still get `pageCount >= 1` instead of always throwing `noResults`
+    /// (the previous integer division truncated any remainder to 0).
+    static func pageCount(forResultCount resultCount: Int, perPage: Int) -> Int {
+        guard perPage > 0, resultCount > 0 else { return 0 }
+        return (resultCount + perPage - 1) / perPage
     }
 
     // MARK: Private

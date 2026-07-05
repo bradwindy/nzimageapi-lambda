@@ -14,8 +14,10 @@ from the Swift Lambda without deploying:
 
 Usage:
     python -m venv .venv && .venv/bin/pip install 'Pillow==11.*'
+    export CONVERTER_SIGNING_KEY=some-local-testing-value   # must match the Swift side
     .venv/bin/python converter/local_server.py 8787 &
     export JP2_CONVERTER_URL=http://127.0.0.1:8787
+    export CONVERTER_SIGNING_KEY=some-local-testing-value   # same value, Swift process env
     swift run CollectionTester "TAPUHI"
 """
 

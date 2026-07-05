@@ -5,6 +5,7 @@
 //  Created by Bradley Windybank on 30/06/23.
 //
 
+import Crypto
 import Foundation
 import RichError
 import SwiftSoup
@@ -463,8 +464,11 @@ final class URLProcessor: Sendable {
                 urlModifier: { url in
                     guard let landingUrl = result.landingUrl else { return url.absoluteString }
 
+                    guard let html = try? await NetworkRequestManager().fetchHTML(endpoint: landingUrl.absoluteString) else {
+                        return url.absoluteString
+                    }
+
                     do {
-                        let html = try String(contentsOf: landingUrl, encoding: .utf8)
                         let document: Document = try SwiftSoup.parse(html)
 
                         let imageMetaTag = try document
@@ -937,6 +941,34 @@ final class URLProcessor: Sendable {
         return urlString
     }
 
+    /// Build `<JP2_CONVERTER_URL>/?url=<pct-encoded sourceURL>&sig=<hex HMAC-SHA256(CONVERTER_SIGNING_KEY,
+    /// sourceURL)>`, so only a holder of the signing key (i.e. this Lambda) can mint a converter URL the
+    /// public, unauthenticated converter Function URL will accept. Returns `nil` when either the converter
+    /// URL or the signing key is unset, so every caller degrades to the harvested URL exactly as it did
+    /// before signing existed (including local dev where the converter is unconfigured).
+    ///
+    /// The signature is computed over the raw (decoded) `sourceURL` — the same bytes the converter reads
+    /// back from `queryStringParameters["url"]` (a Function URL delivers it already percent-decoded) — so
+    /// both sides sign identical bytes.
+    /// `internal` (not `private`) so it can be exercised directly by the signer round-trip unit
+    /// test; still not part of any public API surface.
+    static func signedConverterURL(for sourceURL: String) -> String? {
+        let env = ProcessInfo.processInfo.environment
+        guard let base = env["JP2_CONVERTER_URL"], !base.isEmpty,
+              let key = env["CONVERTER_SIGNING_KEY"], !key.isEmpty,
+              let encoded = sourceURL.addingPercentEncoding(withAllowedCharacters: .alphanumerics)
+        else { return nil }
+
+        let mac = HMAC<SHA256>.authenticationCode(
+            for: Data(sourceURL.utf8),
+            using: SymmetricKey(data: Data(key.utf8))
+        )
+        let sig = mac.map { String(format: "%02x", $0) }.joined()
+
+        let trimmed = base.hasSuffix("/") ? String(base.dropLast()) : base
+        return "\(trimmed)/?url=\(encoded)&sig=\(sig)"
+    }
+
     /// TAPUHI / NDHA: resolve the FL JP2 preservation master stream, then hand it to our self-hosted
     /// Pillow JP2→JPEG converter Lambda (its Function URL is injected as `JP2_CONVERTER_URL`). The
     /// browser loads `<converter>/?url=<encoded FL stream>` and receives a displayable JPEG.
@@ -954,14 +986,7 @@ final class URLProcessor: Sendable {
             return url.absoluteString
         }
 
-        guard let base = ProcessInfo.processInfo.environment["JP2_CONVERTER_URL"], !base.isEmpty,
-              let encoded = flStreamURL.addingPercentEncoding(withAllowedCharacters: .alphanumerics)
-        else {
-            return url.absoluteString
-        }
-
-        let trimmed = base.hasSuffix("/") ? String(base.dropLast()) : base
-        return "\(trimmed)/?url=\(encoded)"
+        return signedConverterURL(for: flStreamURL) ?? url.absoluteString
     }
 
     /// Feilding Library (Recollect, signed-IIIF). Resolve the item's original-TIFF download endpoint, then
@@ -980,7 +1005,6 @@ final class URLProcessor: Sendable {
     private static func feildingConverter(_ result: NZRecordsResult, _ url: URL) async -> String {
         guard let landing = result.landingUrl,
               let host = landing.host, host.hasSuffix("feildingheritage.nz"),
-              let base = ProcessInfo.processInfo.environment["JP2_CONVERTER_URL"], !base.isEmpty,
               let html = try? await NetworkRequestManager().fetchHTML(endpoint: landing.absoluteString),
               let pathRange = html.range(
                   of: #"/item/[0-9a-f-]+/files/[0-9a-f-]+/download\?variant=original"#,
@@ -992,12 +1016,7 @@ final class URLProcessor: Sendable {
 
         let downloadURL = "\(landing.scheme ?? "https")://\(host)\(html[pathRange])"
 
-        guard let encoded = downloadURL.addingPercentEncoding(withAllowedCharacters: .alphanumerics) else {
-            return url.absoluteString
-        }
-
-        let trimmed = base.hasSuffix("/") ? String(base.dropLast()) : base
-        return "\(trimmed)/?url=\(encoded)"
+        return signedConverterURL(for: downloadURL) ?? url.absoluteString
     }
 
     /// Kete Horowhenua (Recollect signed-IIIF, same `curtis-production2-cache` platform as Feilding
@@ -1070,14 +1089,7 @@ final class URLProcessor: Sendable {
             return downloadURL
         }
 
-        guard let base = ProcessInfo.processInfo.environment["JP2_CONVERTER_URL"], !base.isEmpty,
-              let encoded = downloadURL.addingPercentEncoding(withAllowedCharacters: .alphanumerics)
-        else {
-            return url.absoluteString
-        }
-
-        let trimmed = base.hasSuffix("/") ? String(base.dropLast()) : base
-        return "\(trimmed)/?url=\(encoded)"
+        return signedConverterURL(for: downloadURL) ?? url.absoluteString
     }
 
     /// War Art Online (Archives NZ via NDHA/Rosetta). Resolve the TIFF preservation master's FL stream and
@@ -1095,14 +1107,7 @@ final class URLProcessor: Sendable {
             return url.absoluteString
         }
 
-        guard let base = ProcessInfo.processInfo.environment["JP2_CONVERTER_URL"], !base.isEmpty,
-              let encoded = flStreamURL.addingPercentEncoding(withAllowedCharacters: .alphanumerics)
-        else {
-            return url.absoluteString
-        }
-
-        let trimmed = base.hasSuffix("/") ? String(base.dropLast()) : base
-        return "\(trimmed)/?url=\(encoded)"
+        return signedConverterURL(for: flStreamURL) ?? url.absoluteString
     }
 
     /// Resolve the War Art Online TIFF preservation master FL stream URL

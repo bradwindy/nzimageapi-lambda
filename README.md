@@ -324,6 +324,7 @@ cat response.json
 |----------|----------|-------------|---------|
 | `DIGITALNZ_API_KEY` | Yes | Your DigitalNZ API key | `abc123xyz` |
 | `SECRET` | Yes (AWS) | Authentication secret for API Gateway | `your_secret_value` |
+| `CONVERTER_SIGNING_KEY` | Yes (if deploying via `template.yaml`) | HMAC key shared between the Swift Lambda and the JP2/TIFF converter Lambda; the Swift Lambda signs every converter URL it emits and the converter rejects any request without a valid signature, so its public Function URL can't be driven directly. Generate a random value and set it as the `ConverterSigningKey` SAM parameter (in the gitignored `samconfig.toml`) — it is injected as this env var into both Lambdas. | `openssl rand -hex 32` |
 | `LOCAL_LAMBDA_SERVER_ENABLED` | Yes (Local) | Enables local development server | `true` |
 | `LOG_LEVEL` | No | Logging verbosity | `info`, `debug`, or `trace` |
 

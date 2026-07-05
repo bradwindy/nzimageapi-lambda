@@ -20,6 +20,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-collections.git", from: "1.1.0"),
         .package(url: "https://github.com/bradwindy/RichError.git", from: "2.0.0"),
         .package(url: "https://github.com/scinfu/SwiftSoup.git", from: "2.7.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.0.0"),
     ],
     targets: [
         .executableTarget(
@@ -30,8 +31,14 @@ let package = Package(
                 .product(name: "Alamofire", package: "Alamofire"),
                 .product(name: "OrderedCollections", package: "swift-collections"),
                 .product(name: "RichError", package: "RichError"),
-                .product(name: "SwiftSoup", package: "SwiftSoup")
+                .product(name: "SwiftSoup", package: "SwiftSoup"),
+                .product(name: "Crypto", package: "swift-crypto")
             ]
+        ),
+        .testTarget(
+            name: "NZImageApiLambdaTests",
+            dependencies: ["NZImageApiLambda"],
+            path: "Tests/NZImageApiLambdaTests"
         ),
         .target(
             name: "LambdaTesting",

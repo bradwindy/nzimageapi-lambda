@@ -23,7 +23,7 @@
   "isBase64Encoded":false,
   "rawQueryString":"",
   "headers":{
-    "secret":"9rXBKaMg4yhA__YX*XJEG*y_y6wjds",
+    "secret":"super_secret_secret",
     "host":"image.test.com",
     "user-agent":"test"
   }

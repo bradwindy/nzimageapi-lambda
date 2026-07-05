@@ -23,6 +23,8 @@ trusted to choose its own asset store.)
 """
 
 import base64
+import hashlib
+import hmac
 import os
 import time
 from io import BytesIO
@@ -34,6 +36,13 @@ from urllib.request import Request, urlopen
 _HOSTS_RAW = os.environ.get("ALLOWED_HOSTS") or os.environ.get("ALLOWED_HOST", "ndhadeliver.natlib.govt.nz")
 ALLOWED_HOSTS = frozenset(h.strip() for h in _HOSTS_RAW.split(",") if h.strip())
 MAX_DIM = int(os.environ.get("MAX_DIM", "4000"))
+# HMAC key shared with the Swift Lambda, which signs every converter URL it emits — required so
+# this public, unauthenticated Function URL only accepts requests minted by our own Swift Lambda.
+SIGNING_KEY = os.environ.get("CONVERTER_SIGNING_KEY", "")
+# Finite decompression-bomb ceiling. The host allowlist alone doesn't bound decoded pixel count;
+# this is high enough not to reject legitimate preservation masters (multi-hundred-MP TIFFs/JP2s
+# are expected here) while still stopping a pathological multi-gigapixel bomb.
+MAX_IMAGE_PIXELS = 500_000_000
 
 # Browser UA: the NDHA FL `dps_func=stream` endpoint is stateless (no cookies needed); the
 # Feilding download endpoint also serves anonymously for public-rights records.
@@ -81,9 +90,9 @@ def convert_to_jpeg(data, max_dim=MAX_DIM):
     """
     from PIL import Image
 
-    # The host is allowlisted to a single trusted origin, so the decompression-bomb guard
-    # would only ever produce false positives on legitimately large preservation masters.
-    Image.MAX_IMAGE_PIXELS = None
+    # Finite ceiling (not disabled outright): high enough to admit legitimate large
+    # preservation masters, low enough to still reject a pathological decompression bomb.
+    Image.MAX_IMAGE_PIXELS = MAX_IMAGE_PIXELS
 
     image = Image.open(BytesIO(data))
 
@@ -126,6 +135,17 @@ def lambda_handler(event, context):
     source_url = params.get("url")
     if not source_url:
         return _text_response(400, "missing 'url' query parameter")
+
+    if not SIGNING_KEY:
+        return _text_response(500, "converter signing key not configured")
+
+    # Verify before any host check / network access: only the Swift Lambda (which holds
+    # SIGNING_KEY) can mint a valid signature, so an invalid one is rejected fast, before
+    # spending a download/decode on a request nobody with the key actually asked for.
+    supplied_sig = params.get("sig") or ""
+    expected_sig = hmac.new(SIGNING_KEY.encode(), source_url.encode(), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(expected_sig, supplied_sig):
+        return _text_response(403, "invalid signature")
 
     host = urlparse(source_url).hostname
     if host not in ALLOWED_HOSTS:
