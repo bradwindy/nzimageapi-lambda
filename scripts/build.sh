@@ -13,5 +13,5 @@ docker run \
     --platform linux/arm64 \
     --volume "$(pwd)/:/src" \
     --workdir "/src/" \
-    swift:6.0-amazonlinux2 \
+    swift:6.3-amazonlinux2 \
     /bin/bash -c "yum -y update; yum -y install openssl openssl-devel -y; swift build --product NZImageApiLambda -c release -Xswiftc -static-stdlib"
