@@ -26,57 +26,74 @@ public struct NZImageApi: Sendable {
 
     // MARK: Public
 
-    // Collection weights are not yet final
-    public static let collectionWeights: OrderedDictionary = [
-        "Auckland Museum Collections": 0.162,
-        "Te Papa Collections Online": 0.119,
-        "Kura Heritage Collections Online": 0.116,
-        "Canterbury Museum": 0.048,
-        "Antarctica NZ Digital Asset Manager": 0.048,
-        "National Publicity Studios black and white file prints": 0.037,
-        "Tauranga City Libraries Other Collection": 0.032,
-        "Hawke's Bay Knowledge Bank": 0.029,
-        "South Canterbury Museum": 0.023,
-        "Howick Historical Village NZMuseums": 0.015,
-        "National Army Museum": 0.013,
-        "TAPUHI": 0.011,
-        "Auckland Art Gallery Toi o Tāmaki": 0.01,
-        "Waimate Museum and Archives PastPerfect": 0.01,
-        "Te Toi Uku, Crown Lynn and Clayworks Museum": 0.009,
-        "Culture Waitaki": 0.009,
-        "Te Hikoi Museum": 0.006,
-        "V.C. Browne & Son NZ Aerial Photograph Collection": 0.005,
-        "Tāmiro": 0.005,
-        "Alexander Turnbull Library Flickr": 0.005,
-        "He Purapura Marara Scattered Seeds": 0.005,
-        "Hastings Recollect": 0.004,
-        "Lower Hutt MyRecollect": 0.002,
-        "Hocken Digital Collections": 0.05,
-        "Ministry for Culture and Heritage Te Ara Flickr": 0.015,
-        "Dunedin City Council Archives Flickr": 0.002,
-        "State Library of New South Wales Flickr": 0.001,
-        "Australian National Maritime Museum Flickr": 0.001,
-        "Mataura Museum NZMuseums": 0.003,
-        "New Zealand Portrait Gallery NZMuseums": 0.001,
-        "Te Ūaka The Lyttelton Museum": 0.009,
-        "Wyndham & Districts Historical Museum": 0.002,
-        "Feilding Library": 0.002,
-        "Clutha Heritage": 0.002,
-        "John Kinder Theological Library": 0.002,
-        "Tasman Heritage": 0.002,
-        "Western Bay Community Archives": 0.002,
-        "War Art Online": 0.002,
-        "Far North District Libraries Rediscovery": 0.002,
-        "Pakiaka Rotorua Heritage Online": 0.002,
-        "Victoria and Albert Museum": 0.001,
-        "The University of Waikato Art Collection": 0.001,
-        "Te Ahu Museum": 0.002,
-        "Ngā Puhipuhi o Te Herenga Waka—Victoria University of Wellington Art Collection": 0.002,
-        "Nelson Provincial Museum": 0.002,
-        "Puke Ariki": 0.002,
-        "Kete Horowhenua": 0.002,
-        "Manawatū Heritage": 0.002,
+    /// Raw DigitalNZ `category=Images` result counts per collection (same query
+    /// `DigitalNZAPIDataSource` uses for its own `per_page=0` count request), fetched 2026-07-06
+    /// via `Sources/Testing/CollectionLister`. `collectionWeights` below normalizes these to
+    /// proportions, so a collection's odds of being picked track its actual share of available
+    /// images instead of a hand-picked number. The previous hardcoded weights only summed to
+    /// 0.837 (not 1.0), which silently gave the last dictionary entry an extra ~16% pick chance
+    /// via `weightedRandomPick`'s fallthrough — see git history and CLAUDE.md "Collection
+    /// weights" section. Re-run CollectionLister and paste in fresh counts periodically as
+    /// collections grow; the derived weights will always sum to 1 as long as this stays counts,
+    /// not fractions.
+    public static let collectionImageCounts: OrderedDictionary<String, Int> = [
+        "Auckland Museum Collections": 267_710,
+        "Te Papa Collections Online": 388_639,
+        "Kura Heritage Collections Online": 390_626,
+        "Canterbury Museum": 295_981,
+        "Antarctica NZ Digital Asset Manager": 59_376,
+        "National Publicity Studios black and white file prints": 33_796,
+        "Tauranga City Libraries Other Collection": 65_298,
+        "Hawke's Bay Knowledge Bank": 29_348,
+        "South Canterbury Museum": 22_582,
+        "Howick Historical Village NZMuseums": 13_450,
+        "National Army Museum": 14_035,
+        "TAPUHI": 301_621,
+        "Auckland Art Gallery Toi o Tāmaki": 18_204,
+        "Waimate Museum and Archives PastPerfect": 8_667,
+        "Te Toi Uku, Crown Lynn and Clayworks Museum": 8_106,
+        "Culture Waitaki": 10_631,
+        "Te Hikoi Museum": 8_714,
+        "V.C. Browne & Son NZ Aerial Photograph Collection": 31_506,
+        "Tāmiro": 5_636,
+        "Alexander Turnbull Library Flickr": 4_307,
+        "He Purapura Marara Scattered Seeds": 10_746,
+        "Hastings Recollect": 4_015,
+        "Lower Hutt MyRecollect": 2_225,
+        "Hocken Digital Collections": 56_791,
+        "Ministry for Culture and Heritage Te Ara Flickr": 15_714,
+        "Dunedin City Council Archives Flickr": 1_768,
+        "State Library of New South Wales Flickr": 177,
+        "Australian National Maritime Museum Flickr": 126,
+        "Mataura Museum NZMuseums": 3_446,
+        "New Zealand Portrait Gallery NZMuseums": 136,
+        "Te Ūaka The Lyttelton Museum": 18_588,
+        "Wyndham & Districts Historical Museum": 3_937,
+        "Feilding Library": 3_592,
+        "Clutha Heritage": 2_888,
+        "John Kinder Theological Library": 2_719,
+        "Tasman Heritage": 2_921,
+        "Western Bay Community Archives": 2_442,
+        "War Art Online": 1_477,
+        "Far North District Libraries Rediscovery": 1_435,
+        "Pakiaka Rotorua Heritage Online": 1_571,
+        "Victoria and Albert Museum": 564,
+        "The University of Waikato Art Collection": 540,
+        "Te Ahu Museum": 506,
+        "Ngā Puhipuhi o Te Herenga Waka—Victoria University of Wellington Art Collection": 488,
+        "Nelson Provincial Museum": 198_770,
+        "Puke Ariki": 134_911,
+        "Kete Horowhenua": 24_375,
+        "Manawatū Heritage": 26_055,
     ]
+
+    /// Derived from `collectionImageCounts`, not hand-set — see the comment above. This
+    /// guarantees the weights sum to 1 (mod floating-point rounding), which is exactly the
+    /// invariant `weightedRandomPick()` depends on.
+    public static var collectionWeights: OrderedDictionary<String, Double> {
+        let total = Double(collectionImageCounts.values.reduce(0, +))
+        return collectionImageCounts.mapValues { Double($0) / total }
+    }
 
     public func image(collection: String?, logger: @Sendable (String) -> Void = { _ in }) async -> NZRecordsResult? {
         do {

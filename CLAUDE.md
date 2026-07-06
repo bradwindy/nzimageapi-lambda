@@ -36,6 +36,17 @@ Lambda converts awkward master formats (JP2/TIFF) to JPEG on demand.
   work in the API Lambda itself.
 - The high-res sweep (collections 34–52) is done; treat `Research/highres/progress.json`
   as ground truth over the prose summaries.
+- Random-collection selection weights (`NZImageApi.collectionWeights`, used by
+  `weightedRandomPick()`) are a **computed property derived from `NZImageApi.collectionImageCounts`**,
+  not hand-set fractions — each collection's odds of being picked are its share of the total
+  image count across all listed collections. This is a deliberate fix: the original hardcoded
+  weights only summed to 0.837, which silently gave the last dictionary entry an extra ~16%
+  pick chance via `weightedRandomPick`'s end-of-loop fallthrough. Keep it this way — never
+  replace `collectionImageCounts` with pre-divided fractions, since manually-maintained
+  fractions are exactly what caused the bug. To refresh counts as collections grow, rebuild
+  `CollectionLister` (`swift build --product CollectionLister`) and run it with
+  `DIGITALNZ_API_KEY` set — it fetches every collection's live `category=Images` result count
+  in one facet query — then paste the updated numbers into `collectionImageCounts`.
 
 Full request-flow/model details: [`.claude/rules/architecture.md`](.claude/rules/architecture.md).
 
@@ -91,6 +102,10 @@ Secrets live in gitignored `.env`, `samconfig.toml`, and `.consumer-secrets/` �
   don't describe concurrency as reserved/limited per-function.
 - Routing a new collection through the converter requires adding its host to
   `ALLOWED_HOSTS` and redeploying the converter; pure `URLProcessor` strategy changes don't.
+- Compiled Swift binaries (e.g. running `CollectionLister` or `NZImageApiLambda` after
+  `swift build`) fail DNS resolution under the command sandbox even for allowlisted hosts —
+  same class of issue as the Docker gotcha above, but it also hits plain network calls made
+  by a built binary, not just Docker. Run with the sandbox disabled.
 
 ## Where to read more
 
