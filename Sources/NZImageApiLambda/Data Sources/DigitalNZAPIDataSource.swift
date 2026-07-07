@@ -37,6 +37,7 @@ final class DigitalNZAPIDataSource: Sendable {
 
     func newResult(
         collection: String?,
+        weightsOverride: OrderedDictionary<String, Double>? = nil,
         logger: (String) -> Void
     )
         async throws -> NZRecordsResult
@@ -47,7 +48,9 @@ final class DigitalNZAPIDataSource: Sendable {
             chosenCollection = collection
         }
         else {
-            chosenCollection = collectionWeights.weightedRandomPick()
+            // Use the per-call override (already filtered + renormalized by the caller) when
+            // provided; otherwise fall back to the unfiltered weights captured at init.
+            chosenCollection = (weightsOverride ?? collectionWeights).weightedRandomPick()
         }
 
         let secondRequestResultsPerPage = 100
