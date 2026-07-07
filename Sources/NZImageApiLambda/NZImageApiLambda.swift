@@ -27,12 +27,34 @@ struct NZImageApiLambda {
         context.logger.log(level: .info, "Authorized consumer: \(consumer)")
 
         switch (event.context.http.path, event.context.http.method) {
+        case ("/collections", .get):
+            let jsonEncoder = JSONEncoder()
+            jsonEncoder.outputFormatting = .withoutEscapingSlashes
+            let jsonData = try jsonEncoder.encode(Array(NZImageApi.collectionImageCounts.keys))
+            let jsonString = String(data: jsonData, encoding: .utf8)
+
+            return APIGatewayV2Response(statusCode: .ok, headers: ["content-type": "application/json"], body: jsonString)
+
         case ("/image", .get):
             let requestedCollection = event.queryStringParameters?["collection"]
 
-            context.logger.log(level: .info, "Requested collection: \(requestedCollection ?? "random")")
+            // `collection` (single explicit override) wins over `exclude`; only consult `exclude`
+            // when no explicit collection was requested.
+            let exclude: Set<String>
+            if requestedCollection != nil {
+                exclude = []
+            }
+            else if let excludeParam = event.queryStringParameters?["exclude"], !excludeParam.isEmpty {
+                exclude = Set(excludeParam.split(separator: ",").map(String.init))
+            }
+            else {
+                exclude = []
+            }
 
-            guard let image = await api.image(collection: requestedCollection, logger: { log in
+            context.logger.log(level: .info, "Requested collection: \(requestedCollection ?? "random")")
+            context.logger.log(level: .info, "Excluded collections: \(exclude.isEmpty ? "none" : exclude.sorted().joined(separator: ", "))")
+
+            guard let image = await api.image(collection: requestedCollection, exclude: exclude, logger: { log in
                 context.logger.log(level: .info, "\(log)")
             }) else {
                 context.logger.log(level: .error, "Failed to get image for collection: \(requestedCollection ?? "random")")
