@@ -173,6 +173,11 @@ Resources:
           Properties:
             Path: /image
             Method: GET
+        Collections:
+          Type: HttpApi
+          Properties:
+            Path: /collections
+            Method: GET
     Metadata:
       BuildMethod: makefile
 
