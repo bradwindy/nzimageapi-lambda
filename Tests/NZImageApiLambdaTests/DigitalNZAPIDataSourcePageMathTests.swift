@@ -41,6 +41,13 @@ private final class MockValidatedRequestManager: ValidatedRequestManager, @unche
     }
 }
 
+/// Collects logger messages across an `async` call without capturing a bare mutable var in a
+/// non-`@Sendable` closure (this project builds under Swift 6 strict concurrency).
+private final class LogCollector: @unchecked Sendable {
+    private(set) var messages: [String] = []
+    func log(_ message: String) { messages.append(message) }
+}
+
 final class DigitalNZAPIDataSourcePageMathTests: XCTestCase {
     // MARK: pure page-count math
 
@@ -91,5 +98,89 @@ final class DigitalNZAPIDataSourcePageMathTests: XCTestCase {
             let id = try XCTUnwrap(result.id)
             XCTAssertTrue((0 ..< 5).contains(id), "chosen result id \(id) was outside the actual 5-result page")
         }
+    }
+
+    // MARK: noResults error paths
+
+    func testThrowsNoResultsWhenInitialResultCountIsZero() async {
+        let dataSource = DigitalNZAPIDataSource(
+            requestManager: MockValidatedRequestManager(resultCount: 0, secondPageResults: []),
+            collectionWeights: [:],
+            urlProcessor: URLProcessor()
+        )
+
+        await XCTAssertThrowsErrorAsync(try await dataSource.newResult(collection: "Any Collection") { _ in }) { error in
+            guard let richError = error as? DigitalNZAPIDataSource.DigitalNZAPIDataSourceError else {
+                XCTFail("expected DigitalNZAPIDataSourceError, got \(error)")
+                return
+            }
+            XCTAssertEqual(richError.kind, .noResults)
+        }
+    }
+
+    func testThrowsNoResultsWhenSecondPageReturnsEmptyResults() async {
+        // resultCount > 0 so the pageCount guard passes and a second request is made, but that
+        // second request's page happens to come back empty.
+        let dataSource = DigitalNZAPIDataSource(
+            requestManager: MockValidatedRequestManager(resultCount: 5, secondPageResults: []),
+            collectionWeights: [:],
+            urlProcessor: URLProcessor()
+        )
+
+        await XCTAssertThrowsErrorAsync(try await dataSource.newResult(collection: "Any Collection") { _ in }) { error in
+            guard let richError = error as? DigitalNZAPIDataSource.DigitalNZAPIDataSourceError else {
+                XCTFail("expected DigitalNZAPIDataSourceError, got \(error)")
+                return
+            }
+            XCTAssertEqual(richError.kind, .noResults)
+        }
+    }
+
+    // MARK: weighted-random collection selection
+
+    func testNilCollectionResolvesUsingInjectedCollectionWeights() async throws {
+        let mockResults = [
+            NZRecordsResult(
+                id: 99, title: "t", description: "d", thumbnailUrl: nil,
+                largeThumbnailUrl: URL(string: "https://example.com/large.jpg"),
+                objectUrl: nil, collection: "Weighted Collection", landingUrl: nil
+            ),
+        ]
+        let dataSource = DigitalNZAPIDataSource(
+            requestManager: MockValidatedRequestManager(resultCount: 1, secondPageResults: mockResults),
+            collectionWeights: ["Weighted Collection": 1.0],
+            urlProcessor: URLProcessor()
+        )
+        let logCollector = LogCollector()
+
+        let result = try await dataSource.newResult(collection: nil) { logCollector.log($0) }
+
+        XCTAssertEqual(result.id, 99)
+        XCTAssertTrue(
+            logCollector.messages.contains { $0.contains("Weighted Collection") },
+            "expected a log message naming the weighted-random-picked collection, got \(logCollector.messages)"
+        )
+    }
+
+    // MARK: end-to-end pure-strategy transform (data source -> URLProcessor wiring)
+
+    func testNewResultAppliesVictoriaAndAlbertMuseumPureStrategyTransform() async throws {
+        let vamResult = NZRecordsResult(
+            id: 7, title: "t", description: "d", thumbnailUrl: nil,
+            largeThumbnailUrl: URL(string: "https://media.vam.ac.uk/media/thira/collection_images/2025PE4780/2025PE4780.jpg"),
+            objectUrl: nil, collection: "Victoria and Albert Museum", landingUrl: nil
+        )
+        let dataSource = DigitalNZAPIDataSource(
+            requestManager: MockValidatedRequestManager(resultCount: 1, secondPageResults: [vamResult]),
+            collectionWeights: [:],
+            urlProcessor: URLProcessor()
+        )
+
+        let result = try await dataSource.newResult(collection: "Victoria and Albert Museum") { _ in }
+
+        XCTAssertEqual(
+            result.largeThumbnailUrl?.absoluteString,
+            "https://framemark.vam.ac.uk/collections/2025PE4780/full/max/0/default.jpg"
+        )
     }
 }

@@ -517,13 +517,15 @@ final class URLProcessor: Sendable {
     // them. Migrated in one collection at a time during the high-res sweep.
 
     /// Return the current `large_thumbnail_url` unchanged.
-    private static func passthrough(_ result: NZRecordsResult, _ url: URL) -> String {
+    /// `internal` (not `private`) so it's directly unit-testable.
+    static func passthrough(_ result: NZRecordsResult, _ url: URL) -> String {
         url.absoluteString
     }
 
     /// Use `result.objectUrl` directly when present (often the full-res original);
     /// otherwise fall back to the current URL.
-    private static func objectUrlDirect(_ result: NZRecordsResult, _ url: URL) -> String {
+    /// `internal` (not `private`) so it's directly unit-testable.
+    static func objectUrlDirect(_ result: NZRecordsResult, _ url: URL) -> String {
         result.objectUrl?.absoluteString ?? url.absoluteString
     }
 
@@ -538,7 +540,8 @@ final class URLProcessor: Sendable {
     /// URL shape: `https://live.staticflickr.com/<server>/<id>_<secret>[_<size>].jpg`. The `<id>`
     /// and `<secret>` never contain `_`, so splitting the filename on `_` cleanly isolates an
     /// optional trailing size token.
-    private static func flickrLargest(_ result: NZRecordsResult, _ url: URL) -> String {
+    /// `internal` (not `private`) so it's directly unit-testable.
+    static func flickrLargest(_ result: NZRecordsResult, _ url: URL) -> String {
         let urlString = url.absoluteString
 
         guard urlString.contains("staticflickr.com"),
@@ -641,7 +644,8 @@ final class URLProcessor: Sendable {
     /// The image id (`<id>_<token>`) contains an underscore, so we drop only the *last* `_<size>`
     /// segment. The slashes are encoded as lowercase `%2f` to match the identifier eHive's own viewer
     /// uses. Falls back to the original URL if the host/filename shape is unexpected.
-    private static func ehiveIIIFLargest(_ result: NZRecordsResult, _ url: URL) -> String {
+    /// `internal` (not `private`) so it's directly unit-testable.
+    static func ehiveIIIFLargest(_ result: NZRecordsResult, _ url: URL) -> String {
         let urlString = url.absoluteString
 
         guard urlString.contains("images.ehive.com"),
@@ -680,7 +684,8 @@ final class URLProcessor: Sendable {
     /// browser UA and there is no larger public derivative (the IIIF maxWidth is 2500 and the manifest
     /// exposes nothing else). Pure URL construction (no request-time fetch); falls back to the harvested
     /// URL if the host/filename shape is unexpected.
-    private static func vamIIIFLargest(_ result: NZRecordsResult, _ url: URL) -> String {
+    /// `internal` (not `private`) so it's directly unit-testable.
+    static func vamIIIFLargest(_ result: NZRecordsResult, _ url: URL) -> String {
         let urlString = url.absoluteString
 
         guard urlString.contains("vam.ac.uk"),
@@ -888,7 +893,8 @@ final class URLProcessor: Sendable {
 
     /// Proxy through images.weserv.nl at native resolution (bypasses hotlink
     /// protection). Note: weserv has a 71 MP cap and cannot decode JP2.
-    private static func weservProxy(_ result: NZRecordsResult, _ url: URL) -> String {
+    /// `internal` (not `private`) so it's directly unit-testable.
+    static func weservProxy(_ result: NZRecordsResult, _ url: URL) -> String {
         guard let escaped = url.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else {
             return url.absoluteString
         }
@@ -896,7 +902,8 @@ final class URLProcessor: Sendable {
     }
 
     /// Proxy through thumbnailer.digitalnz.org, normalising to JPEG.
-    private static func thumbnailerProxy(_ result: NZRecordsResult, _ url: URL) -> String {
+    /// `internal` (not `private`) so it's directly unit-testable.
+    static func thumbnailerProxy(_ result: NZRecordsResult, _ url: URL) -> String {
         guard let escaped = url.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else {
             return url.absoluteString
         }
@@ -904,7 +911,8 @@ final class URLProcessor: Sendable {
     }
 
     /// Build a strategy that swaps a size token in the URL (e.g. `large` -> `xlarge`).
-    private static func stringSwap(from: String, to: String) -> URLStrategy {
+    /// `internal` (not `private`) so it's directly unit-testable.
+    static func stringSwap(from: String, to: String) -> URLStrategy {
         { _, url in url.absoluteString.replacingOccurrences(of: from, with: to) }
     }
 
@@ -1242,7 +1250,8 @@ final class URLProcessor: Sendable {
     /// the `-max` derivative is still larger than the harvested `-600` (e.g. a ~2000px display
     /// ceiling). Rips the asset id from the `large_thumbnail_url`; falls back to the original URL
     /// if the id can't be parsed.
-    private static func recollectDisplayMax(_ result: NZRecordsResult, _ url: URL) -> String {
+    /// `internal` (not `private`) so it's directly unit-testable.
+    static func recollectDisplayMax(_ result: NZRecordsResult, _ url: URL) -> String {
         guard let collection = result.collection,
               let domain = try? recollectDomain(for: collection),
               let id = url.absoluteString.slice(from: "display/", to: "-")
@@ -1314,7 +1323,8 @@ final class URLProcessor: Sendable {
         "Clutha Heritage": "clutha.recollect.co.nz",
     ]
 
-    private static func recollectDownloadUrlString(
+    /// `internal` (not `private`) so it's directly unit-testable.
+    static func recollectDownloadUrlString(
         from url: URL,
         collection: String
     )
@@ -1330,7 +1340,8 @@ final class URLProcessor: Sendable {
         )
     }
 
-    private static func recollectDomain(for collection: String) throws -> String {
+    /// `internal` (not `private`) so it's directly unit-testable.
+    static func recollectDomain(for collection: String) throws -> String {
         guard let domain = recollectDomainMap[collection] else {
             throw URLProcessorError(
                 kind: .unableToFindRecollectDomain,
@@ -1341,7 +1352,8 @@ final class URLProcessor: Sendable {
         return domain
     }
 
-    private static func ripId(
+    /// `internal` (not `private`) so it's directly unit-testable.
+    static func ripId(
         from url: URL,
         to: (String) -> String,
         startString: String,

@@ -49,6 +49,10 @@ let package = Package(
             dependencies: [],
             path: "Sources/Testing/LambdaTesting"
         ),
+        .testTarget(
+            name: "LambdaTestingTests",
+            dependencies: ["LambdaTesting"]
+        ),
         .executableTarget(
             name: "CollectionTester",
             dependencies: ["LambdaTesting"],
