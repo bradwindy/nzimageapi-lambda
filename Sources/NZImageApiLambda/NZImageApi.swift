@@ -131,6 +131,11 @@ public struct NZImageApi: Sendable {
             )
             return result
         }
+        catch is NoEligibleCollectionsError {
+            // Expected, user-triggerable (an `exclude` list that covers every collection) --
+            // logged distinctly from the catch-all below so it doesn't read as a genuine bug.
+            logger("No eligible collections remain after applying the exclude filter")
+        }
         catch {
             if let richError = error as? (any RichError) {
                 // Get the raw value from the enum that defines the kind of error. Messy due to RichError being a protocol and the nested
