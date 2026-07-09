@@ -5,6 +5,14 @@
 //  Checks image resolutions for Digital NZ collections
 //
 
+// Must be the first import: Glibc's stdout/stderr aren't marked Sendable, so Swift 6 strict
+// concurrency flags any reference to them. @preconcurrency suppresses that, but only if this
+// import is resolved before Foundation's own (non-preconcurrency) transitive import of Glibc —
+// see https://github.com/swiftlang/swift/issues/77866.
+#if canImport(Glibc)
+@preconcurrency import Glibc
+#endif
+
 import Alamofire
 import Foundation
 #if canImport(ImageIO)
@@ -17,10 +25,8 @@ import RichError
     import FoundationNetworking
 #endif
 
-// stdout/stderr are extern C globals; Glibc's overlay (unlike Darwin's) doesn't mark them
-// Sendable, so Swift 6 strict concurrency flags direct references. This CLI is single-threaded
-// interactive terminal I/O, so aliasing them as nonisolated(unsafe) (the SE-0412-documented
-// escape hatch) is safe.
+// nonisolated(unsafe) because this is a new global of a non-Sendable type
+// (UnsafeMutablePointer<FILE>); safe here since this CLI is single-threaded terminal I/O.
 nonisolated(unsafe) private let standardError = stderr
 
 // MARK: - Models
