@@ -28,7 +28,7 @@ struct NZImageApiLambda {
 
         switch (event.context.http.path, event.context.http.method) {
         case ("/image", .get):
-            let requestedCollection = event.queryStringParameters?["collection"]
+            let requestedCollection = event.queryStringParameters["collection"]
 
             context.logger.log(level: .info, "Requested collection: \(requestedCollection ?? "random")")
 
