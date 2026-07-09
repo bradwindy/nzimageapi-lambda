@@ -16,6 +16,11 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'invalid JSON body' }, { status: 400 });
   }
+  // request.json() returns null/primitives (e.g. body "null") without throwing;
+  // destructuring those would throw a TypeError outside the guard → 500 instead of 400.
+  if (typeof body !== 'object' || body === null) {
+    return NextResponse.json({ error: 'index must be a number' }, { status: 400 });
+  }
   const { index } = body as { index?: unknown };
   if (typeof index !== 'number') {
     return NextResponse.json({ error: 'index must be a number' }, { status: 400 });

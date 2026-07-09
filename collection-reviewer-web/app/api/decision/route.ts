@@ -16,6 +16,11 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'invalid JSON body' }, { status: 400 });
   }
+  // request.json() returns null/primitives (e.g. body "null" or "42") without throwing;
+  // destructuring those would throw a TypeError outside the guard → 500 instead of 400.
+  if (typeof body !== 'object' || body === null) {
+    return NextResponse.json({ error: 'invalid body' }, { status: 400 });
+  }
   const { index, status, notes } = body as {
     index: number;
     status: DecisionStatus;
