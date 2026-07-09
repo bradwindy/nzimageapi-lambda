@@ -24,7 +24,7 @@ let package = Package(
         // Pinned explicitly (not just a transitive dep of swift-service-lifecycle) to force
         // resolution past 1.1.3: 1.1.4 fixes region-isolation errors that the newer Swift
         // compiler flags as build failures in this package's own source.
-        .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.1.4"),
+        .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.1.5"),
     ],
     targets: [
         .executableTarget(
