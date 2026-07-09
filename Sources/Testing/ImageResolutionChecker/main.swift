@@ -7,7 +7,9 @@
 
 import Alamofire
 import Foundation
+#if canImport(ImageIO)
 import ImageIO
+#endif
 import OrderedCollections
 import RichError
 
@@ -79,6 +81,7 @@ struct ResolutionCheckOutput: Codable {
 // MARK: - Image Resolution Checker
 
 func getImageResolution(from url: URL) async -> ImageResolution? {
+    #if canImport(ImageIO)
     do {
         let (data, _) = try await URLSession.shared.data(from: url)
 
@@ -94,6 +97,11 @@ func getImageResolution(from url: URL) async -> ImageResolution? {
     } catch {
         return nil
     }
+    #else
+    // ImageIO is Darwin-only; this dev CLI tool isn't built/run on Linux (see CLAUDE.md's
+    // "Sources/Testing/*" CI exclusion), but Linux `swift test` still compiles this target.
+    return nil
+    #endif
 }
 
 func checkImageURL(_ url: URL?) async -> ImageCheckResult? {

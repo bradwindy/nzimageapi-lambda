@@ -8,6 +8,9 @@
 import Foundation
 import XCTest
 @testable import NZImageApiLambda
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 /// Stands in for the real network-backed `ValidatedRequestManager`. Returns a canned
 /// `NZRecordsResponse` for both the initial (`per_page=0`, count-only) and secondary

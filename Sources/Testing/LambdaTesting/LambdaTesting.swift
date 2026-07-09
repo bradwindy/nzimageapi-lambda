@@ -11,6 +11,9 @@ import Darwin
 #else
 import Glibc
 #endif
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 // MARK: - Lambda Response
 
