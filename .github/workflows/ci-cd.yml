@@ -14,11 +14,9 @@ concurrency:
 jobs:
   swift-test:
     name: Swift tests
-    runs-on: ubuntu-24.04-arm            # free arm64 runner (public repo); matches prod arch
-    container: swift:6.3-amazonlinux2    # exact prod toolchain — same image scripts/build.sh uses
+    runs-on: ubuntu-24.04-arm                # free arm64 runner (public repo); matches prod arch
+    container: swift:6.3-amazonlinux2023     # exact prod toolchain — same image scripts/build.sh uses; already bundles git + openssl-devel
     steps:
-      - name: Install git + openssl (AL2 image, needed by SwiftPM/deps)
-        run: yum -y install git openssl openssl-devel
       - uses: actions/checkout@v4
       - name: swift test
         run: swift test
