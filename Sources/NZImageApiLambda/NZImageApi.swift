@@ -95,13 +95,46 @@ public struct NZImageApi: Sendable {
         return collectionImageCounts.mapValues { Double($0) / total }
     }
 
-    public func image(collection: String?, logger: @Sendable (String) -> Void = { _ in }) async -> NZRecordsResult? {
+    /// Thrown when `exclude` removes every collection, leaving nothing eligible to pick from.
+    /// Surfaced to the handler so it can return a `.badRequest` rather than silently falling
+    /// back to the full unfiltered set.
+    public struct NoEligibleCollectionsError: Error {}
+
+    /// Weights over `collectionImageCounts` minus `exclude`, re-derived as `count / filtered-total`
+    /// so they still sum to 1 (mod float rounding) over the remaining set — never
+    /// subtract-then-leave-unnormalized, which reintroduces the documented "weights don't sum to 1"
+    /// bug. Throws `NoEligibleCollectionsError` if `exclude` removes every collection.
+    public static func filteredCollectionWeights(excluding exclude: Set<String>) throws -> OrderedDictionary<String, Double> {
+        let filteredCounts = collectionImageCounts.filter { !exclude.contains($0.key) }
+        guard !filteredCounts.isEmpty else { throw NoEligibleCollectionsError() }
+        let total = Double(filteredCounts.values.reduce(0, +))
+        return filteredCounts.mapValues { Double($0) / total }
+    }
+
+    public func image(
+        collection: String?,
+        exclude: Set<String> = [],
+        logger: @Sendable (String) -> Void = { _ in }
+    ) async -> NZRecordsResult? {
         do {
+            // An explicit single collection always wins; `exclude` is only consulted for the
+            // random path. When `exclude` is non-empty we filter+renormalize the canonical counts.
+            var weightsOverride: OrderedDictionary<String, Double>? = nil
+            if collection == nil, !exclude.isEmpty {
+                weightsOverride = try NZImageApi.filteredCollectionWeights(excluding: exclude)
+            }
+
             let result = try await digitalNZAPIDataSource.newResult(
                 collection: collection,
+                weightsOverride: weightsOverride,
                 logger: logger
             )
             return result
+        }
+        catch is NoEligibleCollectionsError {
+            // Expected, user-triggerable (an `exclude` list that covers every collection) --
+            // logged distinctly from the catch-all below so it doesn't read as a genuine bug.
+            logger("No eligible collections remain after applying the exclude filter")
         }
         catch {
             if let richError = error as? (any RichError) {

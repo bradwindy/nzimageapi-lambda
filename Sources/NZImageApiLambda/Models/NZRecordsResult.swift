@@ -21,7 +21,10 @@ public struct NZRecordsResult: NonNullableResult, Codable, Sendable {
         collection: String?,
         landingUrl: URL?,
         originUrl: URL? = nil,
-        sourceUrl: URL? = nil
+        sourceUrl: URL? = nil,
+        creator: [String]? = nil,
+        date: [String]? = nil,
+        subject: [String]? = nil
     ) {
         self.id = id
         self.title = title
@@ -33,6 +36,9 @@ public struct NZRecordsResult: NonNullableResult, Codable, Sendable {
         self.landingUrl = landingUrl
         self.originUrl = originUrl
         self.sourceUrl = sourceUrl
+        self.creator = creator
+        self.date = date
+        self.subject = subject
     }
 
     // MARK: Internal
@@ -62,6 +68,9 @@ public struct NZRecordsResult: NonNullableResult, Codable, Sendable {
         case landingUrl = "landing_url"
         case originUrl = "origin_url"
         case sourceUrl = "source_url"
+        case creator
+        case date
+        case subject
     }
 
     public var id: Int?
@@ -74,6 +83,9 @@ public struct NZRecordsResult: NonNullableResult, Codable, Sendable {
     public var landingUrl: URL?
     public var originUrl: URL?
     public var sourceUrl: URL?
+    public var creator: [String]?
+    public var date: [String]?
+    public var subject: [String]?
 
     func customDescription() -> String {
         return """
@@ -86,7 +98,10 @@ public struct NZRecordsResult: NonNullableResult, Codable, Sendable {
         collection: \(String(describing: collection)),
         landingUrl: \(String(describing: landingUrl)),
         originUrl: \(String(describing: originUrl)),
-        sourceUrl: \(String(describing: sourceUrl))
+        sourceUrl: \(String(describing: sourceUrl)),
+        creator: \(String(describing: creator)),
+        date: \(String(describing: date)),
+        subject: \(String(describing: subject))
         """
     }
 
