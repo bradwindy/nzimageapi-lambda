@@ -5,12 +5,24 @@
 //  Lists all image collections from Digital NZ and their counts
 //
 
+// Must be the first import: Glibc's stdout/stderr aren't marked Sendable, so Swift 6 strict
+// concurrency flags any reference to them. @preconcurrency suppresses that, but only if this
+// import is resolved before Foundation's own (non-preconcurrency) transitive import of Glibc —
+// see https://github.com/swiftlang/swift/issues/77866.
+#if canImport(Glibc)
+@preconcurrency import Glibc
+#endif
+
 import Alamofire
 import Foundation
 
 #if canImport(FoundationNetworking)
     import FoundationNetworking
 #endif
+
+// nonisolated(unsafe) because this is a new global of a non-Sendable type
+// (UnsafeMutablePointer<FILE>); safe here since this CLI is single-threaded terminal I/O.
+nonisolated(unsafe) private let standardError = stderr
 
 // MARK: - Models
 
@@ -47,7 +59,7 @@ struct CollectionListOutput: Codable {
 struct CollectionListerApp {
     static func main() async throws {
         guard let apiKey = ProcessInfo.processInfo.environment["DIGITALNZ_API_KEY"] else {
-            fputs("Error: DIGITALNZ_API_KEY environment variable not set\n", stderr)
+            fputs("Error: DIGITALNZ_API_KEY environment variable not set\n", standardError)
             exit(1)
         }
 
@@ -75,12 +87,12 @@ struct CollectionListerApp {
 
         // Check for API errors
         if let errors = response.errors, !errors.isEmpty {
-            fputs("API returned errors: \(errors.joined(separator: ", "))\n", stderr)
+            fputs("API returned errors: \(errors.joined(separator: ", "))\n", standardError)
             exit(1)
         }
 
         guard let facetDict = response.search?.facets?.primaryCollection else {
-            fputs("Error: No facet data returned from API\n", stderr)
+            fputs("Error: No facet data returned from API\n", standardError)
             exit(1)
         }
 

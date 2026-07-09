@@ -7,11 +7,11 @@ echo "Cleaning previous build artifacts..."
 rm -rf .build/checkouts .build/repositories .build/workspace-state.json
 
 # Build using Docker
-echo "Building Lambda for Amazon Linux 2..."
+echo "Building Lambda for Amazon Linux 2023..."
 docker run \
     --rm \
     --platform linux/arm64 \
     --volume "$(pwd)/:/src" \
     --workdir "/src/" \
-    swift:6.3-amazonlinux2 \
-    /bin/bash -c "yum -y update; yum -y install openssl openssl-devel -y; swift build --product NZImageApiLambda -c release -Xswiftc -static-stdlib"
+    swift:6.3-amazonlinux2023 \
+    /bin/bash -c "dnf -y install openssl-devel; swift build --product NZImageApiLambda -c release -Xswiftc -static-stdlib"

@@ -6,8 +6,12 @@
 //  testable without any actual network request.
 //
 
+import Foundation
 import XCTest
 @testable import NZImageApiLambda
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 final class NetworkRequestManagerValidationTests: XCTestCase {
     private func response(statusCode: Int, contentType: String?) -> HTTPURLResponse {

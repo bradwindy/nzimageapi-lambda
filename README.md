@@ -252,7 +252,7 @@ The deployment script handles building with Docker and packaging with UPX:
 
 **Manual build steps:**
 ```bash
-# 1. Build using Docker (compiles for Amazon Linux 2)
+# 1. Build using Docker (compiles for Amazon Linux 2023)
 ./scripts/build.sh
 
 # 2. Package with UPX compression
@@ -269,7 +269,7 @@ The deployment script handles building with Docker and packaging with UPX:
 2. Select your function (or create new)
 3. Upload `.build/lambda/NZImageApiLambda/lambda.zip`
 4. Configure:
-   - Runtime: `provided.al2` (Amazon Linux 2)
+   - Runtime: `provided.al2023` (Amazon Linux 2023)
    - Handler: `bootstrap`
    - Architecture: `arm64`
    - Timeout: 60 seconds
@@ -292,7 +292,7 @@ aws lambda update-function-configuration \
 ```bash
 aws lambda create-function \
   --function-name NZImageApiLambda \
-  --runtime provided.al2 \
+  --runtime provided.al2023 \
   --role YOUR_LAMBDA_ROLE_ARN \
   --handler bootstrap \
   --zip-file fileb://.build/lambda/NZImageApiLambda/lambda.zip \
@@ -370,8 +370,8 @@ The design rationale (why free static secrets instead of Amazon Cognito) is reco
 ## Build Details
 
 The build process:
-- Uses Docker with `swift:6.0-amazonlinux2` image
-- Compiles for AWS Lambda's Amazon Linux 2 runtime
+- Uses Docker with `swift:6.3-amazonlinux2023` image
+- Compiles for AWS Lambda's Amazon Linux 2023 runtime
 - Statically links the Swift standard library
 - Compresses the binary with UPX (~70% size reduction: 106MB → 32MB)
 - Creates a `bootstrap` executable (required by AWS custom runtime)

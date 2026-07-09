@@ -5,6 +5,14 @@
 //  Interactive review tool for all collections
 //
 
+// Must be the first import: Glibc's stdout/stderr aren't marked Sendable, so Swift 6 strict
+// concurrency flags any reference to them. @preconcurrency suppresses that, but only if this
+// import is resolved before Foundation's own (non-preconcurrency) transitive import of Glibc —
+// see https://github.com/swiftlang/swift/issues/77866.
+#if canImport(Glibc)
+@preconcurrency import Glibc
+#endif
+
 import Foundation
 import LambdaTesting
 import Synchronization
@@ -12,6 +20,11 @@ import Synchronization
 #if canImport(FoundationNetworking)
     import FoundationNetworking
 #endif
+
+// nonisolated(unsafe) because these are new globals of a non-Sendable type
+// (UnsafeMutablePointer<FILE>); safe here since this CLI is single-threaded terminal I/O.
+nonisolated(unsafe) private let standardOutput = stdout
+nonisolated(unsafe) private let standardError = stderr
 
 // MARK: - Progress Tracking
 
@@ -229,7 +242,7 @@ func printClickableLink(_ url: URL, label: String) {
 
 func getSelectionInput(prompt: String) -> SelectionStatus {
     print(prompt, terminator: " ")
-    fflush(stdout)
+    fflush(standardOutput)
 
     while true {
         if let input = readLine()?.lowercased().trimmingCharacters(in: .whitespaces) {
@@ -249,13 +262,13 @@ func getSelectionInput(prompt: String) -> SelectionStatus {
             }
         }
         print("Please enter y/n/u/m/s: ", terminator: "")
-        fflush(stdout)
+        fflush(standardOutput)
     }
 }
 
 func getTextInput(prompt: String) -> String {
     print(prompt, terminator: " ")
-    fflush(stdout)
+    fflush(standardOutput)
     return readLine() ?? ""
 }
 
@@ -297,7 +310,7 @@ struct CollectionReviewerApp {
         progressState.withLock { $0.filePath = "\(currentDir)/Research/.collection-reviewer-progress" }
 
         guard fileManager.fileExists(atPath: detailsPath) else {
-            fputs("Error: Could not find \(detailsPath)\n", stderr)
+            fputs("Error: Could not find \(detailsPath)\n", standardError)
             exit(1)
         }
 

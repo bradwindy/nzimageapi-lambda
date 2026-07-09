@@ -144,13 +144,13 @@ Resources:
       AlarmActions:
         - !Ref AlarmTopic
 
-  # --- Swift NZ Image API (provided.al2 custom runtime, built via the Makefile) -------
+  # --- Swift NZ Image API (provided.al2023 custom runtime, built via the Makefile) -------
   NZImageApiFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: .
       Handler: bootstrap
-      Runtime: provided.al2
+      Runtime: provided.al2023
       Architectures:
         - arm64
       MemorySize: 512

@@ -5,15 +5,29 @@
 //  Checks image resolutions for Digital NZ collections
 //
 
+// Must be the first import: Glibc's stdout/stderr aren't marked Sendable, so Swift 6 strict
+// concurrency flags any reference to them. @preconcurrency suppresses that, but only if this
+// import is resolved before Foundation's own (non-preconcurrency) transitive import of Glibc —
+// see https://github.com/swiftlang/swift/issues/77866.
+#if canImport(Glibc)
+@preconcurrency import Glibc
+#endif
+
 import Alamofire
 import Foundation
+#if canImport(ImageIO)
 import ImageIO
+#endif
 import OrderedCollections
 import RichError
 
 #if canImport(FoundationNetworking)
     import FoundationNetworking
 #endif
+
+// nonisolated(unsafe) because this is a new global of a non-Sendable type
+// (UnsafeMutablePointer<FILE>); safe here since this CLI is single-threaded terminal I/O.
+nonisolated(unsafe) private let standardError = stderr
 
 // MARK: - Models
 
@@ -79,6 +93,7 @@ struct ResolutionCheckOutput: Codable {
 // MARK: - Image Resolution Checker
 
 func getImageResolution(from url: URL) async -> ImageResolution? {
+    #if canImport(ImageIO)
     do {
         let (data, _) = try await URLSession.shared.data(from: url)
 
@@ -94,6 +109,11 @@ func getImageResolution(from url: URL) async -> ImageResolution? {
     } catch {
         return nil
     }
+    #else
+    // ImageIO is Darwin-only; this dev CLI tool isn't built/run on Linux (see CLAUDE.md's
+    // "Sources/Testing/*" CI exclusion), but Linux `swift test` still compiles this target.
+    return nil
+    #endif
 }
 
 func checkImageURL(_ url: URL?) async -> ImageCheckResult? {
@@ -172,20 +192,20 @@ struct ImageResolutionCheckerApp {
         let arguments = CommandLine.arguments
 
         guard arguments.count >= 2 else {
-            fputs("Usage: ImageResolutionChecker <collection_name>\n", stderr)
+            fputs("Usage: ImageResolutionChecker <collection_name>\n", standardError)
             exit(1)
         }
 
         let collection = arguments[1]
 
         guard let apiKey = ProcessInfo.processInfo.environment["DIGITALNZ_API_KEY"] else {
-            fputs("Error: DIGITALNZ_API_KEY environment variable not set\n", stderr)
+            fputs("Error: DIGITALNZ_API_KEY environment variable not set\n", standardError)
             exit(1)
         }
 
         // Fetch a result from Digital NZ
         guard let result = try await fetchDigitalNZResult(collection: collection, apiKey: apiKey) else {
-            fputs("Error: No results found for collection '\(collection)'\n", stderr)
+            fputs("Error: No results found for collection '\(collection)'\n", standardError)
             exit(1)
         }
 
