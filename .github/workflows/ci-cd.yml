@@ -1,0 +1,77 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded PR runs; never cancel an in-progress main run (which may be deploying).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  swift-test:
+    name: Swift tests
+    runs-on: ubuntu-24.04-arm            # free arm64 runner (public repo); matches prod arch
+    container: swift:6.3-amazonlinux2    # exact prod toolchain — same image scripts/build.sh uses
+    steps:
+      - name: Install git + openssl (AL2 image, needed by SwiftPM/deps)
+        run: yum -y install git openssl openssl-devel
+      - uses: actions/checkout@v4
+      - name: swift test
+        run: swift test
+
+  python-test:
+    name: Python converter tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"         # matches converter Lambda runtime
+      - name: Install dev deps
+        run: pip install -r converter/requirements-dev.txt
+      - name: pytest
+        working-directory: converter
+        run: pytest
+
+  deploy:
+    name: Build & deploy (SAM)
+    needs: [swift-test, python-test]     # deploy blocked until BOTH pass
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04-arm            # native arm64 Docker: fast Swift cross-compile + converter image
+    environment: production              # gives an optional approval gate; scopes OIDC sub (see setup)
+    permissions:
+      id-token: write                    # required for OIDC
+      contents: read
+    concurrency:
+      group: deploy-nzimageapi           # serialize deploys; never overlap
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-southeast-2
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true            # arch-independent SAM CLI install
+      - name: sam build
+        run: sam build                   # Swift via Makefile+Docker; converter via Docker image
+      - name: sam deploy
+        run: |
+          sam deploy \
+            --stack-name nzimageapi \
+            --region ap-southeast-2 \
+            --resolve-s3 \
+            --image-repositories Jp2ConverterFunction=${{ vars.CONVERTER_ECR_REPO }} \
+            --capabilities CAPABILITY_IAM \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+              DigitalNzApiKey=${{ secrets.DIGITALNZ_API_KEY }} \
+              ApiClientSecrets='${{ secrets.API_CLIENT_SECRETS }}' \
+              ConverterSigningKey=${{ secrets.CONVERTER_SIGNING_KEY }} \
+              AlarmEmail=${{ vars.ALARM_EMAIL }}
