@@ -14,4 +14,4 @@ docker run \
     --volume "$(pwd)/:/src" \
     --workdir "/src/" \
     swift:6.3-amazonlinux2023 \
-    /bin/bash -c "dnf -y install openssl-devel; swift build --product NZImageApiLambda -c release -Xswiftc -static-stdlib"
+    /bin/bash -c "swift build --product NZImageApiLambda -c release -Xswiftc -static-stdlib && chown -R $(id -u):$(id -g) /src"
