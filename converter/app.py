@@ -16,20 +16,27 @@ This function downloads that master (following redirects), decodes it with Pillo
 response cap, and returns a browser-displayable JPEG (base64, image/jpeg).
 
 It is a generic master->JPEG proxy, host-allowlisted to a fixed set of trusted origins so
-it can never be used as an open proxy / SSRF pivot. (A redirect issued by an allowlisted
-origin — e.g. Feilding -> its own presigned S3 store — is followed transparently by
-urlopen; only the entry host is checked, which is sufficient because the entry host is
-trusted to choose its own asset store.)
+it can never be used as an open proxy / SSRF pivot. A redirect issued by an allowlisted
+origin — e.g. Feilding -> its own presigned S3 store — is followed even though the target
+host is *not* on the allowlist (the entry host is trusted to choose its own asset store);
+so redirect targets are not re-checked against ALLOWED_HOSTS. They are instead re-checked
+against the actual SSRF danger by `_reject_if_unsafe`: http(s) scheme only, and never an
+internal address (IMDS / loopback / RFC1918). Do NOT "fix" this back to an allowlist
+re-check — that would break the legitimate cross-host S3 redirect.
 """
 
 import base64
 import hashlib
 import hmac
+import ipaddress
 import os
+import socket
 import time
 from io import BytesIO
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
+
+ALLOWED_SCHEMES = ("http", "https")
 
 # --- configuration (env-overridable; defaults match the SAM template) ---------------
 # Comma-separated allowlist; ALLOWED_HOST (singular) is still honoured for backward compat.
@@ -57,10 +64,52 @@ MAX_DOWNLOAD_BYTES = 110 * 1024 * 1024  # guard on the source download (masters 
 RAW_JPEG_BUDGET = 4_000_000
 
 
+def _reject_if_unsafe(url):
+    """Raise ValueError if `url` is not an http(s) URL pointing at a public IP.
+
+    The allowlisted entry hosts legitimately 302-redirect to their own asset stores on
+    *other* hosts (e.g. Feilding / Manawatū → a presigned S3 URL), so we deliberately do
+    NOT re-check the redirect target against ALLOWED_HOSTS — that would break the intended
+    flow. Instead we block the actual SSRF danger: redirects to a non-http(s) scheme, or to
+    an internal address (IMDS 169.254.169.254, loopback, RFC1918, etc.). Defence-in-depth
+    behind the HMAC signature; note it resolves DNS here while urllib resolves again on
+    connect, so it is not hardened against a determined DNS-rebinding attacker.
+    """
+    parsed = urlparse(url)
+    if parsed.scheme.lower() not in ALLOWED_SCHEMES:
+        raise ValueError(f"disallowed scheme: {parsed.scheme}")
+    host = parsed.hostname
+    if not host:
+        raise ValueError("url missing host")
+    for info in socket.getaddrinfo(host, None):
+        ip = ipaddress.ip_address(info[4][0])
+        if (
+            ip.is_private
+            or ip.is_loopback
+            or ip.is_link_local
+            or ip.is_reserved
+            or ip.is_multicast
+            or ip.is_unspecified
+        ):
+            raise ValueError("target resolves to a non-public address")
+
+
+class _SafeRedirectHandler(HTTPRedirectHandler):
+    """Re-validate every redirect target before following it (see _reject_if_unsafe)."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        _reject_if_unsafe(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+_OPENER = build_opener(_SafeRedirectHandler)
+
+
 def download_image(url, max_bytes=MAX_DOWNLOAD_BYTES, timeout=DOWNLOAD_TIMEOUT):
     """Download the source image, enforcing a byte ceiling and timeout."""
+    _reject_if_unsafe(url)
     request = Request(url, headers={"User-Agent": USER_AGENT})
-    with urlopen(request, timeout=timeout) as response:  # noqa: S310 (host is allowlisted)
+    with _OPENER.open(request, timeout=timeout) as response:  # noqa: S310 (host allowlisted + SSRF-guarded)
         data = response.read(max_bytes + 1)
     if len(data) > max_bytes:
         raise ValueError(f"source exceeds {max_bytes} byte limit")
@@ -147,7 +196,10 @@ def lambda_handler(event, context):
     if not hmac.compare_digest(expected_sig, supplied_sig):
         return _text_response(403, "invalid signature")
 
-    host = urlparse(source_url).hostname
+    parsed = urlparse(source_url)
+    if parsed.scheme.lower() not in ALLOWED_SCHEMES:
+        return _text_response(403, "scheme not allowed")
+    host = parsed.hostname
     if host not in ALLOWED_HOSTS:
         return _text_response(403, f"host not allowed: {host}")
 
@@ -155,14 +207,18 @@ def lambda_handler(event, context):
     try:
         data = download_image(source_url)
     except Exception as error:  # noqa: BLE001 — surface a short reason, never crash
-        return _text_response(502, f"download failed: {error}")
+        # Generic body only: echoing the raw exception would turn the redirect SSRF guard
+        # into a reachability/timing oracle (connection refused vs timeout vs DNS failure).
+        print(f"download failed: {error}")
+        return _text_response(502, "download failed")
     t_download = time.perf_counter() - t0
 
     t1 = time.perf_counter()
     try:
         jpeg = convert_to_jpeg(data, MAX_DIM)
     except Exception as error:  # noqa: BLE001
-        return _text_response(502, f"decode/convert failed: {error}")
+        print(f"decode/convert failed: {error}")
+        return _text_response(502, "decode/convert failed")
     t_convert = time.perf_counter() - t1
 
     # Observability: download (NDHA -> Lambda) vs decode/encode split, plus byte sizes.

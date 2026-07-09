@@ -7,6 +7,7 @@
 
 import AWSLambdaEvents
 import AWSLambdaRuntime
+import Crypto
 import Foundation
 import HTTPTypes
 
@@ -51,11 +52,13 @@ struct NZImageApiLambda {
         }
     }
 
-    /// Compares two strings in constant time (independent of where they first differ), to avoid
-    /// leaking a secret's value through response-timing side channels.
+    /// Compares two strings in constant time — independent of both where they first differ *and*
+    /// their lengths, to avoid leaking a secret's value or its length through response-timing side
+    /// channels. Each operand is first reduced to a fixed-width 32-byte SHA-256 digest, so the XOR
+    /// loop always runs over exactly 32 bytes regardless of input length (no early length return).
     private static func constantTimeEquals(_ a: String, _ b: String) -> Bool {
-        let x = Array(a.utf8), y = Array(b.utf8)
-        guard x.count == y.count else { return false }
+        let x = Array(SHA256.hash(data: Data(a.utf8)))
+        let y = Array(SHA256.hash(data: Data(b.utf8)))
         var diff: UInt8 = 0
         for i in x.indices { diff |= x[i] ^ y[i] }
         return diff == 0
