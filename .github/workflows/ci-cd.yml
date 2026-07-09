@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"         # matches converter Lambda runtime
+          python-version: "3.14"         # matches converter Lambda runtime
       - name: Install dev deps
         run: pip install -r converter/requirements-dev.txt
       - name: pytest
