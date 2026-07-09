@@ -12,15 +12,15 @@
     "update-collections": "tsx scripts/update-collections.ts"
   },
   "dependencies": {
-    "next": "^15.3.0",
+    "next": "^16.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.20.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
+    "@types/react": "19.2.15",
+    "@types/react-dom": "19.2.3",
     "tsx": "^4.19.0",
-    "typescript": "^5.8.0"
+    "typescript": "^6.0.0"
   }
 }
