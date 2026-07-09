@@ -178,6 +178,22 @@ function formatLocalTimestamp(date: Date): string {
   return `${y}-${mo}-${d} ${h}:${mi}`;
 }
 
+// Resolve the reviewer's saved progress index onto the post-merge collection list.
+// `oldName` is the collection name captured at the pre-merge index (or null if the
+// index was stale / out of range). Every branch clamps into [0, last] so a stale
+// index is pinned to the nearest valid position rather than silently reset to 0.
+export function remapProgress(
+  oldName: string | null,
+  newCollections: { name: string }[],
+  oldIndex: number,
+): number {
+  const last = Math.max(newCollections.length - 1, 0);
+  const clamp = (i: number) => Math.min(Math.max(i, 0), last);
+  if (oldName === null) return clamp(oldIndex); // stale/out-of-range index → clamp, not 0
+  const idx = newCollections.findIndex(c => c.name === oldName);
+  return idx !== -1 ? idx : clamp(oldIndex); // collection removed → clamp to nearest
+}
+
 // ---------------------------------------------------------------------------
 // Merge (sync) — shared by the sync API route and the one-time update script.
 //
@@ -286,16 +302,11 @@ export async function mergeCollections(facets: FacetEntry[]): Promise<MergeResul
   // Remap progress: find new index of the previously-captured collection name
   const { collections: newCollections } = parseCollectionsFile(newLines.join('\n'));
 
-  let newProgressIndex = 0;
-  if (progressCollectionName !== null) {
-    const idx = newCollections.findIndex(c => c.name === progressCollectionName);
-    if (idx !== -1) {
-      newProgressIndex = idx;
-    } else {
-      // Collection was removed — clamp to nearest valid index
-      newProgressIndex = Math.min(progressIndex, newCollections.length - 1);
-    }
-  }
+  const newProgressIndex = remapProgress(
+    progressCollectionName,
+    newCollections,
+    progressIndex,
+  );
 
   await atomicWrite(PROGRESS_PATH, String(newProgressIndex));
 

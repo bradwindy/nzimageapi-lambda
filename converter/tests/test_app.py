@@ -14,6 +14,7 @@ existing live `converter/test_local.py` smoke script instead.
 import base64
 import hashlib
 import hmac
+import socket
 import sys
 from io import BytesIO
 from pathlib import Path
@@ -266,22 +267,28 @@ class _FakeURLResponse:
         return False
 
 
+def _stub_download(monkeypatch, data):
+    """Make download_image hermetic: skip the DNS-based SSRF check and the real opener."""
+    monkeypatch.setattr(app, "_reject_if_unsafe", lambda _url: None)
+    monkeypatch.setattr(app._OPENER, "open", lambda _request, timeout=None: _FakeURLResponse(data))
+
+
 def test_download_image_raises_when_over_max_bytes(monkeypatch):
-    monkeypatch.setattr(app, "urlopen", lambda _request, timeout=None: _FakeURLResponse(b"x" * 20))
+    _stub_download(monkeypatch, b"x" * 20)
 
     with pytest.raises(ValueError):
         app.download_image("https://example.com/x", max_bytes=10, timeout=5)
 
 
 def test_download_image_raises_when_response_empty(monkeypatch):
-    monkeypatch.setattr(app, "urlopen", lambda _request, timeout=None: _FakeURLResponse(b""))
+    _stub_download(monkeypatch, b"")
 
     with pytest.raises(ValueError):
         app.download_image("https://example.com/x", max_bytes=10, timeout=5)
 
 
 def test_download_image_returns_bytes_for_normal_response(monkeypatch):
-    monkeypatch.setattr(app, "urlopen", lambda _request, timeout=None: _FakeURLResponse(b"hello"))
+    _stub_download(monkeypatch, b"hello")
 
     result = app.download_image("https://example.com/x", max_bytes=100, timeout=5)
 
@@ -294,3 +301,88 @@ def test_text_response_shape():
         "headers": {"Content-Type": "text/plain; charset=utf-8"},
         "body": "nope",
     }
+
+
+# --- B4: SSRF hardening (scheme allowlist, redirect re-validation, error opacity) -------
+
+
+def _addrinfo(ip):
+    """One getaddrinfo-style 5-tuple: (family, type, proto, canonname, (ip, port))."""
+    return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", (ip, 0))]
+
+
+def test_valid_signature_but_ftp_scheme_returns_403(monkeypatch):
+    # Scheme is checked (after the signature) before the host check, so an allowlisted
+    # host over a non-http(s) scheme is still rejected.
+    monkeypatch.setattr(app, "SIGNING_KEY", "test-signing-key")
+    monkeypatch.setattr(app, "ALLOWED_HOSTS", frozenset({"ndhadeliver.natlib.govt.nz"}))
+    url = "ftp://ndhadeliver.natlib.govt.nz/x"
+    event = {"queryStringParameters": {"url": url, "sig": _sig("test-signing-key", url)}}
+
+    result = app.lambda_handler(event, None)
+
+    assert result["statusCode"] == 403
+    assert "scheme not allowed" in result["body"]
+
+
+def test_reject_if_unsafe_blocks_non_http_scheme():
+    with pytest.raises(ValueError):
+        app._reject_if_unsafe("ftp://example.com/x")
+
+
+def test_reject_if_unsafe_blocks_missing_host():
+    with pytest.raises(ValueError):
+        app._reject_if_unsafe("https:///no-host")
+
+
+def test_reject_if_unsafe_blocks_loopback(monkeypatch):
+    monkeypatch.setattr(app.socket, "getaddrinfo", lambda *_a, **_kw: _addrinfo("127.0.0.1"))
+    with pytest.raises(ValueError):
+        app._reject_if_unsafe("http://localhost.evil/x")
+
+
+def test_reject_if_unsafe_blocks_link_local_imds(monkeypatch):
+    # 169.254.169.254 is the EC2/Lambda instance metadata endpoint.
+    monkeypatch.setattr(app.socket, "getaddrinfo", lambda *_a, **_kw: _addrinfo("169.254.169.254"))
+    with pytest.raises(ValueError):
+        app._reject_if_unsafe("http://metadata.evil/latest/meta-data/")
+
+
+def test_reject_if_unsafe_blocks_private_rfc1918(monkeypatch):
+    monkeypatch.setattr(app.socket, "getaddrinfo", lambda *_a, **_kw: _addrinfo("10.1.2.3"))
+    with pytest.raises(ValueError):
+        app._reject_if_unsafe("https://internal.evil/x")
+
+
+def test_reject_if_unsafe_allows_public_ip(monkeypatch):
+    # A public S3-style redirect target must still pass (the legitimate Feilding/Manawatū flow).
+    monkeypatch.setattr(app.socket, "getaddrinfo", lambda *_a, **_kw: _addrinfo("52.95.128.10"))
+    app._reject_if_unsafe("https://presigned.s3.amazonaws.com/x")  # no raise
+
+
+def test_safe_redirect_handler_rejects_internal_target(monkeypatch):
+    monkeypatch.setattr(app.socket, "getaddrinfo", lambda *_a, **_kw: _addrinfo("127.0.0.1"))
+    handler = app._SafeRedirectHandler()
+    with pytest.raises(ValueError):
+        handler.redirect_request(None, None, 302, "Found", {}, "http://127.0.0.1/latest/meta-data/")
+
+
+def test_download_failure_body_is_generic_not_raw_exception(monkeypatch):
+    # The error body must not echo the raw exception, or the redirect SSRF guard becomes a
+    # reachability oracle (connection-refused vs timeout vs DNS-failure distinguishable).
+    monkeypatch.setattr(app, "SIGNING_KEY", "test-signing-key")
+    monkeypatch.setattr(app, "ALLOWED_HOSTS", frozenset({"ndhadeliver.natlib.govt.nz"}))
+    url = "https://ndhadeliver.natlib.govt.nz/x"
+
+    def _raise(*_args, **_kwargs):
+        raise ValueError("Connection refused to 169.254.169.254")
+
+    monkeypatch.setattr(app, "download_image", _raise)
+    event = {"queryStringParameters": {"url": url, "sig": _sig("test-signing-key", url)}}
+
+    result = app.lambda_handler(event, None)
+
+    assert result["statusCode"] == 502
+    assert result["body"] == "download failed"
+    assert "169.254" not in result["body"]
+    assert "Connection refused" not in result["body"]
