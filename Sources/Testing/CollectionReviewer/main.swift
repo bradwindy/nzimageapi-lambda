@@ -13,6 +13,13 @@ import Synchronization
     import FoundationNetworking
 #endif
 
+// stdout/stderr are extern C globals; Glibc's overlay (unlike Darwin's) doesn't mark them
+// Sendable, so Swift 6 strict concurrency flags direct references. This CLI is single-threaded
+// interactive terminal I/O, so aliasing them as nonisolated(unsafe) (the SE-0412-documented
+// escape hatch) is safe.
+nonisolated(unsafe) private let standardOutput = stdout
+nonisolated(unsafe) private let standardError = stderr
+
 // MARK: - Progress Tracking
 
 struct ProgressState: Sendable {
@@ -229,7 +236,7 @@ func printClickableLink(_ url: URL, label: String) {
 
 func getSelectionInput(prompt: String) -> SelectionStatus {
     print(prompt, terminator: " ")
-    fflush(stdout)
+    fflush(standardOutput)
 
     while true {
         if let input = readLine()?.lowercased().trimmingCharacters(in: .whitespaces) {
@@ -249,13 +256,13 @@ func getSelectionInput(prompt: String) -> SelectionStatus {
             }
         }
         print("Please enter y/n/u/m/s: ", terminator: "")
-        fflush(stdout)
+        fflush(standardOutput)
     }
 }
 
 func getTextInput(prompt: String) -> String {
     print(prompt, terminator: " ")
-    fflush(stdout)
+    fflush(standardOutput)
     return readLine() ?? ""
 }
 
@@ -297,7 +304,7 @@ struct CollectionReviewerApp {
         progressState.withLock { $0.filePath = "\(currentDir)/Research/.collection-reviewer-progress" }
 
         guard fileManager.fileExists(atPath: detailsPath) else {
-            fputs("Error: Could not find \(detailsPath)\n", stderr)
+            fputs("Error: Could not find \(detailsPath)\n", standardError)
             exit(1)
         }
 

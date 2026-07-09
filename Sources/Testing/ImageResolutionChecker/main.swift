@@ -17,6 +17,12 @@ import RichError
     import FoundationNetworking
 #endif
 
+// stdout/stderr are extern C globals; Glibc's overlay (unlike Darwin's) doesn't mark them
+// Sendable, so Swift 6 strict concurrency flags direct references. This CLI is single-threaded
+// interactive terminal I/O, so aliasing them as nonisolated(unsafe) (the SE-0412-documented
+// escape hatch) is safe.
+nonisolated(unsafe) private let standardError = stderr
+
 // MARK: - Models
 
 struct NZRecordsResult: Codable, Sendable {
@@ -180,20 +186,20 @@ struct ImageResolutionCheckerApp {
         let arguments = CommandLine.arguments
 
         guard arguments.count >= 2 else {
-            fputs("Usage: ImageResolutionChecker <collection_name>\n", stderr)
+            fputs("Usage: ImageResolutionChecker <collection_name>\n", standardError)
             exit(1)
         }
 
         let collection = arguments[1]
 
         guard let apiKey = ProcessInfo.processInfo.environment["DIGITALNZ_API_KEY"] else {
-            fputs("Error: DIGITALNZ_API_KEY environment variable not set\n", stderr)
+            fputs("Error: DIGITALNZ_API_KEY environment variable not set\n", standardError)
             exit(1)
         }
 
         // Fetch a result from Digital NZ
         guard let result = try await fetchDigitalNZResult(collection: collection, apiKey: apiKey) else {
-            fputs("Error: No results found for collection '\(collection)'\n", stderr)
+            fputs("Error: No results found for collection '\(collection)'\n", standardError)
             exit(1)
         }
 

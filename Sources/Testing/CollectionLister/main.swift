@@ -12,6 +12,12 @@ import Foundation
     import FoundationNetworking
 #endif
 
+// stdout/stderr are extern C globals; Glibc's overlay (unlike Darwin's) doesn't mark them
+// Sendable, so Swift 6 strict concurrency flags direct references. This CLI is single-threaded
+// interactive terminal I/O, so aliasing them as nonisolated(unsafe) (the SE-0412-documented
+// escape hatch) is safe.
+nonisolated(unsafe) private let standardError = stderr
+
 // MARK: - Models
 
 struct FacetsResponse: Codable {
@@ -47,7 +53,7 @@ struct CollectionListOutput: Codable {
 struct CollectionListerApp {
     static func main() async throws {
         guard let apiKey = ProcessInfo.processInfo.environment["DIGITALNZ_API_KEY"] else {
-            fputs("Error: DIGITALNZ_API_KEY environment variable not set\n", stderr)
+            fputs("Error: DIGITALNZ_API_KEY environment variable not set\n", standardError)
             exit(1)
         }
 
@@ -75,12 +81,12 @@ struct CollectionListerApp {
 
         // Check for API errors
         if let errors = response.errors, !errors.isEmpty {
-            fputs("API returned errors: \(errors.joined(separator: ", "))\n", stderr)
+            fputs("API returned errors: \(errors.joined(separator: ", "))\n", standardError)
             exit(1)
         }
 
         guard let facetDict = response.search?.facets?.primaryCollection else {
-            fputs("Error: No facet data returned from API\n", stderr)
+            fputs("Error: No facet data returned from API\n", standardError)
             exit(1)
         }
 
