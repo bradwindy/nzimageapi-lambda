@@ -27,6 +27,12 @@
       "automerge": false
     },
     {
+      "description": "TypeScript 7 breaks collection-reviewer-web's Next.js build (Next fails to detect TypeScript, build worker crashes with \"The id argument must be of type string\") - CI doesn't cover this subproject so this won't show as a failing check, hold off until Next.js/TS7 compatibility is confirmed manually",
+      "matchPackageNames": ["typescript"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
       "description": "React (collection-reviewer-web)",
       "groupName": "React",
       "matchPackageNames": ["/^react/", "/^@types/react/"]
