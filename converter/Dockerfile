@@ -1,4 +1,4 @@
-FROM public.ecr.aws/lambda/python:3.13
+FROM public.ecr.aws/lambda/python:3.15@sha256:f6aa405dd25ac6bd6a0720987f245e3de885c4dd287558fc118d897e7c189abd
 
 # Pillow's manylinux wheel bundles libopenjp2. Install it, then HARD-ASSERT at build
 # time that JPEG 2000 decode is actually enabled — if it is not, the build fails here
