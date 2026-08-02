@@ -19,7 +19,7 @@ let package = Package(
         .package(url: "https://github.com/Alamofire/Alamofire.git", from: "5.12.0"),
         .package(url: "https://github.com/apple/swift-collections.git", from: "1.6.0"),
         .package(url: "https://github.com/bradwindy/RichError.git", from: "2.1.0"),
-        .package(url: "https://github.com/scinfu/SwiftSoup.git", from: "2.13.6"),
+        .package(url: "https://github.com/scinfu/SwiftSoup.git", from: "2.13.7"),
         .package(url: "https://github.com/apple/swift-crypto.git", from: "4.5.1"),
         // Pinned explicitly (not just a transitive dep of swift-service-lifecycle) to force
         // resolution past 1.1.3: 1.1.4 fixes region-isolation errors that the newer Swift
