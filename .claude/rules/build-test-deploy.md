@@ -138,6 +138,25 @@ outputs after any bootstrap-stack change:
 aws cloudformation describe-stacks --region ap-southeast-2 --stack-name nzimageapi-bootstrap --query 'Stacks[0].Outputs'
 ```
 
+### The wiring in CI
+
+`.github/workflows/ci-cd.yml` cannot read the gitignored `samconfig.toml`, so its deploy job
+resolves the same two values itself, in a `Resolve bootstrap artefact stores` step that queries
+the bootstrap stack's outputs and feeds them to `sam deploy` as `--s3-bucket` and
+`--image-repositories`. The step fails the job with a pointer to the bootstrap-deploy command if
+the stack is missing or either output is absent, so a misconfigured deploy never reaches the
+push.
+
+They are read from the stack rather than from GitHub repo/environment variables on purpose. The
+job previously used `--resolve-s3` plus a `CONVERTER_ECR_REPO` environment variable, and that
+variable still held the *pre-migration* companion-stack repo, so every CI deploy kept pushing a
+~195 MB image into the unmanaged repo and a zip into a SAM-auto-created bucket while local deploys
+correctly used the bootstrap stores. Reading the stack removes the copy that can go stale. If you
+add another artefact store, add its output to `infra/bootstrap.yaml` and read it in the same step.
+
+`CONVERTER_ECR_REPO` is no longer referenced by anything and can be deleted from the repository's
+`production` environment.
+
 ### Superseded resources
 
 The pre-migration artefact stores still exist and still hold their history:
@@ -150,6 +169,10 @@ The pre-migration artefact stores still exist and still hold their history:
 Both had the same lifecycle policies applied imperatively on 2026-08-24, so they drain on
 their own rather than sitting there forever. Leave them until a deploy against the new
 repo and bucket is confirmed working and you are past wanting to roll back to an old image.
+
+Note that CI kept writing to both of them until the deploy job was pointed at the bootstrap stack
+(see "The wiring in CI" above), so their newest contents are more recent than the migration date
+suggests.
 
 ### When adding a new container-image Lambda
 
