@@ -72,3 +72,89 @@ from `--parameter-overrides` or the gitignored `samconfig.toml` — never hardco
 a manual `aws lambda update-function-code` flow. They still work for the Swift Lambda alone
 but don't know about the converter Lambda or the SAM-managed resources (alarms, budget,
 Function URL wiring) — prefer `sam build && sam deploy` for anything touching the full stack.
+
+## Deploy artefact retention (cost control)
+
+Every `sam deploy` leaves permanent artefacts behind. Left unmanaged these are the account's
+only real recurring cost, and they grow with every deploy while the running stack itself
+(Lambda, API Gateway, CloudWatch, SNS, SQS) sits at $0.00.
+
+Two things accumulate:
+
+- **The converter's ECR repo.** Each deploy pushes a fresh ~195 MB image under a unique tag
+  (`jp2converterfunction-<hash>-latest`), so nothing is ever overwritten. Only the one tag
+  referenced by the deployed `Jp2ConverterFunction` is live.
+- **The SAM artefact bucket.** Each deploy uploads the Swift Lambda zip (~44 MB) plus
+  packaged templates, and versioning is on.
+
+By 2026-08-24 that had reached 29 ECR images (~5.5 GB of manifests) and 75 S3 objects
+(1.45 GB) from roughly 20 deploys since June 2026 - about $0.17/month and climbing, all of
+it waste.
+
+### `infra/bootstrap.yaml` owns both
+
+Both resources, and both retention policies, are declared in **`infra/bootstrap.yaml`** and
+deployed as the separate `nzimageapi-bootstrap` stack:
+
+```bash
+aws cloudformation deploy --region ap-southeast-2 --stack-name nzimageapi-bootstrap --template-file infra/bootstrap.yaml
+```
+
+**Why a separate stack and not `template.yaml`:** `sam deploy` pushes the container image to
+ECR and uploads the packaged template to S3 *before* CloudFormation runs. A repo or bucket
+declared in the stack that consumes them would not exist yet at push time. They have to be
+created by something that runs first, hence a tiny bootstrap stack deployed on its own.
+
+Retention is tunable via stack parameters rather than by editing policy JSON:
+
+| Parameter | Default | Effect |
+| --- | --- | --- |
+| `ImageRetentionCount` | `3` | ECR keeps this many images. Newest is live, the rest are rollback targets. |
+| `ArtifactRetentionDays` | `60` | S3 artefacts expire after this many days. Non-current versions go at 7 days, stalled multipart uploads at 7. |
+
+The 60-day S3 window is deliberately generous. It does mean a stack update failing more than
+60 days after the deploy that produced an artefact cannot roll back to it, which is well
+outside any realistic rollback window here.
+
+Both resources carry `DeletionPolicy: Retain` / `UpdateReplacePolicy: Retain`, so deleting or
+replacing the bootstrap stack will not take the artefacts (or a bucket full of objects,
+which would fail the delete anyway) with it.
+
+### The wiring in `samconfig.toml`
+
+The gitignored `samconfig.toml` points the main stack at the bootstrap stack's outputs:
+
+```toml
+s3_bucket = "nzimageapi-sam-artifacts-686865771242-ap-southeast-2"
+image_repositories = ["Jp2ConverterFunction=686865771242.dkr.ecr.ap-southeast-2.amazonaws.com/nzimageapi/jp2converter"]
+```
+
+`s3_bucket` **replaces** `resolve_s3 = true` - the two are mutually exclusive, and
+`resolve_s3` is what made SAM auto-create its own unmanaged bucket. Because `samconfig.toml`
+is gitignored, this wiring is the one part that is not in version control; re-read the two
+outputs after any bootstrap-stack change:
+
+```bash
+aws cloudformation describe-stacks --region ap-southeast-2 --stack-name nzimageapi-bootstrap --query 'Stacks[0].Outputs'
+```
+
+### Superseded resources
+
+The pre-migration artefact stores still exist and still hold their history:
+
+- ECR `nzimageapi40221342/jp2converterfunctione92cbfdcrepo`, owned by the SAM-generated
+  `nzimageapi-40221342-CompanionStack`.
+- S3 `aws-sam-cli-managed-default-samclisourcebucket-tfqwkahyri86`, owned by the
+  `aws-sam-cli-managed-default` stack.
+
+Both had the same lifecycle policies applied imperatively on 2026-08-24, so they drain on
+their own rather than sitting there forever. Leave them until a deploy against the new
+repo and bucket is confirmed working and you are past wanting to roll back to an old image.
+
+### When adding a new container-image Lambda
+
+A new `PackageType: Image` function does **not** automatically get a managed repo any more,
+because `image_repositories` is now explicit. Add an `AWS::ECR::Repository` for it in
+`infra/bootstrap.yaml` (copy `ConverterRepository`, including its `LifecyclePolicy`), deploy
+the bootstrap stack, then add the new `<FunctionLogicalId>=<repoUri>` entry to
+`image_repositories`. Skipping the lifecycle policy is how this problem started.

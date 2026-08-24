@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >
+  Deploy-artefact storage for the nzimageapi SAM stack: the converter's ECR
+  repository and the SAM artefact bucket, each with a retention lifecycle policy.
+
+  This is deliberately a SEPARATE stack from template.yaml, not part of it.
+  `sam deploy` pushes the container image to ECR and uploads the packaged template
+  to S3 BEFORE CloudFormation runs, so neither resource can live in the stack that
+  consumes them - they would not exist yet at push time. Hence a small bootstrap
+  stack, deployed once with plain `aws cloudformation deploy`, that the main stack's
+  samconfig.toml then points at.
+
+  Deploy:
+    aws cloudformation deploy \
+      --region ap-southeast-2 \
+      --stack-name nzimageapi-bootstrap \
+      --template-file infra/bootstrap.yaml
+
+  Then wire the outputs into samconfig.toml - see
+  .claude/rules/build-test-deploy.md, "Deploy artefact retention (cost control)".
+
+Parameters:
+  ImageRetentionCount:
+    Type: Number
+    Default: 3
+    MinValue: 1
+    Description: >
+      How many converter images to keep in ECR. The newest is the live one, so the
+      remainder are rollback targets. Every deploy pushes a fresh ~195 MB image under
+      a unique tag and never overwrites, so without this they accumulate forever.
+
+  ArtifactRetentionDays:
+    Type: Number
+    Default: 60
+    MinValue: 1
+    Description: >
+      How long SAM build artefacts live in the bucket. A stack update failing more
+      than this many days after the deploy that produced its artefact cannot roll
+      back to it, which is far outside any realistic rollback window here.
+
+Resources:
+  ConverterRepository:
+    Type: AWS::ECR::Repository
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      RepositoryName: nzimageapi/jp2converter
+      ImageTagMutability: MUTABLE
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      EncryptionConfiguration:
+        EncryptionType: AES256
+      LifecyclePolicy:
+        LifecyclePolicyText: !Sub |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep only the ${ImageRetentionCount} most recent images; older ones are dead deploy artefacts",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": ${ImageRetentionCount}
+                },
+                "action": { "type": "expire" }
+              }
+            ]
+          }
+
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "nzimageapi-sam-artifacts-${AWS::AccountId}-${AWS::Region}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-old-sam-artifacts
+            Status: Enabled
+            ExpirationInDays: !Ref ArtifactRetentionDays
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 7
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+
+  ArtifactBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ArtifactBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !GetAtt ArtifactBucket.Arn
+              - !Sub "${ArtifactBucket.Arn}/*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
+
+Outputs:
+  ConverterRepositoryUri:
+    Description: Value for samconfig.toml image_repositories (Jp2ConverterFunction=<this>)
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ConverterRepository}"
+
+  ArtifactBucketName:
+    Description: Value for samconfig.toml s3_bucket (replaces resolve_s3 = true)
+    Value: !Ref ArtifactBucket

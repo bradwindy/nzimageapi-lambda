@@ -106,6 +106,18 @@ Secrets live in gitignored `.env`, `samconfig.toml`, and `.consumer-secrets/` �
   `swift build`) fail DNS resolution under the command sandbox even for allowlisted hosts —
   same class of issue as the Docker gotcha above, but it also hits plain network calls made
   by a built binary, not just Docker. Run with the sandbox disabled.
+- Every `sam deploy` leaves a new ~195 MB image in the converter's ECR repo and a ~44 MB
+  zip in the SAM artefact bucket, forever. Both stores, and their retention lifecycle
+  policies (ECR: keep last 3 images; S3: expire at 60 days), are declared in
+  [`infra/bootstrap.yaml`](infra/bootstrap.yaml) and deployed as the separate
+  `nzimageapi-bootstrap` stack. They are **deliberately not in `template.yaml`**: `sam deploy`
+  pushes the image and uploads the packaged template *before* CloudFormation runs, so a repo
+  or bucket in the consuming stack would not exist yet at push time. `samconfig.toml` wires
+  the main stack to that stack's outputs via `s3_bucket` and `image_repositories` (`s3_bucket`
+  replaces `resolve_s3`; they are mutually exclusive). Adding a new container-image Lambda
+  means adding its repo to `infra/bootstrap.yaml` too - skipping the lifecycle policy is how
+  this problem started. Full detail:
+  [`.claude/rules/build-test-deploy.md`](.claude/rules/build-test-deploy.md#deploy-artefact-retention-cost-control).
 
 ## Where to read more
 
@@ -113,6 +125,7 @@ Secrets live in gitignored `.env`, `samconfig.toml`, and `.consumer-secrets/` �
 - [`.claude/rules/build-test-deploy.md`](.claude/rules/build-test-deploy.md) — full build/test/deploy command reference and gotchas.
 - [`.claude/rules/converter.md`](.claude/rules/converter.md) — the Python converter Lambda: contract, allowlist, local dev.
 - `README.md` — end-user API reference and setup.
+- `infra/bootstrap.yaml` — deploy-artefact stores (converter ECR repo, SAM artefact bucket) and their retention policies.
 - `docs/ACCESS-CONTROL.md`, `docs/adr/0001-free-per-consumer-secrets.md` — auth model and cost-control design.
 - `Research/highres/README.md`, `recipes.md`, `progress.json` — per-collection high-res findings.
 - `Sources/Testing/CollectionTester/README-CollectionTester.md` — CollectionTester options.
