@@ -54,3 +54,28 @@ To add or change a collection's strategy:
 3. If the master needs format conversion (JP2/TIFF), route through `signedConverterURL`
    instead of decoding in-process — see [`converter.md`](converter.md).
 4. Validate end-to-end with `./Sources/Testing/CollectionTester/test-collection.sh "<Collection>"`.
+
+## HTTP client lifecycle
+
+All outbound HTTP goes through `NetworkRequestManager`
+(`Sources/NZImageApiLambda/Helpers/NetworkRequestManager.swift`), which uses Alamofire. Two rules,
+both there to keep the Lambda process alive:
+
+- **DigitalNZ requests** use Alamofire's global `AF` session.
+- **Everything else** (HTML scrapes, HEAD probes, ranged GET probes) uses one of three
+  process-lifetime `static let` `Session`s on `NetworkRequestManager`, differing only in request
+  timeout and whether they send `Range: bytes=0-0`.
+
+Nothing may create a `Session` (or a bare `URLSession`) per call. On Linux, releasing one runs
+`URLSession._MultiHandle.deinit` in swift-corelibs-foundation, which calls `curl_multi_cleanup`;
+that synchronously re-enters the registered `CURLMOPT_TIMERFUNCTION`, and for a zero timeout
+`updateTimeoutTimer(to: .immediate)` does `queue.async { nonisolatedSelf... }`, taking a strong
+reference to the object being deinitialized. The Swift runtime then aborts (or segfaults on the
+dangling reference), and Lambda reports `Runtime.ExitError` with a 500 even though the handler had
+already produced its answer. It is a race, so it only fires under scheduling pressure, which a
+512 MB Lambda has plenty of.
+
+To reproduce or re-verify, run the Lambda's local server in a Linux container under CPU pressure
+and hammer `POST /invoke`; a per-call-session build fails several requests in 40, a shared-session
+build fails none. `Tests/NZImageApiLambdaTests/NetworkRequestManagerSessionTests.swift` pins the
+shared-session invariant and each session's configuration.

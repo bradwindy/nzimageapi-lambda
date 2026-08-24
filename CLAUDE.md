@@ -100,6 +100,14 @@ Secrets live in gitignored `.env`, `samconfig.toml`, and `.consumer-secrets/` â€
 - `template.yaml` deliberately sets **no** `ReservedConcurrentExecutions` on either
   function (the account's Lambda concurrency quota is already only 10, fully unreserved) â€”
   don't describe concurrency as reserved/limited per-function.
+- **Never let a `URLSession` (or an Alamofire `Session`, which owns one) be deallocated in the
+  Lambda.** On Linux, `URLSession.deinit` tears down swift-corelibs-foundation's libcurl
+  `_MultiHandle`, whose own `deinit` re-enters curl's timer callback and takes a strong reference
+  to the object being deinitialized. The Swift runtime aborts the process, so a request that has
+  already done all its work returns a 500 (`Runtime.ExitError`). This caused an intermittent ~12-25%
+  failure rate on `/image` until 2026-08-24. `NetworkRequestManager` now holds process-lifetime
+  static `Session`s (`browserSession`, `shortTimeoutBrowserSession`, `rangeProbeSession`); add a new
+  static one there rather than constructing `Session(configuration:)` per call.
 - Routing a new collection through the converter requires adding its host to
   `ALLOWED_HOSTS` and redeploying the converter; pure `URLProcessor` strategy changes don't.
 - Compiled Swift binaries (e.g. running `CollectionLister` or `NZImageApiLambda` after
