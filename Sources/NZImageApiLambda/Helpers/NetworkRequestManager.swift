@@ -45,6 +45,67 @@ final class NetworkRequestManager: ValidatedRequestManager {
         return .success(())
     }
 
+    /// The browser User-Agent every non-DigitalNZ request presents. Several sources (Recollect
+    /// vanity domains, Te Papa media) 403 a request that looks like a bot.
+    static let browserUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+
+    /// Process-lifetime `Session`s, deliberately never released.
+    ///
+    /// These were previously created per call. On Linux, an Alamofire `Session` owns a
+    /// `URLSession`, whose `deinit` tears down swift-corelibs-foundation's libcurl
+    /// `URLSession._MultiHandle`. That teardown is unsound: `_MultiHandle.deinit` calls
+    /// `curl_multi_remove_handle`/`curl_multi_cleanup`, which synchronously re-enter the
+    /// registered `CURLMOPT_TIMERFUNCTION` callback; for a zero timeout that lands in
+    /// `updateTimeoutTimer(to: .immediate)`, which does `queue.async { nonisolatedSelf... }` and so
+    /// takes a *strong* reference to the object currently being deinitialized. The Swift runtime
+    /// then aborts the whole process with "Object ... of class _MultiHandle deallocated with
+    /// non-zero retain count". In a Lambda that abort surfaces as `Runtime.ExitError` and a 500,
+    /// after the request has already done all of its useful work.
+    ///
+    /// (Source: swift-corelibs-foundation, swift-6.3-RELEASE,
+    /// `Sources/FoundationNetworking/URLSession/libcurl/MultiHandle.swift`.)
+    ///
+    /// It is a race, so it only fires some of the time, and it fires far more often when CPU is
+    /// scarce, which is exactly a 512 MB Lambda. A session that is never deallocated never runs
+    /// that teardown, so keeping these alive for the life of the process removes the crash
+    /// entirely. Alamofire's own `AF` default session (used by `makeRequest`) is already a
+    /// process-lifetime global for the same reason.
+    ///
+    /// Do **not** reintroduce a per-call `Session(configuration:)` here.
+    static let browserSession = makeSession(
+        additionalHeaders: ["User-Agent": browserUserAgent],
+        requestTimeout: nil
+    )
+
+    /// As `browserSession`, but with the short timeout used by the redirect-following status probes.
+    static let shortTimeoutBrowserSession = makeSession(
+        additionalHeaders: ["User-Agent": browserUserAgent],
+        requestTimeout: 15
+    )
+
+    /// As `shortTimeoutBrowserSession`, plus the `Range: bytes=0-0` header that keeps the probing
+    /// GETs to a single byte.
+    static let rangeProbeSession = makeSession(
+        additionalHeaders: ["User-Agent": browserUserAgent, "Range": "bytes=0-0"],
+        requestTimeout: 15
+    )
+
+    private static func makeSession(
+        additionalHeaders: [String: String],
+        requestTimeout: TimeInterval?
+    )
+        -> Session
+    {
+        let configuration = URLSessionConfiguration.default
+        configuration.httpAdditionalHeaders = additionalHeaders
+
+        if let requestTimeout {
+            configuration.timeoutIntervalForRequest = requestTimeout
+        }
+
+        return Session(configuration: configuration)
+    }
+
     func makeRequest<ResponseType: NonNullableResult & Sendable>(
         endpoint: String,
         apiKey: String? = nil,
@@ -75,13 +136,6 @@ final class NetworkRequestManager: ValidatedRequestManager {
     }
 
     func fetchHTML(endpoint: String) async throws -> String {
-        let userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-
-        let configuration = URLSessionConfiguration.default
-        configuration.httpAdditionalHeaders = ["User-Agent": userAgent]
-
-        let session = Session(configuration: configuration)
-
         // Also set the User-Agent as a per-REQUEST header (not only on the session config) so it is
         // carried onto the redirected URLRequest when URLSession auto-follows a redirect. Some
         // Recollect instances 301/302 the harvested *.recollect.co.nz landing host to a council vanity
@@ -89,8 +143,8 @@ final class NetworkRequestManager: ValidatedRequestManager {
         // request lacking a browser UA. Session-level httpAdditionalHeaders are NOT reliably reapplied
         // to the cross-host redirect (URLSession returns the 403 error page, so an og:image scrape sees
         // no image and falls back), whereas request headers ARE copied across the redirect.
-        let headers: HTTPHeaders = ["User-Agent": userAgent]
-        let response = await session.request(endpoint, headers: headers).serializingString().response
+        let headers: HTTPHeaders = ["User-Agent": Self.browserUserAgent]
+        let response = await Self.browserSession.request(endpoint, headers: headers).serializingString().response
 
         switch response.result {
         case let .success(value):
@@ -107,14 +161,10 @@ final class NetworkRequestManager: ValidatedRequestManager {
     /// safe at request time even for very large assets. Uses a browser User-Agent and a
     /// short timeout.
     func headStatusFollowingRedirects(endpoint: String) async -> Int {
-        let configuration = URLSessionConfiguration.default
-        configuration.httpAdditionalHeaders = [
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-        ]
-        configuration.timeoutIntervalForRequest = 15
-
-        let session = Session(configuration: configuration)
-        let response = await session.request(endpoint, method: .head).serializingData().response
+        let response = await Self.shortTimeoutBrowserSession
+            .request(endpoint, method: .head)
+            .serializingData()
+            .response
 
         return response.response?.statusCode ?? 0
     }
@@ -127,15 +177,10 @@ final class NetworkRequestManager: ValidatedRequestManager {
     /// downloads the full image at request time (the endpoint must honour Range — Te Papa/S3 does).
     /// Browser User-Agent + short timeout.
     func rangeStatusFollowingRedirects(endpoint: String) async -> Int {
-        let configuration = URLSessionConfiguration.default
-        configuration.httpAdditionalHeaders = [
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-            "Range": "bytes=0-0",
-        ]
-        configuration.timeoutIntervalForRequest = 15
-
-        let session = Session(configuration: configuration)
-        let response = await session.request(endpoint, method: .get).serializingData().response
+        let response = await Self.rangeProbeSession
+            .request(endpoint, method: .get)
+            .serializingData()
+            .response
 
         return response.response?.statusCode ?? 0
     }
@@ -146,15 +191,10 @@ final class NetworkRequestManager: ValidatedRequestManager {
     /// for GET only), but also surfaces the MIME type so a caller can branch on the resolved
     /// original's actual format (e.g. `image/jpeg` vs `image/tiff`) without downloading the body.
     func rangeContentType(endpoint: String) async -> (status: Int, contentType: String?) {
-        let configuration = URLSessionConfiguration.default
-        configuration.httpAdditionalHeaders = [
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-            "Range": "bytes=0-0",
-        ]
-        configuration.timeoutIntervalForRequest = 15
-
-        let session = Session(configuration: configuration)
-        let response = await session.request(endpoint, method: .get).serializingData().response
+        let response = await Self.rangeProbeSession
+            .request(endpoint, method: .get)
+            .serializingData()
+            .response
 
         let status = response.response?.statusCode ?? 0
         let contentType = response.response?.value(forHTTPHeaderField: "Content-Type")
@@ -162,13 +202,10 @@ final class NetworkRequestManager: ValidatedRequestManager {
     }
 
     func headRequest(endpoint: String) async throws -> (contentType: String, contentLength: Int64) {
-        let configuration = URLSessionConfiguration.default
-        configuration.httpAdditionalHeaders = [
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-        ]
-
-        let session = Session(configuration: configuration)
-        let response = await session.request(endpoint, method: .head).serializingData().response
+        let response = await Self.browserSession
+            .request(endpoint, method: .head)
+            .serializingData()
+            .response
 
         guard let httpResponse = response.response else {
             throw NetworkRequestManagerError(
