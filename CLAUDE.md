@@ -122,7 +122,12 @@ Secrets live in gitignored `.env`, `samconfig.toml`, and `.consumer-secrets/` â€
   pushes the image and uploads the packaged template *before* CloudFormation runs, so a repo
   or bucket in the consuming stack would not exist yet at push time. `samconfig.toml` wires
   the main stack to that stack's outputs via `s3_bucket` and `image_repositories` (`s3_bucket`
-  replaces `resolve_s3`; they are mutually exclusive). Adding a new container-image Lambda
+  replaces `resolve_s3`; they are mutually exclusive). `samconfig.toml` is gitignored, so CI
+  cannot read it: the deploy job in `.github/workflows/ci-cd.yml` resolves the same two values
+  from the bootstrap stack's outputs at deploy time and passes them as `--s3-bucket` and
+  `--image-repositories`. Never reintroduce `--resolve-s3` or a hand-maintained repo variable
+  there; a stale variable is what kept CI deploying into the superseded stores. Adding a new
+  container-image Lambda
   means adding its repo to `infra/bootstrap.yaml` too - skipping the lifecycle policy is how
   this problem started. Full detail:
   [`.claude/rules/build-test-deploy.md`](.claude/rules/build-test-deploy.md#deploy-artefact-retention-cost-control).

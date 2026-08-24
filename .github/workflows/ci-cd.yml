@@ -58,13 +58,38 @@ jobs:
           use-installer: true            # arch-independent SAM CLI install
       - name: sam build
         run: sam build                   # Swift via Makefile+Docker; converter via Docker image
+      # The artefact stores live in the separate `nzimageapi-bootstrap` stack (infra/bootstrap.yaml),
+      # which owns their retention lifecycle policies. Read them from that stack's outputs rather
+      # than from a hand-maintained repo variable: a stale variable silently sends deploys back to
+      # an unmanaged store, which is exactly what happened before this step existed.
+      - name: Resolve bootstrap artefact stores
+        id: bootstrap
+        run: |
+          set -euo pipefail
+          # `|| outputs='[]'` so a missing stack reaches the guard below (which explains the fix)
+          # instead of aborting on a raw ValidationError under `set -e`. The AWS error itself is
+          # still printed to the log. `.[]?` does the same for a stack that has no outputs at all.
+          outputs=$(aws cloudformation describe-stacks \
+            --region ap-southeast-2 \
+            --stack-name nzimageapi-bootstrap \
+            --query 'Stacks[0].Outputs' --output json) || outputs='[]'
+          bucket=$(echo "$outputs" | jq -r '[.[]? | select(.OutputKey=="ArtifactBucketName") | .OutputValue] | first // ""')
+          repo=$(echo "$outputs" | jq -r '[.[]? | select(.OutputKey=="ConverterRepositoryUri") | .OutputValue] | first // ""')
+          if [ -z "$bucket" ] || [ "$bucket" = "null" ] || [ -z "$repo" ] || [ "$repo" = "null" ]; then
+            echo "::error::nzimageapi-bootstrap did not return both ArtifactBucketName and ConverterRepositoryUri. Deploy the bootstrap stack first: aws cloudformation deploy --region ap-southeast-2 --stack-name nzimageapi-bootstrap --template-file infra/bootstrap.yaml"
+            exit 1
+          fi
+          echo "bucket=$bucket" >> "$GITHUB_OUTPUT"
+          echo "repo=$repo" >> "$GITHUB_OUTPUT"
+          echo "Artefact bucket: $bucket"
+          echo "Converter repo:  $repo"
       - name: sam deploy
         run: |
           sam deploy \
             --stack-name nzimageapi \
             --region ap-southeast-2 \
-            --resolve-s3 \
-            --image-repositories Jp2ConverterFunction=${{ vars.CONVERTER_ECR_REPO }} \
+            --s3-bucket ${{ steps.bootstrap.outputs.bucket }} \
+            --image-repositories Jp2ConverterFunction=${{ steps.bootstrap.outputs.repo }} \
             --capabilities CAPABILITY_IAM \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
