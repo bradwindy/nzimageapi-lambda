@@ -157,22 +157,30 @@ add another artefact store, add its output to `infra/bootstrap.yaml` and read it
 `CONVERTER_ECR_REPO` is no longer referenced by anything and can be deleted from the repository's
 `production` environment.
 
-### Superseded resources
+### Superseded resources (retired 2026-08-25)
 
-The pre-migration artefact stores still exist and still hold their history:
+The pre-migration artefact stores are **gone**. Both were deleted on 2026-08-25, once a CI
+deploy against the bootstrap stores was confirmed:
 
-- ECR `nzimageapi40221342/jp2converterfunctione92cbfdcrepo`, owned by the SAM-generated
-  `nzimageapi-40221342-CompanionStack`.
-- S3 `aws-sam-cli-managed-default-samclisourcebucket-tfqwkahyri86`, owned by the
-  `aws-sam-cli-managed-default` stack.
+- ECR `nzimageapi40221342/jp2converterfunctione92cbfdcrepo` and its owning SAM-generated
+  `nzimageapi-40221342-CompanionStack` (3 remaining images deleted first, since the stack's
+  `AWS::ECR::Repository` sets neither `EmptyOnDelete` nor a retain policy and would otherwise
+  fail to delete).
+- S3 `aws-sam-cli-managed-default-samclisourcebucket-tfqwkahyri86` and its owning
+  `aws-sam-cli-managed-default` stack (158 object versions and delete markers purged first;
+  `aws s3 rm --recursive` alone is not enough on a versioned bucket, it only writes delete
+  markers).
 
-Both had the same lifecycle policies applied imperatively on 2026-08-24, so they drain on
-their own rather than sitting there forever. Leave them until a deploy against the new
-repo and bucket is confirmed working and you are past wanting to roll back to an old image.
+The account now holds exactly one ECR repository and one S3 bucket, both from
+`infra/bootstrap.yaml`.
 
-Note that CI kept writing to both of them until the deploy job was pointed at the bootstrap stack
-(see "The wiring in CI" above), so their newest contents are more recent than the migration date
-suggests.
+The practical consequence: CloudFormation cannot roll the `nzimageapi` stack back to any
+version deployed before 2026-08-25, because those templates and images no longer exist. Every
+artefact from that date on lives in the bootstrap stores under their retention policies.
+
+They lasted as long as they did because CI kept writing to both of them until the deploy job was
+pointed at the bootstrap stack (see "The wiring in CI" above), which is why their final contents
+were newer than the migration date suggested.
 
 ### When adding a new container-image Lambda
 
