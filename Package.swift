@@ -17,7 +17,7 @@ let package = Package(
         .package(url: "https://github.com/awslabs/swift-aws-lambda-runtime.git", from: "2.11.0"),
         .package(url: "https://github.com/swift-server/swift-aws-lambda-events.git", from: "1.5.0"),
         .package(url: "https://github.com/Alamofire/Alamofire.git", from: "5.12.2"),
-        .package(url: "https://github.com/apple/swift-collections.git", from: "1.7.1"),
+        .package(url: "https://github.com/apple/swift-collections.git", from: "1.7.2"),
         .package(url: "https://github.com/bradwindy/RichError.git", from: "2.1.0"),
         .package(url: "https://github.com/scinfu/SwiftSoup.git", from: "2.13.9"),
         .package(url: "https://github.com/apple/swift-crypto.git", from: "4.5.2"),
