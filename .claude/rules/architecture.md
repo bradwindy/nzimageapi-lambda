@@ -154,8 +154,8 @@ Kept unchanged by the port. Don't describe them as fixed.
 
 - Victoria and Albert Museum image URLs 404.
 - A picked record with a non-string `date` (DigitalNZ sometimes sends nested arrays) fails to
-  decode, so that request returns 400. Other records on the page no longer matter: since October
-  2026 `decodeRecordsPage` decodes only the record that is picked.
+  decode, so that request returns 400. (Other records on the page no longer matter, see
+  `decodeRecordsPage` and `worker/README.md`'s differences from Swift.)
 - The HTTP `exclude` parameter splits on commas, so it can't name
   "Te Toi Uku, Crown Lynn and Clayworks Museum". The RPC `exclude` array can.
 - "New Zealand Portrait Gallery NZMuseums" has 0 results, so requests for it return 400.

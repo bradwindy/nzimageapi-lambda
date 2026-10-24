@@ -44,7 +44,8 @@ export interface AKLMuseumResponse {
 }
 
 // Decoding mirrors Swift's JSONDecoder with all-optional properties: a missing or null key is
-// absent, but a present value of the wrong type fails the whole document.
+// absent, but a present value of the wrong type fails the whole document (for a page of records,
+// see decodeRecordsPage).
 
 type JSONObject = Record<string, unknown>;
 type Decoder<T> = (value: unknown, path: string) => T;
@@ -122,10 +123,15 @@ export function decodeRecordsResponse(value: unknown): RecordsResponse {
 	return decodeFields(value, "$", [["search", decodeSearch]]);
 }
 
+const decodeUndecodedArray: Decoder<unknown[]> = (value, path) => {
+	if (!Array.isArray(value)) throw new DecodingError(`Expected an array at ${path}`);
+	return value;
+};
+
 const decodeUndecodedSearch: Decoder<RecordsSearch<unknown>> = (value, path) =>
 	decodeFields(value, path, [
 		["result_count", decodeInt],
-		["results", decodeArray((element) => element)],
+		["results", decodeUndecodedArray],
 	]);
 
 /**
