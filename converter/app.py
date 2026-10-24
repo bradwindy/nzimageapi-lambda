@@ -57,7 +57,7 @@ USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
 # DOWNLOAD_TIMEOUT is per socket operation, so on its own it never stops a slow but steady
 # download. NDHA streams some masters to the Lambda at under 1 MB/s (FL73848659, 45.8 MB, ran
 # into the old 60 s function timeout with nothing logged), hence the whole-download deadline,
-# set below the 120 s function timeout so a slow source fails as a logged 502 with time to spare
+# set well inside the 180 s function timeout so a slow source fails as a logged 502 with time to spare
 # for decoding the ones that make it (see the arithmetic on Timeout in template.yaml).
 DOWNLOAD_TIMEOUT = int(os.environ.get("DOWNLOAD_TIMEOUT", "35"))  # seconds
 DOWNLOAD_DEADLINE = int(os.environ.get("DOWNLOAD_DEADLINE", "90"))  # seconds, whole download
@@ -101,6 +101,11 @@ def _reject_if_unsafe(url):
 
 class _SafeRedirectHandler(HTTPRedirectHandler):
     """Re-validate every redirect target before following it (see _reject_if_unsafe)."""
+
+    # The real sources redirect at most once (Recollect -> presigned S3). Each hop can block for
+    # DOWNLOAD_TIMEOUT before the deadline applies, so urllib's default of 10 hops could outlast
+    # the function timeout.
+    max_redirections = 3
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         _reject_if_unsafe(newurl)

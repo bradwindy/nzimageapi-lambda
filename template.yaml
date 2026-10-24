@@ -48,11 +48,13 @@ Parameters:
       ConverterGuardFunction switches the converter off.
   GuardMaxGbSeconds:
     Type: Number
-    Default: 320000
+    Default: 250000
     Description: >
       Month-to-date Lambda compute (GB-seconds, all functions) at which the converter is
-      switched off. The always-free allowance is 400,000, and the gap absorbs the guard's hourly
-      lag and the Duration metric not counting init time.
+      switched off. The always-free allowance is 400,000. The gap is about two hours of the
+      worst-case burn (10 concurrent 2 GB converters, ~72,000 GB-s an hour, which a flood of slow
+      calls can reach without tripping the spike alarm), to cover the hourly check, metric lag
+      and init time the Duration metric leaves out.
   GuardMaxRequests:
     Type: Number
     Default: 800000

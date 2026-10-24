@@ -35,7 +35,7 @@ import boto3
 FUNCTION_NAME = os.environ.get("CONVERTER_FUNCTION_NAME", "")
 SPIKE_ALARM_NAME = os.environ.get("SPIKE_ALARM_NAME", "")
 ALERT_TOPIC_ARN = os.environ.get("ALERT_TOPIC_ARN", "")
-MAX_GB_SECONDS = float(os.environ.get("MAX_GB_SECONDS", "320000"))
+MAX_GB_SECONDS = float(os.environ.get("MAX_GB_SECONDS", "250000"))
 MAX_REQUESTS = float(os.environ.get("MAX_REQUESTS", "800000"))
 MAX_CONVERTER_INVOCATIONS = float(os.environ.get("MAX_CONVERTER_INVOCATIONS", "20000"))
 SPIKE_COOLDOWN_HOURS = float(os.environ.get("SPIKE_COOLDOWN_HOURS", "6"))

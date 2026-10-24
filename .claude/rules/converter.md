@@ -32,8 +32,8 @@ reservation:
 - **Spike:** `nzimageapi-converter-invocations-high` (over `ConverterSpikeThreshold`, default 100,
   invocations in 5 minutes) emails `nzimageapi-cost-alarms` and, through the same topic, switches
   the converter off.
-- **Hourly:** month-to-date usage from CloudWatch is checked against `GuardMaxGbSeconds` (320,000
-  of the 400,000 free), `GuardMaxRequests` (800,000 of 1,000,000) and
+- **Hourly:** month-to-date usage from CloudWatch is checked against `GuardMaxGbSeconds` (250,000
+  of the 400,000 free, about two hours of worst-case burn below it), `GuardMaxRequests` (800,000 of 1,000,000) and
   `GuardMaxConverterInvocations` (20,000, which keeps data transfer out under the free 100 GB at
   up to ~4 MB a response). Over any limit, it switches off. Under all of them, and with the spike
   alarm not fired for `GuardSpikeCooldownHours` (6), it switches back on. That is how it recovers
