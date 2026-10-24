@@ -67,7 +67,9 @@ DigitalNZ has no random sort, so `newResult` never asks for "a page of random re
 `NZImage` (`models.ts`) is one DigitalNZ record in exactly the shape `GET /image` returns:
 snake_case keys, absent fields omitted, fields in the Swift `CodingKeys` order. Decoding mirrors
 Swift's `JSONDecoder` with all-optional properties. A missing or null key is left out, but a
-present value of the wrong type throws `DecodingError` and fails the whole response. URL fields go
+present value of the wrong type throws `DecodingError` and fails the whole response. The page
+request is the exception: `decodeRecordsPage` leaves its records raw and only the picked one goes
+through `decodeRecord`, to keep CPU inside the Free plan's 10 ms. URL fields go
 through `swiftURLString` (`swiftUrl.ts`), which reproduces Foundation's `URL(string:)`, so
 returned URLs match what the Swift Lambda returned.
 
@@ -151,8 +153,9 @@ A WAF rate-limiting rule on the `iolab.nz` zone blocks an IP that sends more tha
 Kept unchanged by the port. Don't describe them as fixed.
 
 - Victoria and Albert Museum image URLs 404.
-- A DigitalNZ record with a non-string `date` fails decoding of the whole page, so the request
-  returns 400.
+- A picked record with a non-string `date` (DigitalNZ sometimes sends nested arrays) fails to
+  decode, so that request returns 400. Other records on the page no longer matter: since October
+  2026 `decodeRecordsPage` decodes only the record that is picked.
 - The HTTP `exclude` parameter splits on commas, so it can't name
   "Te Toi Uku, Crown Lynn and Clayworks Museum". The RPC `exclude` array can.
 - "New Zealand Portrait Gallery NZMuseums" has 0 results, so requests for it return 400.

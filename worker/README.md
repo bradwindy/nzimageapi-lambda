@@ -112,6 +112,9 @@ parameter cannot.
 
 ## Differences from the Swift Lambda
 
+- Only the picked record of a DigitalNZ page is decoded (`decodeRecordsPage`). Swift decoded all
+  100, which cost most of a request's CPU here and let one malformed record elsewhere on the page
+  fail the request with 400.
 - Routes other than `GET /image` and `GET /collections` return `404 {"message":"Not Found"}`
   before the secret check, which is what API Gateway returned in front of the Lambda.
 - The 400 body is sent as `text/plain`. The Lambda set no content type.

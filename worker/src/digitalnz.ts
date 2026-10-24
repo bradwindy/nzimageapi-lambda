@@ -5,6 +5,8 @@ import {
 	checkHasTitleAndLargeImage,
 	checkResponseNonNull,
 	checkSearchNonNull,
+	decodeRecord,
+	decodeRecordsPage,
 	decodeRecordsResponse,
 	type NZImage,
 } from "./models.ts";
@@ -55,13 +57,14 @@ export async function newResult(
 
 	const page = randomInt(1, pages);
 	context.log(`Making second request. pageNumber: ${page}, resultsPerPage: ${RESULTS_PER_PAGE}, collection: ${chosenCollection}`);
-	const secondary = decodeRecordsResponse(await request(page, RESULTS_PER_PAGE));
+	const secondary = decodeRecordsPage(await request(page, RESULTS_PER_PAGE));
 	context.log(`Got second response, result count ${secondary.search?.result_count}`);
 
 	const { results } = checkSearchNonNull(checkResponseNonNull(secondary));
 	if (results.length === 0) throw new ApiError("noResults", { collection: chosenCollection, page: String(page) });
 
 	// The last page is usually short, so pick within the page actually returned.
-	const chosen = checkHasTitleAndLargeImage(results[randomInt(0, results.length - 1)]!);
+	const index = randomInt(0, results.length - 1);
+	const chosen = checkHasTitleAndLargeImage(decodeRecord(results[index], `$.search.results[${index}]`));
 	return getLargerImage(chosen, context);
 }
