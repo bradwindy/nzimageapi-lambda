@@ -133,9 +133,10 @@ Resources:
         - arm64
       MemorySize: 2048          # Lambda CPU scales with memory; headroom for large JP2 masters
       # NDHA streams some masters to the Lambda at under 1 MB/s, so a 45 MB master can need
-      # ~60 s just to download. app.py stops the download at DOWNLOAD_DEADLINE (90 s), which
-      # leaves this much again for decode/encode.
-      Timeout: 120
+      # ~60 s just to download. app.py gives up once a read returns after DOWNLOAD_DEADLINE (90 s),
+      # and one read can block for up to DOWNLOAD_TIMEOUT (35 s), so a download ends by ~125 s.
+      # That leaves ~55 s for decode/encode.
+      Timeout: 180
       # No ReservedConcurrentExecutions in the template: this account's total Lambda concurrency
       # quota is only 10 (not the usual 1000 default) and must stay fully unreserved. The only
       # reservation ever made is 0, set at runtime by ConverterGuardFunction as a kill switch,
@@ -202,7 +203,7 @@ Resources:
       Environment:
         Variables:
           CONVERTER_FUNCTION_NAME: !Ref Jp2ConverterFunction
-          SPIKE_ALARM_NAME: nzimageapi-converter-invocations-high
+          SPIKE_ALARM_NAME: !Ref Jp2ConverterInvocationsAlarm
           ALERT_TOPIC_ARN: !Ref AlarmTopic
           MAX_GB_SECONDS: !Ref GuardMaxGbSeconds
           MAX_REQUESTS: !Ref GuardMaxRequests
@@ -234,6 +235,14 @@ Resources:
           Type: SNS
           Properties:
             Topic: !Ref AlarmTopic
+            # Only the spike alarm entering ALARM wakes the guard. Other alarms, budget mail and
+            # the guard's own plain-text notices on this topic are dropped at the subscription.
+            FilterPolicyScope: MessageBody
+            FilterPolicy:
+              AlarmName:
+                - !Ref Jp2ConverterInvocationsAlarm
+              NewStateValue:
+                - ALARM
     Metadata:
       BuildMethod: makefile
 

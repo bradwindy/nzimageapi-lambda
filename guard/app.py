@@ -115,11 +115,13 @@ def month_to_date_usage(now):
     return usage
 
 
-def spike_alarm_quiet(now):
-    """True when the spike alarm is not in ALARM and has not entered it within the cooldown."""
+def spike_alarm_firing():
     alarms = _cloudwatch.describe_alarms(AlarmNames=[SPIKE_ALARM_NAME])["MetricAlarms"]
-    if alarms and alarms[0]["StateValue"] == "ALARM":
-        return False
+    return bool(alarms) and alarms[0]["StateValue"] == "ALARM"
+
+
+def spike_alarm_quiet(now):
+    """True when the spike alarm has not entered ALARM within the cooldown."""
     history = _cloudwatch.describe_alarm_history(
         AlarmName=SPIKE_ALARM_NAME,
         HistoryItemType="StateUpdate",
@@ -168,6 +170,10 @@ def lambda_handler(event, _context):
     print(f"month-to-date usage: {usage}")
     if reached:
         set_converter_enabled(False, "month-to-date free-tier limit reached: " + ", ".join(reached))
+    elif spike_alarm_firing():
+        # Normally the SNS-triggered run has already done this. This covers that run failing
+        # (throttled past its retries, an API error): the alarm stays in ALARM and won't notify again.
+        set_converter_enabled(False, f"{SPIKE_ALARM_NAME} is still firing")
     elif spike_alarm_quiet(now):
         set_converter_enabled(
             True, f"usage under every limit and no spike alarm in the last {SPIKE_COOLDOWN_HOURS:g} hours"

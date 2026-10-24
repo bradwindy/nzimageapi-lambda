@@ -17,7 +17,7 @@ imports the built package on arm64 Python 3.13 and fails if either codec is miss
 
 ## Timeouts
 
-NDHA streams some masters to the Lambda at under 1 MB/s. The function timeout is 120 s and
+NDHA streams some masters to the Lambda at under 1 MB/s. The function timeout is 180 s and
 `download_image` gives up after `DOWNLOAD_DEADLINE` (90 s) for the whole download, on top of the
 per-socket `DOWNLOAD_TIMEOUT`, so a slow source ends as a logged `502 download failed` instead of
 a silent function timeout. FL73848659 (45.8 MB, 7356×5010) is the known slow master.

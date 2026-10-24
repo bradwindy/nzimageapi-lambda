@@ -58,7 +58,7 @@ USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
 # download. NDHA streams some masters to the Lambda at under 1 MB/s (FL73848659, 45.8 MB, ran
 # into the old 60 s function timeout with nothing logged), hence the whole-download deadline,
 # set below the 120 s function timeout so a slow source fails as a logged 502 with time to spare
-# for decoding the ones that make it.
+# for decoding the ones that make it (see the arithmetic on Timeout in template.yaml).
 DOWNLOAD_TIMEOUT = int(os.environ.get("DOWNLOAD_TIMEOUT", "35"))  # seconds
 DOWNLOAD_DEADLINE = int(os.environ.get("DOWNLOAD_DEADLINE", "90"))  # seconds, whole download
 DOWNLOAD_CHUNK_BYTES = 1024 * 1024

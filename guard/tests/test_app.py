@@ -207,6 +207,13 @@ def test_hourly_check_leaves_it_off_while_the_spike_alarm_is_still_firing(aws):
     assert _hourly(aws, reserved=0, converter_calls=10, alarm_state="ALARM").calls == []
 
 
+def test_hourly_check_switches_off_if_the_alarm_run_never_did(aws):
+    # The SNS-triggered run failed, so the converter is still on while the alarm sits in ALARM.
+    assert _hourly(aws, reserved=None, converter_calls=10, alarm_state="ALARM").calls == [
+        ("put", "converter", 0)
+    ]
+
+
 def test_hourly_check_waits_out_the_cooldown_after_a_spike(aws):
     # The alarm cleared minutes after the switch-off (throttled calls aren't invocations), but it
     # fired 1 hour ago, inside the 6-hour cooldown, so a flood may still be running.
