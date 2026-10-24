@@ -3,7 +3,7 @@ export interface FacetEntry {
   count: number;
 }
 
-// Faithful port of CollectionLister/main.swift facets query.
+// Port of the facets query in the removed Swift CollectionLister (see worker/scripts/count-collections.ts).
 // Returns all primary_collection facets for Images category (up to 350).
 export async function fetchCollectionFacets(): Promise<FacetEntry[]> {
   const apiKey = process.env.DIGITALNZ_API_KEY;

@@ -1,30 +1,14 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  NZ Image API stack: the DigitalNZ random-image Swift Lambda (HTTP API) plus a
-  self-hosted Python + Pillow JP2->JPEG converter Lambda (Function URL), deployed
-  together as one stack. The Swift Lambda stays a pure URL builder; for TAPUHI it
-  emits <converter Function URL>/?url=<encoded NDHA FL JP2 stream> and the browser
-  loads the converter, which decodes the JP2 to a displayable JPEG.
+  NZ Image API's AWS side: the self-hosted Python + Pillow JP2/TIFF->JPEG converter
+  Lambda (public Function URL), its free-tier kill switch, and the cost alarms and
+  budget. The API itself is the nzimages-api Cloudflare Worker (worker/), which stays
+  a pure URL builder: for converter-routed collections it emits
+  <converter Function URL>/?url=<encoded master URL>&sig=<HMAC> and the browser loads
+  the converter, which decodes the master to a displayable JPEG.
 
 Parameters:
-  DigitalNzApiKey:
-    Type: String
-    NoEcho: true
-    Description: >
-      DigitalNZ API key (sent as the Authentication-Token header). Pass at deploy time
-      via --parameter-overrides or the gitignored samconfig.toml. NEVER commit it.
-  ApiClientSecrets:
-    Type: String
-    NoEcho: true
-    Description: >
-      Comma-separated "name:secret" pairs, one per approved consumer of the `/image` API
-      (e.g. "site:AbC123...,mobile:XyZ789..."). The Swift Lambda requires the `secret`
-      request header to constant-time-match one entry's secret; the matching entry's name
-      is logged as the authorized consumer. Generate each secret with `openssl rand -hex 32`
-      (hex only -- ":" and "," are the field/entry delimiters). See docs/ACCESS-CONTROL.md
-      for onboarding/revoking a consumer. Pass at deploy time via --parameter-overrides or
-      the gitignored samconfig.toml. NEVER commit it.
   AlarmEmail:
     Type: String
     Description: >
@@ -36,10 +20,10 @@ Parameters:
     Type: String
     NoEcho: true
     Description: >
-      HMAC key shared between the Swift Lambda (signs converter URLs) and the converter
-      Lambda (verifies them), so the public converter Function URL only accepts requests
-      the Swift Lambda minted. Pass at deploy time via --parameter-overrides or the
-      gitignored samconfig.toml. NEVER commit it.
+      HMAC key shared between the nzimages-api Worker (signs converter URLs, as its
+      CONVERTER_SIGNING_KEY secret) and the converter Lambda (verifies them), so the public
+      converter Function URL only accepts requests the API minted. Pass at deploy time via
+      --parameter-overrides or the gitignored samconfig.toml. NEVER commit it.
   ConverterSpikeThreshold:
     Type: Number
     Default: 100
@@ -248,83 +232,9 @@ Resources:
     Metadata:
       BuildMethod: makefile
 
-  # --- Swift NZ Image API (provided.al2023 custom runtime, built via the Makefile) -------
-  NZImageApiFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: .
-      Handler: bootstrap
-      Runtime: provided.al2023
-      Architectures:
-        - arm64
-      MemorySize: 512
-      Timeout: 60
-      # No ReservedConcurrentExecutions: see the matching comment on Jp2ConverterFunction --
-      # this account's total Lambda concurrency quota is only 10, already fully unreserved,
-      # and is itself the binding concurrency ceiling right now.
-      Environment:
-        Variables:
-          DIGITALNZ_API_KEY: !Ref DigitalNzApiKey
-          API_CLIENT_SECRETS: !Ref ApiClientSecrets
-          CONVERTER_SIGNING_KEY: !Ref ConverterSigningKey
-          LOG_LEVEL: info
-          # Injected from the converter's Function URL (no hardcoding / chicken-and-egg).
-          # SAM auto-creates AWS::Lambda::Url with logical id <FunctionLogicalId>Url.
-          JP2_CONVERTER_URL: !GetAtt Jp2ConverterFunctionUrl.FunctionUrl
-      Events:
-        Image:
-          Type: HttpApi
-          Properties:
-            Path: /image
-            Method: GET
-        Collections:
-          Type: HttpApi
-          Properties:
-            Path: /collections
-            Method: GET
-    Metadata:
-      BuildMethod: makefile
-
-  # Fires if the Swift API is invoked more than 200 times in any 1-hour window. Since the
-  # secret check happens before any DigitalNZ call, an unauthorized flood is cheap per-call
-  # but this still flags unexpected volume from an authorized-but-misbehaving consumer.
-  NZImageApiInvocationsAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: nzimageapi-api-invocations-high
-      AlarmDescription: NZImageApiFunction invoked more than 200 times in 1 hour.
-      Namespace: AWS/Lambda
-      MetricName: Invocations
-      Dimensions:
-        - Name: FunctionName
-          Value: !Ref NZImageApiFunction
-      Statistic: Sum
-      Period: 3600
-      EvaluationPeriods: 1
-      Threshold: 200
-      ComparisonOperator: GreaterThanThreshold
-      TreatMissingData: notBreaching
-      AlarmActions:
-        - !Ref AlarmTopic
-
-  # Explicit declaration of the implicit HTTP API (must keep the logical id "ServerlessHttpApi"
-  # so SAM customizes -- rather than replaces -- the API the Image event already targets; the
-  # live URL is unaffected). DefaultRouteSettings caps request *rate*; the account's total Lambda
-  # concurrency quota (currently 10 -- see the comments on Jp2ConverterFunction/NZImageApiFunction)
-  # currently caps *parallelism* -- together they bound worst-case cost even for a valid caller.
-  ServerlessHttpApi:
-    Type: AWS::Serverless::HttpApi
-    Properties:
-      DefaultRouteSettings:
-        ThrottlingRateLimit: 10    # steady-state requests/sec; tune to expected legitimate traffic
-        ThrottlingBurstLimit: 20   # token-bucket burst capacity
-
 Outputs:
-  ImageApiEndpoint:
-    Description: Random-image endpoint (send the `secret` header) — the new SAM HTTP API URL.
-    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/image"
   Jp2ConverterUrl:
-    Description: JP2->JPEG converter Function URL (wired into the Swift Lambda's JP2_CONVERTER_URL).
+    Description: JP2/TIFF->JPEG converter Function URL. Set it as JP2_CONVERTER_URL in worker/wrangler.jsonc.
     Value: !GetAtt Jp2ConverterFunctionUrl.FunctionUrl
   AlarmTopicArn:
     Description: >

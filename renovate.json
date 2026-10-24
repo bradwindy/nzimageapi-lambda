@@ -41,32 +41,6 @@
       "description": "Next.js (collection-reviewer-web)",
       "groupName": "Next.js",
       "matchPackageNames": ["/^next/", "/^@next//", "/^eslint-config-next/"]
-    },
-    {
-      "description": "AWS's own Swift Lambda packages tend to release in lockstep; keep them in one PR",
-      "groupName": "Swift AWS Lambda runtime",
-      "matchManagers": ["swift"],
-      "matchPackageNames": [
-        "awslabs/swift-aws-lambda-runtime",
-        "swift-server/swift-aws-lambda-events"
-      ]
-    },
-    {
-      "description": "swift-async-algorithms is pinned to >=1.1.4 in Package.swift to work around a region-isolation build failure with newer Swift compilers (see the comment there) — require manual review on every update, not just majors",
-      "matchManagers": ["swift"],
-      "matchPackageNames": ["apple/swift-async-algorithms"],
-      "automerge": false
-    }
-  ],
-  "customManagers": [
-    {
-      "customType": "regex",
-      "description": "Track the Swift base image pinned in scripts/build.sh — still the real build path, since the SAM Makefile's build-NZImageApiFunction target calls this script",
-      "managerFilePatterns": ["/^scripts/build\\.sh$/"],
-      "matchStrings": ["swift:(?<currentValue>[\\w.\\-]+)\\s*\\\\"],
-      "depNameTemplate": "swift",
-      "datasourceTemplate": "docker",
-      "versioningTemplate": "docker"
     }
   ]
 }

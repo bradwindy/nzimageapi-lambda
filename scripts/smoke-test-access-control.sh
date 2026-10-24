@@ -2,20 +2,20 @@
 #
 # Smoke-tests the /image access-control model described in docs/ACCESS-CONTROL.md.
 # Asserts: 200 with a valid secret, 401 with a missing/wrong secret, and (optionally,
-# opt-in) 429 once the API Gateway stage throttle is exceeded.
+# opt-in) 429 once the iolab.nz WAF rate-limiting rule (30 requests per 10 s per IP) trips.
 #
 # Usage:
-#   API_URL="https://xxxx.execute-api.ap-southeast-2.amazonaws.com" \
+#   API_URL="https://nzimages-api.iolab.nz" \
 #   API_SECRET="your-consumer-secret" \
 #   ./scripts/smoke-test-access-control.sh
 #
-#   # Also exercise the throttle (fires ~20+ rapid requests -- costs real invocations,
-#   # so it's opt-in and NOT run by default):
+#   # Also exercise the rate limit (fires 40 parallel /collections requests, which count
+#   # toward the Free plan's daily Worker requests, so it's opt-in and NOT run by default):
 #   ./scripts/smoke-test-access-control.sh --throttle
 
 set -e
 
-API_URL="${API_URL:?Set API_URL to the deployed API base URL, e.g. https://xxxx.execute-api.ap-southeast-2.amazonaws.com}"
+API_URL="${API_URL:?Set API_URL to the deployed API base URL, e.g. https://nzimages-api.iolab.nz}"
 API_SECRET="${API_SECRET:?Set API_SECRET to a secret value from API_CLIENT_SECRETS}"
 RUN_THROTTLE_TEST=false
 
@@ -56,24 +56,17 @@ status=$(curl -s -o /dev/null -w "%{http_code}" -H "secret: definitely-not-a-rea
 assert_status "incorrect secret returns 401" "401" "$status"
 
 if [ "$RUN_THROTTLE_TEST" = true ]; then
-  echo "-- Throttle (default ThrottlingBurstLimit is 20; firing 30 rapid requests) --"
-  saw_429=false
-  for _ in $(seq 1 30); do
-    status=$(curl -s -o /dev/null -w "%{http_code}" -H "secret: $API_SECRET" "$API_URL/image")
-    if [ "$status" = "429" ]; then
-      saw_429=true
-      break
-    fi
-  done
-  if [ "$saw_429" = true ]; then
-    echo "  PASS: throttle engaged (saw a 429 within 30 rapid requests)"
+  echo "-- Rate limit (WAF rule allows 30 requests per 10 s per IP; firing 40 in parallel) --"
+  statuses=$(seq 1 40 | xargs -P 40 -I{} curl -s -o /dev/null -w "%{http_code}\n" -H "secret: $API_SECRET" "$API_URL/collections")
+  if echo "$statuses" | grep -q '^429$'; then
+    echo "  PASS: rate limit engaged (saw a 429 within 40 parallel requests)"
     pass_count=$((pass_count + 1))
   else
-    echo "  FAIL: never saw a 429 within 30 rapid requests -- check ThrottlingBurstLimit/ThrottlingRateLimit"
+    echo "  FAIL: never saw a 429 within 40 parallel requests -- check the iolab.nz rate limiting rule"
     fail_count=$((fail_count + 1))
   fi
 else
-  echo "-- Throttle test skipped (pass --throttle to run it; it deliberately fires 30 rapid requests) --"
+  echo "-- Rate limit test skipped (pass --throttle to run it; it deliberately fires 40 parallel requests) --"
 fi
 
 echo ""

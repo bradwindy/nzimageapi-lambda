@@ -5,7 +5,7 @@ import ImageCard from './components/ImageCard';
 import CollectionDetails from './components/CollectionDetails';
 import DecisionBar from './components/DecisionBar';
 import ProgressNav from './components/ProgressNav';
-import type { ApiCollection, LambdaImageResponse, DecisionStatus } from '@/lib/types';
+import type { ApiCollection, ImageApiResponse, DecisionStatus } from '@/lib/types';
 
 interface Props {
   initialCollections: ApiCollection[];
@@ -15,7 +15,7 @@ interface Props {
 export default function Reviewer({ initialCollections, initialIndex }: Props) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [collections, setCollections] = useState<ApiCollection[]>(initialCollections);
-  const [images, setImages] = useState<LambdaImageResponse[]>([]);
+  const [images, setImages] = useState<ImageApiResponse[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
   const [imagesError, setImagesError] = useState<string | null>(null);
   const [notesDraft, setNotesDraft] = useState('');

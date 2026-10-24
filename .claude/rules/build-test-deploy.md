@@ -1,83 +1,92 @@
 # Build, test, and deploy reference
 
-Read this when building, testing, or deploying — either component. For end-user API docs
+Read this when building, testing, or deploying any part. For end-user API docs
 and setup walkthroughs, see the root `README.md` instead of duplicating them here.
 
-## Swift Lambda
+## API Worker (`worker/`)
 
 ```bash
-swift build                    # build all targets (main Lambda + CLI tools)
-swift test                     # XCTest suite: Tests/NZImageApiLambdaTests
+cd worker
+npm ci
+npm test                 # Vitest inside workerd (@cloudflare/vitest-plugin), outbound fetches mocked with MSW
+npm run typecheck        # src, test and scripts
+npm run dev              # wrangler dev on http://127.0.0.1:8787, secrets from worker/.dev.vars
+npm run cf-typegen       # regenerate worker-configuration.d.ts after editing wrangler.jsonc
 ```
 
-Run locally (listens on `127.0.0.1:7000`; `LOCAL_LAMBDA_SERVER_ENABLED=true` is what
-switches the runtime into local HTTP-server mode instead of polling the Lambda Runtime API):
+### Validating collections end-to-end
+
+`check-collections` replaces the old CollectionTester. It requests `/image` for every collection
+(or each `--collection`), checks the JSON and that the image URL loads, and exits 1 on any failure:
 
 ```bash
-DIGITALNZ_API_KEY=$DIGITALNZ_API_KEY API_CLIENT_SECRETS=dev:super_secret_secret \
-  LOCAL_LAMBDA_SERVER_ENABLED=true ./.build/debug/NZImageApiLambda
+NZIMAGE_API_SECRET=... npm run check-collections -- --base-url https://nzimages-api.iolab.nz
+NZIMAGE_API_SECRET=... npm run check-collections -- --collection "Feilding Library"   # against wrangler dev
 ```
 
-Invoke it directly once running:
+`--compare-url <base>` also queries a second deployment and reports whether both return the same
+URL shape (records are random, so a master-vs-fallback difference can be legitimate).
+
+### Deploying the Worker
+
+Workers Builds deploys `worker/` (its root directory) on every push to `main`. Its build command
+is `npm run typecheck && npm test`, so a failing check stops the deploy, the same gate GitHub CI's
+`worker-test` job applies to pull requests. The build configuration lives in the Cloudflare
+dashboard (Workers & Pages, nzimages-api, Settings, Build), not in this repo. By hand:
 
 ```bash
-curl -X POST http://127.0.0.1:7000/invoke -d '{...APIGatewayV2 event JSON...}'
+npx wrangler deploy
+npx wrangler secret put API_CLIENT_SECRETS      # or DIGITALNZ_API_KEY, CONVERTER_SIGNING_KEY
 ```
 
-## CollectionTester (recommended way to validate a collection end-to-end)
+`secrets.required` in `wrangler.jsonc` makes a deploy fail until all three secrets exist. A new
+Worker's first deploy therefore uploads them with `--secrets-file <file outside the repo>`.
+Secret changes take effect immediately, with no redeploy. `JP2_CONVERTER_URL` is a plain var in
+`wrangler.jsonc`, set to the stack's `Jp2ConverterUrl` output.
 
-```bash
-./Sources/Testing/CollectionTester/test-collection.sh                       # random collection
-./Sources/Testing/CollectionTester/test-collection.sh "Wellington City Recollect"
-./Sources/Testing/CollectionTester/test-collection.sh --port 8000 "Canterbury Museum"
-```
-
-Builds the Lambda, boots it, makes a request, validates the JSON, checks the image URL is
-actually fetchable, then shuts the server down. Full option list:
-`Sources/Testing/CollectionTester/README-CollectionTester.md`.
+Free plan limits that shape the code: 100,000 requests a day for the whole account, 10 ms CPU
+and 50 subrequests per request. See CLAUDE.md's gotchas.
 
 ## Reviewer web app
 
 ```bash
-cd collection-reviewer-web && npm run dev          # incremental Swift build, boots Lambda on :7000 too
-npm run dev:clean                                   # clean Swift build first
-npm run dev:reuse                                   # skip Swift build, reuse an already-healthy Lambda
+cd worker && npm ci                                # once
+cd ../collection-reviewer-web && npm run dev       # boots the API Worker on :8977, then Next.js
 ```
 
-Reads `DIGITALNZ_API_KEY` from the repo-root `.env` (`collection-reviewer-web/scripts/dev.mjs`).
-**Do not run this at the same time as the `CollectionReviewer` Swift CLI** — both mutate the
-same collections file and only one writer can hold the mutex
-(`collection-reviewer-web/lib/collectionsFile.ts`).
+`scripts/dev.mjs` reads `DIGITALNZ_API_KEY` from the repo-root `.env`, starts `wrangler dev` with a
+dev-only consumer secret (`dev:super_secret_secret`, which `lib/imageApi.ts` sends), and reuses an
+API that is already healthy on the port. `CONVERTER_SIGNING_KEY` is not set there, so
+converter-routed collections show their harvested URL. **Do not run `npm run update-collections`
+while the app is running**: both write the same collections file and only one writer can hold
+the mutex (`collection-reviewer-web/lib/collectionsFile.ts`).
 
-## SAM deploy (the real deploy path)
-
-Stack name `nzimageapi`, region `ap-southeast-2`. Needs Docker for the Swift Lambda's Makefile
-target. Docker commands need the sandbox disabled here, since the Docker socket isn't
-sandbox-allowlisted. The converter and guard are .zips built by their own Makefiles
-(`converter/Makefile`, `guard/Makefile`) with no Docker. The converter's `pip install` needs
-network access to PyPI.
+## Converter and kill switch (SAM)
 
 ```bash
-sam build
-sam deploy                     # will prompt a changeset y/N — see below
+(cd converter && pip install -r requirements-dev.txt && pytest)
+(cd guard && pip install -r requirements-dev.txt && pytest)
 ```
 
-This environment has no tty for interactive prompts: show the user the changeset, get
-explicit confirmation, then re-run with `sam deploy --no-confirm-changeset`.
+Stack name `nzimageapi`, region `ap-southeast-2`. GitHub Actions deploys it on every push to
+`main` (`.github/workflows/ci-cd.yml`: tests, `sam build`, a codec check on the built converter,
+`sam deploy`). By hand:
 
-Parameters (`DigitalNzApiKey`, `ApiClientSecrets`, `AlarmEmail`, `ConverterSigningKey`) come
-from `--parameter-overrides` or the gitignored `samconfig.toml` — never hardcode or commit them.
+```bash
+sam build                      # needs network access to PyPI (run unsandboxed here)
+sam deploy                     # will prompt a changeset y/N, see below
+```
 
-## Legacy scripts (pre-SAM, not the current deploy path)
+This environment has no tty for interactive prompts: show the user the changeset, get explicit
+confirmation, then re-run with `sam deploy --no-confirm-changeset`.
 
-`scripts/deploy.sh`, `scripts/build.sh`, `scripts/package.sh` predate the SAM stack and drive
-a manual `aws lambda update-function-code` flow. They still work for the Swift Lambda alone
-but don't know about the converter Lambda or the SAM-managed resources (alarms, budget,
-Function URL wiring) — prefer `sam build && sam deploy` for anything touching the full stack.
+Parameters (`ConverterSigningKey`, `AlarmEmail`, and the `Converter*`/`Guard*` thresholds) come
+from `--parameter-overrides` or the gitignored `samconfig.toml`. Never hardcode or commit them.
+`ConverterSigningKey` must match the Worker's `CONVERTER_SIGNING_KEY` secret.
 
 ## Deploy artefact retention (cost control)
 
-Every `sam deploy` uploads the packaged code (the Swift Lambda zip ~44 MB, the converter zip
+Every `sam deploy` uploads the packaged code (the converter zip
 ~22 MB, the guard) and templates to S3, and versioning is on. Left unmanaged, deploy artefacts
 were the account's only real recurring cost while the running stack sat at $0.00: by 2026-08-24
 there were 29 converter images in ECR (~5.5 GB) and 1.45 GB in S3.

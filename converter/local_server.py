@@ -2,23 +2,22 @@
 
 NOT part of the deployed .zip (converter/Makefile only copies app.py). This faithfully
 simulates a Lambda Function URL so the real app.py handler can be exercised end-to-end
-from the Swift Lambda without deploying:
+from a local API Worker without deploying:
 
   - GET /?url=<percent-encoded FL stream>  ->  build an API Gateway v2 event with the
     URL-*decoded* queryStringParameters (exactly what a Function URL passes the handler),
     call app.lambda_handler, return its response (base64-decoding the body when
     isBase64Encoded, like AWS does for binary responses).
-  - HEAD is short-circuited to a fast 200 image/jpeg so CollectionTester's 10s HEAD probe
-    never times out on the cold 6 MB download+decode; the subsequent ranged GET does the
-    real conversion and returns actual JPEG bytes.
+  - HEAD is short-circuited to a fast 200 image/jpeg so a link checker's HEAD probe never
+    times out on the cold multi-MB download and decode. The subsequent GET does the real
+    conversion and returns actual JPEG bytes.
 
-Usage:
-    python -m venv .venv && .venv/bin/pip install 'Pillow==11.*'
-    export CONVERTER_SIGNING_KEY=some-local-testing-value   # must match the Swift side
-    .venv/bin/python converter/local_server.py 8787 &
-    export JP2_CONVERTER_URL=http://127.0.0.1:8787
-    export CONVERTER_SIGNING_KEY=some-local-testing-value   # same value, Swift process env
-    swift run CollectionTester "TAPUHI"
+Usage (port 8788, since `wrangler dev` uses 8787):
+    python -m venv .venv && .venv/bin/pip install -r converter/requirements.txt
+    CONVERTER_SIGNING_KEY=some-local-testing-value .venv/bin/python converter/local_server.py 8788 &
+    # worker/.dev.vars must hold the same CONVERTER_SIGNING_KEY
+    cd worker && npx wrangler dev --var JP2_CONVERTER_URL:http://127.0.0.1:8788
+    NZIMAGE_API_SECRET=super_secret_secret npm run check-collections -- --collection TAPUHI
 """
 
 import base64
@@ -30,7 +29,7 @@ from urllib.parse import parse_qsl, urlparse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from app import lambda_handler  # noqa: E402
 
-PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8787
+PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8788
 
 
 class Handler(BaseHTTPRequestHandler):

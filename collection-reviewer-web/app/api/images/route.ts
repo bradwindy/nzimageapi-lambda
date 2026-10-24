@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchImageForCollection } from '@/lib/lambda';
+import { fetchImageForCollection } from '@/lib/imageApi';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,7 +10,7 @@ const MAX_COUNT = 20;
 // Parse the `count` query param into a sane, bounded number of images to fetch.
 // Guards two footguns: a non-numeric value (parseInt → NaN → Array.from silently
 // yields length 0 → "no images"), and an unbounded value (spawning thousands of
-// concurrent lambda fetches). Falls back to the default on anything invalid.
+// concurrent API fetches). Falls back to the default on anything invalid.
 export function parseImageCount(raw: string | null): number {
   if (raw === null) return DEFAULT_COUNT;
   const n = Number.parseInt(raw, 10);
@@ -18,7 +18,7 @@ export function parseImageCount(raw: string | null): number {
   return Math.min(Math.max(n, 1), MAX_COUNT);
 }
 
-// Parallel-fetch `count` images for a collection via the local Swift lambda.
+// Parallel-fetch `count` images for a collection via the local nzimages-api Worker.
 // Returns all results with statusCode===200 and a non-null large_thumbnail_url.
 // Returns 200 with returned:0 if no usable images — the UI handles that case.
 export async function GET(request: NextRequest) {

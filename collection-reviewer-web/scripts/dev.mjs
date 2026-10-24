@@ -1,50 +1,34 @@
 #!/usr/bin/env node
 /**
- * Dev supervisor — starts the Swift lambda then Next.js dev server.
- * Run via: npm run dev (incremental build), npm run dev:clean (clean build),
- *          npm run dev:reuse (skip swift build, reuse lambda if already healthy).
+ * Dev supervisor: starts the nzimages-api Worker under `wrangler dev`, then the Next.js dev
+ * server. If a healthy API is already listening on the port, it is reused.
  *
- * Environment flags (set automatically by npm scripts):
- *   LAMBDA_CLEAN_BUILD=1   — run swift package clean before swift build
- *   LAMBDA_SKIP_BUILD=1    — skip swift build entirely
- *
- * Reads DIGITALNZ_API_KEY from repo-root .env.
+ * The Worker gets DIGITALNZ_API_KEY from the repo-root .env, the dev-only consumer secret that
+ * lib/imageApi.ts sends, and an empty CONVERTER_SIGNING_KEY, so converter-routed collections show
+ * their harvested URL. All three go in as --var flags, which win over anything in worker/.dev.vars
+ * or the environment.
  */
 
 import { spawn, exec } from 'child_process';
-import { readFile } from 'fs/promises';
+import { access, readFile } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '../..');
 const APP_DIR = path.resolve(__dirname, '..');
-const LAMBDA_PORT = 7000;
-const LAMBDA_BINARY = path.join(REPO_ROOT, '.build', 'debug', 'NZImageApiLambda');
+const WORKER_DIR = path.join(REPO_ROOT, 'worker');
+const ENV_PATH = path.join(REPO_ROOT, '.env');
+const API_PORT = 8977; // not wrangler's default 8787, which other Worker projects use
+const DEV_SECRET = 'super_secret_secret';
 
-let lambdaProc = null;
+let apiProc = null;
 let nextProc = null;
 let shuttingDown = false;
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function execPromise(cmd, opts = {}) {
-  return new Promise((resolve, reject) => {
-    const child = exec(cmd, { ...opts, maxBuffer: 100 * 1024 * 1024 }, (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-    child.stdout?.pipe(process.stdout);
-    child.stderr?.pipe(process.stderr);
-  });
-}
-
 async function loadEnv() {
-  const envPath = path.join(REPO_ROOT, '.env');
   try {
-    const content = await readFile(envPath, 'utf-8');
+    const content = await readFile(ENV_PATH, 'utf-8');
     const env = {};
     for (const line of content.split('\n')) {
       const trimmed = line.trim();
@@ -61,19 +45,17 @@ async function loadEnv() {
 
 async function checkHealth() {
   try {
-    const res = await fetch(`http://127.0.0.1:${LAMBDA_PORT}/invoke`, {
-      method: 'POST',
-      body: '{}',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch(`http://127.0.0.1:${API_PORT}/collections`, {
+      headers: { secret: DEV_SECRET },
       signal: AbortSignal.timeout(2000),
     });
-    return typeof res.status === 'number';
+    return res.ok;
   } catch {
     return false;
   }
 }
 
-async function waitUntilHealthy(maxTries = 30, delayMs = 1000) {
+async function waitUntilHealthy(maxTries = 60, delayMs = 1000) {
   for (let i = 0; i < maxTries; i++) {
     if (await checkHealth()) return true;
     await new Promise(r => setTimeout(r, delayMs));
@@ -81,33 +63,22 @@ async function waitUntilHealthy(maxTries = 30, delayMs = 1000) {
   return false;
 }
 
-async function killPort() {
-  return new Promise(resolve => {
-    exec(`lsof -ti :${LAMBDA_PORT}`, (err, stdout) => {
-      if (err || !stdout.trim()) return resolve();
-      const pids = stdout.trim().split('\n').filter(Boolean);
-      for (const pid of pids) {
-        try { exec(`kill -9 ${pid}`); } catch {}
-      }
-      setTimeout(resolve, 600);
-    });
-  });
+// wrangler runs workerd as a child, so signal the whole process group or workerd outlives us
+// and keeps the port, to be "reused" next time with stale code.
+function killApi(signal) {
+  if (!apiProc) return;
+  try { process.kill(-apiProc.pid, signal); } catch {}
 }
-
-// ---------------------------------------------------------------------------
-// Lifecycle
-// ---------------------------------------------------------------------------
 
 function shutdown() {
   if (shuttingDown) return;
   shuttingDown = true;
   console.log('\n[dev] Shutting down...');
   if (nextProc) { try { nextProc.kill('SIGTERM'); } catch {} }
-  if (lambdaProc) { try { lambdaProc.kill('SIGTERM'); } catch {} }
-  // Give processes a moment to exit, then hard-exit
+  killApi('SIGTERM');
   setTimeout(() => {
     if (nextProc) { try { nextProc.kill('SIGKILL'); } catch {} }
-    if (lambdaProc) { try { lambdaProc.kill('SIGKILL'); } catch {} }
+    killApi('SIGKILL');
     process.exit(0);
   }, 2000);
 }
@@ -115,104 +86,67 @@ function shutdown() {
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
-// ---------------------------------------------------------------------------
-// Main
-// ---------------------------------------------------------------------------
-
 async function main() {
-  // Load .env from repo root
   const env = await loadEnv();
-  const apiKey = process.env.DIGITALNZ_API_KEY ?? env.DIGITALNZ_API_KEY;
-
-  if (!apiKey) {
-    console.error('[dev] ERROR: DIGITALNZ_API_KEY not found in .env or environment.');
+  if (!env.DIGITALNZ_API_KEY) {
+    console.error('[dev] ERROR: DIGITALNZ_API_KEY not found in the repo-root .env.');
     console.error('[dev] Create a .env file in the repo root with DIGITALNZ_API_KEY=<your-key>');
     process.exit(1);
   }
 
-  const cleanBuild = process.env.LAMBDA_CLEAN_BUILD === '1';
-  const skipBuild = process.env.LAMBDA_SKIP_BUILD === '1';
-
-  // Check if a healthy lambda is already running — if so, reuse it
-  const alreadyRunning = await checkHealth();
-  if (alreadyRunning) {
-    console.log(`[dev] Lambda already healthy on :${LAMBDA_PORT} — reusing.`);
+  if (await checkHealth()) {
+    console.log(`[dev] nzimages-api already healthy on :${API_PORT}, reusing it.`);
   } else {
-    // Build lambda
-    if (skipBuild) {
-      console.log('[dev] Skipping swift build (LAMBDA_SKIP_BUILD=1).');
-    } else {
-      if (cleanBuild) {
-        console.log('[dev] Running swift package clean...');
-        try {
-          await execPromise('swift package clean', { cwd: REPO_ROOT });
-        } catch (err) {
-          console.warn('[dev] swift package clean failed (continuing):', err.message);
-        }
-      }
-      console.log('[dev] Building lambda (swift build)...');
-      try {
-        await execPromise('swift build', { cwd: REPO_ROOT });
-        console.log('[dev] Build complete.');
-      } catch {
-        console.error('[dev] swift build failed. Exiting.');
-        process.exit(1);
-      }
+    try {
+      await access(path.join(WORKER_DIR, 'node_modules'));
+    } catch {
+      console.error('[dev] ERROR: worker dependencies are missing. Run `npm ci` in worker/ first.');
+      process.exit(1);
     }
 
-    // Free port if occupied
     const portBusy = await new Promise(r =>
-      exec(`lsof -ti :${LAMBDA_PORT}`, (err, out) => r(!err && out.trim().length > 0))
+      exec(`lsof -ti :${API_PORT}`, (err, out) => r(!err && out.trim().length > 0))
     );
     if (portBusy) {
-      console.log(`[dev] Port ${LAMBDA_PORT} in use — killing existing process...`);
-      await killPort();
+      console.error(`[dev] ERROR: port ${API_PORT} is in use by something that isn't a healthy nzimages-api.`);
+      process.exit(1);
     }
 
-    // Spawn lambda
-    console.log(`[dev] Starting lambda on :${LAMBDA_PORT}...`);
-    lambdaProc = spawn(LAMBDA_BINARY, [], {
-      cwd: REPO_ROOT,
-      env: {
-        ...process.env,
-        API_CLIENT_SECRETS: 'dev:super_secret_secret',
-        LOCAL_LAMBDA_SERVER_ENABLED: 'true',
-        PORT: String(LAMBDA_PORT),
-        DIGITALNZ_API_KEY: apiKey,
-      },
+    console.log(`[dev] Starting nzimages-api (wrangler dev) on :${API_PORT}...`);
+    const args = [
+      'dev', '--port', String(API_PORT),
+      '--var', `DIGITALNZ_API_KEY:${env.DIGITALNZ_API_KEY}`,
+      '--var', `API_CLIENT_SECRETS:dev:${DEV_SECRET}`,
+      '--var', 'CONVERTER_SIGNING_KEY:',
+    ];
+    apiProc = spawn(path.join(WORKER_DIR, 'node_modules', '.bin', 'wrangler'), args, {
+      cwd: WORKER_DIR,
       stdio: ['ignore', 'pipe', 'pipe'],
+      detached: true,
     });
 
-    lambdaProc.stdout.on('data', d => process.stdout.write(`[lambda] ${d}`));
-    lambdaProc.stderr.on('data', d => process.stderr.write(`[lambda] ${d}`));
-    lambdaProc.on('exit', (code, sig) => {
+    apiProc.stdout.on('data', d => process.stdout.write(`[api] ${d}`));
+    apiProc.stderr.on('data', d => process.stderr.write(`[api] ${d}`));
+    apiProc.on('exit', (code, sig) => {
       if (!shuttingDown) {
-        console.error(`[dev] Lambda exited unexpectedly (code=${code} sig=${sig}). Shutting down.`);
+        console.error(`[dev] nzimages-api exited unexpectedly (code=${code} sig=${sig}). Shutting down.`);
         shutdown();
       }
     });
 
-    // Health-poll until ready
-    console.log('[dev] Waiting for lambda to be ready...');
-    const ready = await waitUntilHealthy();
-    if (!ready) {
-      console.error('[dev] Lambda did not become healthy in 30s. Exiting.');
+    console.log('[dev] Waiting for nzimages-api to be ready...');
+    if (!(await waitUntilHealthy())) {
+      console.error('[dev] nzimages-api did not become healthy in 60s. Exiting.');
       shutdown();
       return;
     }
-    console.log('[dev] Lambda is ready.');
+    console.log('[dev] nzimages-api is ready.');
   }
 
-  // Spawn Next.js dev server
   console.log('[dev] Starting Next.js dev server...');
   nextProc = spawn('npm', ['run', 'next-only'], {
     cwd: APP_DIR,
-    env: {
-      ...process.env,
-      ...env,
-      DIGITALNZ_API_KEY: apiKey,
-      REPO_ROOT,
-    },
+    env: { ...process.env, ...env, REPO_ROOT },
     stdio: 'inherit',
     shell: true,
   });
@@ -227,5 +161,5 @@ async function main() {
 
 main().catch(err => {
   console.error('[dev] Fatal error:', err);
-  process.exit(1);
+  shutdown();
 });

@@ -8,8 +8,8 @@ see `docs/ACCESS-CONTROL.md` §10 ("Converter security") rather than duplicating
 
 `converter/app.py` is a Python + Pillow Lambda behind a public **Function URL** (`AuthType: NONE`,
 CORS open) that downloads a master image (JP2 via OpenJPEG, TIFF via libtiff) and returns a
-displayable JPEG capped at `MAX_DIM` (default 4000px). It exists because the Swift Lambda is a
-pure URL builder and never decodes image bytes itself.
+displayable JPEG capped at `MAX_DIM` (default 4000px). It exists because the API Worker
+(`nzimages-api`, in `worker/`) is a pure URL builder and never decodes image bytes itself.
 
 It is a python3.13 arm64 **.zip** built by `converter/Makefile`, which installs Pillow's
 `manylinux_2_28_aarch64` wheel (it bundles OpenJPEG and libtiff) on any build host. CI's deploy job
@@ -61,15 +61,20 @@ Known limits, accepted for this account's size:
 
 ## HMAC signer/verifier contract
 
-- Swift side: `URLProcessor.signedConverterURL(for:)` (`Sources/NZImageApiLambda/Helpers/URLProcessor.swift`)
-  builds `<JP2_CONVERTER_URL>/?url=<pct-encoded source URL>&sig=<hex HMAC-SHA256(CONVERTER_SIGNING_KEY, source URL)>`.
-  Returns `nil` (graceful fallback to the unconverted URL) if either `JP2_CONVERTER_URL` or
-  `CONVERTER_SIGNING_KEY` is unset — this is what makes local dev work without a converter deployed.
+- Worker side: `signedConverterURL(sourceURL, env)` (`worker/src/urlProcessor.ts`) builds
+  `<JP2_CONVERTER_URL>/?url=<pct-encoded source URL>&sig=<hex HMAC-SHA256(CONVERTER_SIGNING_KEY, source URL)>`.
+  `JP2_CONVERTER_URL` is a plain var in `worker/wrangler.jsonc`, set to the stack's
+  `Jp2ConverterUrl` output. `CONVERTER_SIGNING_KEY` is a Worker secret. It returns `null`
+  (graceful fallback to the unconverted URL) if either is unset or empty.
 - Python side: `converter/app.py` recomputes the HMAC over the decoded `url` param with its own
   `CONVERTER_SIGNING_KEY` and rejects on mismatch, so the public Function URL only serves
-  requests the Swift Lambda actually minted.
-- Both sides read the **same** `CONVERTER_SIGNING_KEY` — it's a single shared secret, not a
-  keypair. Rotating it requires redeploying both functions with the new value.
+  requests the Worker actually minted.
+- Both sides hold the **same** `CONVERTER_SIGNING_KEY`. It's a single shared secret, not a
+  keypair: the Worker secret and the converter's env var, which comes from the `ConverterSigningKey`
+  stack parameter. To rotate it, run `npx wrangler secret put CONVERTER_SIGNING_KEY` in `worker/`,
+  update the `CONVERTER_SIGNING_KEY` GitHub Actions secret (CI's deploy job passes it as
+  `ConverterSigningKey`), and redeploy the stack. Converter URLs fail with `403` while the two
+  differ.
 
 ## Host allowlist
 
@@ -80,8 +85,8 @@ TIFF originals), `manawatuheritage.pncc.govt.nz` (Manawatū Heritage TIFF origin
 302-redirect to a presigned S3 URL that's followed transparently).
 
 **Adding a new converter-routed collection whose host isn't already listed requires adding it
-to `ALLOWED_HOSTS` in `template.yaml` and redeploying the converter function** — a
-`URLProcessor` strategy change alone won't work if the host is unlisted.
+to `ALLOWED_HOSTS` in `template.yaml` and redeploying the converter function**. A strategy
+change in `worker/src/urlProcessor.ts` alone won't work if the host is unlisted.
 
 ## Which collections route through it vs. direct-serve
 

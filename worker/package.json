@@ -1,0 +1,23 @@
+{
+	"name": "nzimages-api",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy",
+		"test": "vitest run",
+		"typecheck": "tsc -p tsconfig.json && tsc -p test/tsconfig.json && tsc -p scripts/tsconfig.json",
+		"cf-typegen": "wrangler types --strict-vars=false",
+		"check-collections": "node scripts/check-collections.ts",
+		"count-collections": "node scripts/count-collections.ts"
+	},
+	"devDependencies": {
+		"@cloudflare/vitest-plugin": "^1.4.7",
+		"@msw/cloudflare": "^0.2.0",
+		"@types/node": "^26.6.5",
+		"msw": "^3.0.3",
+		"typescript": "^7.0.2",
+		"vitest": "^4.1.12",
+		"wrangler": "^4.152.0"
+	}
+}

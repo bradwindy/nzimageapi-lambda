@@ -12,14 +12,24 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  swift-test:
-    name: Swift tests
-    runs-on: ubuntu-24.04-arm                # free arm64 runner (public repo); matches prod arch
-    container: swift:6.3-amazonlinux2023     # exact prod toolchain — same image scripts/build.sh uses; already bundles git + openssl-devel
+  worker-test:
+    name: Worker tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
-      - name: swift test
-        run: swift test
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      # Proves the Worker bundles. Workers Builds deploys it from main (worker/ is its root).
+      - run: npx wrangler deploy --dry-run --outdir dist
 
   python-test:
     name: Python converter tests
@@ -40,9 +50,9 @@ jobs:
 
   deploy:
     name: Build & deploy (SAM)
-    needs: [swift-test, python-test]     # deploy blocked until BOTH pass
+    needs: [python-test]                 # the Worker deploys separately, through Workers Builds
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-24.04-arm            # native arm64 Docker for the Swift cross-compile, arm64 Python for the converter codec check
+    runs-on: ubuntu-24.04-arm            # arm64 Python for the converter codec check
     environment: production              # gives an optional approval gate; scopes OIDC sub (see setup)
     permissions:
       id-token: write                    # required for OIDC
@@ -63,7 +73,7 @@ jobs:
         with:
           python-version: "3.13"         # same as the Lambda runtime, so the codec check imports the built wheel
       - name: sam build
-        run: sam build                   # Swift via Makefile+Docker, converter and guard via their Makefiles
+        run: sam build                   # converter and guard via their Makefiles
       # The converter .zip carries Pillow's manylinux aarch64 wheel. Prove the build has the two
       # codecs it exists for, on the same architecture and Python as the Lambda, before deploying.
       - name: Check converter codecs
@@ -101,7 +111,16 @@ jobs:
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
             --parameter-overrides \
-              DigitalNzApiKey=${{ secrets.DIGITALNZ_API_KEY }} \
-              ApiClientSecrets='${{ secrets.API_CLIENT_SECRETS }}' \
               ConverterSigningKey=${{ secrets.CONVERTER_SIGNING_KEY }} \
               AlarmEmail=${{ vars.ALARM_EMAIL }}
+      # The Worker can't read stack outputs, so worker/wrangler.jsonc hardcodes the converter's
+      # Function URL. A deploy that replaces the function changes it, and the Worker would keep
+      # signing URLs for a host that no longer exists. Fail loudly instead.
+      - name: Check the Worker's converter URL
+        run: |
+          url=$(aws cloudformation describe-stacks --region ap-southeast-2 --stack-name nzimageapi \
+            --query "Stacks[0].Outputs[?OutputKey=='Jp2ConverterUrl'].OutputValue" --output text)
+          if ! grep -qF "\"JP2_CONVERTER_URL\": \"$url\"" worker/wrangler.jsonc; then
+            echo "::error::Jp2ConverterUrl is now $url. Set JP2_CONVERTER_URL in worker/wrangler.jsonc to it, and Workers Builds then redeploys the Worker."
+            exit 1
+          fi

@@ -1,6 +1,10 @@
 # ADR 0001: Free per-consumer static secrets instead of Cognito M2M
 
-**Status:** Accepted
+**Status:** Accepted, with the hosting superseded. In October 2026 the API moved from API Gateway
+and a Swift Lambda to a Cloudflare Worker on the Workers Free plan. The per-consumer secrets
+decided here still apply (now as Worker secrets). The AWS cost controls listed under Decision
+were replaced by the Free plan's no-billing limits and a WAF rate limit. See
+[`docs/ACCESS-CONTROL.md`](../ACCESS-CONTROL.md) for the current model.
 
 ## Context
 

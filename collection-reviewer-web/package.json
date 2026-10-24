@@ -4,8 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "dev:clean": "LAMBDA_CLEAN_BUILD=1 node scripts/dev.mjs",
-    "dev:reuse": "LAMBDA_SKIP_BUILD=1 node scripts/dev.mjs",
     "next-only": "next dev",
     "build": "next build",
     "start": "next start",
