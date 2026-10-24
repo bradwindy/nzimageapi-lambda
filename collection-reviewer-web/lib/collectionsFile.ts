@@ -29,7 +29,7 @@ export function withWriteMutex<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 // ---------------------------------------------------------------------------
-// Parser — faithful port of parseCollectionsFile from the removed Swift CollectionReviewer
+// Parser: faithful port of parseCollectionsFile from the removed Swift CollectionReviewer
 //
 // Key invariants (must match Swift exactly so the progress integer stays valid):
 //   • Collection start: line startsWith('"') AND includes('": ')
@@ -113,7 +113,7 @@ export async function readAndParse(): Promise<ParsedFile> {
 }
 
 // ---------------------------------------------------------------------------
-// Writer — faithful port of updateCollectionInFile from the removed Swift CollectionReviewer
+// Writer: faithful port of updateCollectionInFile from the removed Swift CollectionReviewer
 //
 // EXACT algorithm (order matters):
 //   1. Re-read file fresh (content may have changed since the caller parsed)

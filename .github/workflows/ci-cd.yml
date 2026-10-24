@@ -113,3 +113,14 @@ jobs:
             --parameter-overrides \
               ConverterSigningKey=${{ secrets.CONVERTER_SIGNING_KEY }} \
               AlarmEmail=${{ vars.ALARM_EMAIL }}
+      # The Worker can't read stack outputs, so worker/wrangler.jsonc hardcodes the converter's
+      # Function URL. A deploy that replaces the function changes it, and the Worker would keep
+      # signing URLs for a host that no longer exists. Fail loudly instead.
+      - name: Check the Worker's converter URL
+        run: |
+          url=$(aws cloudformation describe-stacks --region ap-southeast-2 --stack-name nzimageapi \
+            --query "Stacks[0].Outputs[?OutputKey=='Jp2ConverterUrl'].OutputValue" --output text)
+          if ! grep -qF "\"JP2_CONVERTER_URL\": \"$url\"" worker/wrangler.jsonc; then
+            echo "::error::Jp2ConverterUrl is now $url. Set JP2_CONVERTER_URL in worker/wrangler.jsonc to it, and Workers Builds then redeploys the Worker."
+            exit 1
+          fi

@@ -3,15 +3,14 @@
  * Dev supervisor: starts the nzimages-api Worker under `wrangler dev`, then the Next.js dev
  * server. If a healthy API is already listening on the port, it is reused.
  *
- * The Worker gets only DIGITALNZ_API_KEY from the repo-root .env (through a temporary env file,
- * so stale or placeholder values in .env can't leak in) and the dev-only consumer secret that
- * lib/imageApi.ts sends. CONVERTER_SIGNING_KEY stays unset, so converter-routed collections show
- * their harvested URL instead of a signed converter URL.
+ * The Worker gets DIGITALNZ_API_KEY from the repo-root .env, the dev-only consumer secret that
+ * lib/imageApi.ts sends, and an empty CONVERTER_SIGNING_KEY, so converter-routed collections show
+ * their harvested URL. All three go in as --var flags, which win over anything in worker/.dev.vars
+ * or the environment.
  */
 
 import { spawn, exec } from 'child_process';
-import { access, mkdtemp, readFile, rm, writeFile } from 'fs/promises';
-import os from 'os';
+import { access, readFile } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -26,7 +25,6 @@ const DEV_SECRET = 'super_secret_secret';
 let apiProc = null;
 let nextProc = null;
 let shuttingDown = false;
-let tempDir = null;
 
 async function loadEnv() {
   try {
@@ -78,10 +76,9 @@ function shutdown() {
   console.log('\n[dev] Shutting down...');
   if (nextProc) { try { nextProc.kill('SIGTERM'); } catch {} }
   killApi('SIGTERM');
-  setTimeout(async () => {
+  setTimeout(() => {
     if (nextProc) { try { nextProc.kill('SIGKILL'); } catch {} }
     killApi('SIGKILL');
-    if (tempDir) await rm(tempDir, { recursive: true, force: true });
     process.exit(0);
   }, 2000);
 }
@@ -116,19 +113,14 @@ async function main() {
     }
 
     console.log(`[dev] Starting nzimages-api (wrangler dev) on :${API_PORT}...`);
-    tempDir = await mkdtemp(path.join(os.tmpdir(), 'nzimages-api-dev-'));
-    const envFile = path.join(tempDir, '.env');
-    await writeFile(envFile, `DIGITALNZ_API_KEY=${env.DIGITALNZ_API_KEY}\n`, { mode: 0o600 });
     const args = [
       'dev', '--port', String(API_PORT),
-      '--env-file', envFile,
+      '--var', `DIGITALNZ_API_KEY:${env.DIGITALNZ_API_KEY}`,
       '--var', `API_CLIENT_SECRETS:dev:${DEV_SECRET}`,
+      '--var', 'CONVERTER_SIGNING_KEY:',
     ];
-    // wrangler also reads required secrets from the environment, so don't pass ours through.
-    const { DIGITALNZ_API_KEY, API_CLIENT_SECRETS, CONVERTER_SIGNING_KEY, ...apiEnv } = process.env;
     apiProc = spawn(path.join(WORKER_DIR, 'node_modules', '.bin', 'wrangler'), args, {
       cwd: WORKER_DIR,
-      env: apiEnv,
       stdio: ['ignore', 'pipe', 'pipe'],
       detached: true,
     });
@@ -169,5 +161,5 @@ async function main() {
 
 main().catch(err => {
   console.error('[dev] Fatal error:', err);
-  process.exit(1);
+  shutdown();
 });

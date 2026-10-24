@@ -135,8 +135,9 @@ describe("excludeList", () => {
 		]);
 	});
 
-	it("splits a comma-separated string like the HTTP exclude parameter", () => {
-		expect(excludeList("TAPUHI,Canterbury Museum")).toEqual(["TAPUHI", "Canterbury Museum"]);
+	it("splits a comma-separated string like the HTTP exclude parameter, dropping empty pieces", () => {
+		expect(excludeList("TAPUHI,,Canterbury Museum")).toEqual(["TAPUHI", "Canterbury Museum"]);
+		expect(excludeList("")).toEqual([]);
 	});
 
 	it("treats anything else as no exclusions", () => {

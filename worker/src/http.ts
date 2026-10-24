@@ -132,7 +132,7 @@ export class Http {
 			if (!REDIRECT_STATUSES.has(response.status) || location === null) return response;
 
 			await response.body?.cancel();
-			if (redirects >= MAX_REDIRECTS) throw new ApiError("tooManyRedirects", { url });
+			if (redirects >= MAX_REDIRECTS) throw new ApiError("tooManyRedirects", { url: current });
 			const next = new URL(location, current);
 			if (next.origin !== new URL(current).origin) {
 				// As fetch's own redirect handling would, keep the DigitalNZ key off other origins.

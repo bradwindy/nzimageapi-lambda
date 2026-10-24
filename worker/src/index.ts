@@ -52,7 +52,7 @@ export default {
 /** The binding is untyped at runtime, so a caller could pass the HTTP-style comma string. */
 export function excludeList(value: unknown): string[] {
 	if (Array.isArray(value)) return value.filter((name): name is string => typeof name === "string");
-	return typeof value === "string" ? value.split(",") : [];
+	return typeof value === "string" ? value.split(",").filter((name) => name !== "") : [];
 }
 
 /**
@@ -61,9 +61,9 @@ export function excludeList(value: unknown): string[] {
  */
 export class ImageApi extends WorkerEntrypoint<Env> {
 	/** Exactly the object `GET /image` would serialise, or null where `/image` would return 400. */
-	async image(options: { collection?: string; exclude?: string[] } = {}): Promise<NZImage | null> {
+	async image(options?: { collection?: string; exclude?: string[] } | null): Promise<NZImage | null> {
 		console.log("Authorized consumer: service binding");
-		return requestImage(this.env, options.collection, excludeList(options.exclude));
+		return requestImage(this.env, options?.collection, excludeList(options?.exclude));
 	}
 
 	async collections(): Promise<string[]> {

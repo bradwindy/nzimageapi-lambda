@@ -145,7 +145,12 @@ async function validateImageURL(url: string): Promise<ImageCheck> {
 			headers: { "User-Agent": BROWSER_USER_AGENT, Range: "bytes=0-19" },
 			signal: AbortSignal.timeout(60_000),
 		});
-		fileType = detectFileType(new Uint8Array(await response.arrayBuffer()).slice(0, 20));
+		// Read only the first chunk: hosts that ignore Range (the converter builds a whole JPEG)
+		// would otherwise send the full image just to sniff 20 bytes.
+		const reader = response.body?.getReader();
+		const first = reader ? await reader.read() : undefined;
+		await reader?.cancel();
+		fileType = detectFileType((first?.value ?? new Uint8Array()).slice(0, 20));
 	} catch {
 		fileType = "error";
 	}
