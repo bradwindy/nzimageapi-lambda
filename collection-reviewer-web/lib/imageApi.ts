@@ -2,7 +2,7 @@ import type { ImageApiResponse } from './types';
 
 // The nzimages-api Worker that scripts/dev.mjs runs under `wrangler dev`, with this dev-only
 // consumer secret in API_CLIENT_SECRETS.
-const API_URL = 'http://127.0.0.1:8787/image';
+const API_URL = 'http://127.0.0.1:8977/image';
 const DEV_SECRET = 'super_secret_secret';
 
 // Returns null only when the API can't be reached. A non-200 answer comes back with its status

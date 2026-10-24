@@ -29,8 +29,10 @@ URL shape (records are random, so a master-vs-fallback difference can be legitim
 
 ### Deploying the Worker
 
-Workers Builds deploys `worker/` (its root directory) on every push to `main`, running the
-tests first. By hand:
+Workers Builds deploys `worker/` (its root directory) on every push to `main`. Its build command
+is `npm run typecheck && npm test`, so a failing check stops the deploy, the same gate GitHub CI's
+`worker-test` job applies to pull requests. The build configuration lives in the Cloudflare
+dashboard (Workers & Pages, nzimages-api, Settings, Build), not in this repo. By hand:
 
 ```bash
 npx wrangler deploy
@@ -49,7 +51,7 @@ and 50 subrequests per request. See CLAUDE.md's gotchas.
 
 ```bash
 cd worker && npm ci                                # once
-cd ../collection-reviewer-web && npm run dev       # boots the API Worker on :8787, then Next.js
+cd ../collection-reviewer-web && npm run dev       # boots the API Worker on :8977, then Next.js
 ```
 
 `scripts/dev.mjs` reads `DIGITALNZ_API_KEY` from the repo-root `.env`, starts `wrangler dev` with a

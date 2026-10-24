@@ -71,7 +71,7 @@ NZIMAGE_API_SECRET=... npm run check-collections -- --base-url https://nzimages-
 (cd guard && pytest)
 sam build && sam deploy          # converter stack, see build-test-deploy.md
 
-# Reviewer web app (boots the API Worker on :8787 too)
+# Reviewer web app (boots the API Worker on :8977 too)
 cd collection-reviewer-web && npm run dev
 ```
 

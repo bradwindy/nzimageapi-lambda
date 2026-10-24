@@ -7,5 +7,6 @@ DIGITALNZ_API_KEY=your_api_key_here
 # Clients send the secret in the `secret` header.
 API_CLIENT_SECRETS=dev:super_secret_secret
 
-# HMAC key shared with the converter Lambda. Generate with: openssl rand -hex 32
-CONVERTER_SIGNING_KEY=your_converter_signing_key_here
+# HMAC key shared with the converter Lambda. Leave it empty locally: converter collections then
+# serve their harvested URL. A wrong value would sign URLs the production converter rejects.
+CONVERTER_SIGNING_KEY=

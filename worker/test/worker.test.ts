@@ -4,7 +4,7 @@ import { env, exports } from "cloudflare:workers";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import { collectionNames } from "../src/collections.ts";
-import worker from "../src/index.ts";
+import worker, { excludeList } from "../src/index.ts";
 import { DIGITALNZ_ENDPOINT, digitalNZ } from "./helpers.ts";
 import { network } from "./network.ts";
 
@@ -124,5 +124,23 @@ describe("ImageApi RPC", () => {
 
 	it("lists the collections", async () => {
 		expect(await exports.ImageApi.collections()).toEqual(collectionNames());
+	});
+});
+
+describe("excludeList", () => {
+	it("keeps an array's names and drops anything that isn't a string", () => {
+		expect(excludeList(["Te Toi Uku, Crown Lynn and Clayworks Museum", 3, "TAPUHI"])).toEqual([
+			"Te Toi Uku, Crown Lynn and Clayworks Museum",
+			"TAPUHI",
+		]);
+	});
+
+	it("splits a comma-separated string like the HTTP exclude parameter", () => {
+		expect(excludeList("TAPUHI,Canterbury Museum")).toEqual(["TAPUHI", "Canterbury Museum"]);
+	});
+
+	it("treats anything else as no exclusions", () => {
+		expect(excludeList(undefined)).toEqual([]);
+		expect(excludeList({ TAPUHI: true })).toEqual([]);
 	});
 });

@@ -337,6 +337,11 @@ async function manawatuHeritageOriginal(record: NZImage, url: string, { http, en
 	return (await signedConverterURL(downloadURL, env)) ?? url;
 }
 
+/** Ids taken from URL paths go into patterns literally. */
+function escapeRegExp(value: string): string {
+	return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 // MARK: Flickr
 
 /** Flickr with no `object_url`: the larger sizes' secrets are only on the photo page. */
@@ -351,7 +356,7 @@ async function flickrLandingLargest(record: NZImage, url: string, { http }: Requ
 	let pattern: RegExp;
 	try {
 		html = await http.fetchHTML(landing);
-		pattern = new RegExp(`live\\.staticflickr\\.com/[0-9]+/${photoId}_[0-9a-z]+_([0-9a-z]+)\\.(?:jpg|png|gif)`, "g");
+		pattern = new RegExp(`live\\.staticflickr\\.com/[0-9]+/${escapeRegExp(photoId)}_[0-9a-z]+_([0-9a-z]+)\\.(?:jpg|png|gif)`, "g");
 	} catch {
 		return flickrLargest(record, url);
 	}
@@ -437,7 +442,7 @@ async function knowledgeBankMaster(record: NZImage, url: string, { http }: Reque
 			landing.replaceAll("https://knowledgebank.org.nz", "https://www.knowledgebank.org.nz"),
 		);
 		pattern = new RegExp(
-			`https://cdn\\.knowledgebank\\.org\\.nz/node/${nodeId}/master/([^"' <>]+?)\\.(?:jpg|jpeg|png)`,
+			`https://cdn\\.knowledgebank\\.org\\.nz/node/${escapeRegExp(nodeId)}/master/([^"' <>]+?)\\.(?:jpg|jpeg|png)`,
 			"gi",
 		);
 	} catch {

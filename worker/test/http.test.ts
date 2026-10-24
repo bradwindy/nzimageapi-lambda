@@ -46,6 +46,28 @@ describe("Http", () => {
 		expect(client.subrequests).toBe(3);
 	});
 
+	it("keeps the DigitalNZ key on same-origin redirects but drops it on cross-origin ones", async () => {
+		const seen: Record<string, string | null> = {};
+		network.use(
+			http.get("https://api.example/records.json", ({ request }) => {
+				seen.first = request.headers.get("authentication-token");
+				return new Response(null, { status: 302, headers: { location: "/v2/records.json" } });
+			}),
+			http.get("https://api.example/v2/records.json", ({ request }) => {
+				seen.sameOrigin = request.headers.get("authentication-token");
+				return new Response(null, { status: 302, headers: { location: "https://elsewhere.example/records.json" } });
+			}),
+			http.get("https://elsewhere.example/records.json", ({ request }) => {
+				seen.otherOrigin = request.headers.get("authentication-token");
+				return HttpResponse.json({});
+			}),
+		);
+
+		await new Http().getJSON("https://api.example/records.json", { apiKey: "key" });
+
+		expect(seen).toEqual({ first: "key", sameOrigin: "key", otherOrigin: null });
+	});
+
 	it("never makes more than the Free plan's 50 subrequests in one invocation", async () => {
 		let hops = 0;
 		network.use(

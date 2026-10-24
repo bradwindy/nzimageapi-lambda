@@ -121,18 +121,25 @@ export class Http {
 	async #send(url: string, { method, headers, timeoutMs }: SendOptions): Promise<Response> {
 		const signal = AbortSignal.timeout(timeoutMs);
 		let current = url;
+		let sendHeaders = headers;
 		for (let redirects = 0; ; redirects++) {
 			if (this.#subrequests >= MAX_SUBREQUESTS) {
 				throw new ApiError("subrequestBudgetExhausted", { url: current });
 			}
 			this.#subrequests++;
-			const response = await fetch(current, { method, headers, redirect: "manual", signal });
+			const response = await fetch(current, { method, headers: sendHeaders, redirect: "manual", signal });
 			const location = response.headers.get("location");
 			if (!REDIRECT_STATUSES.has(response.status) || location === null) return response;
 
 			await response.body?.cancel();
 			if (redirects >= MAX_REDIRECTS) throw new ApiError("tooManyRedirects", { url });
-			current = new URL(location, current).href;
+			const next = new URL(location, current);
+			if (next.origin !== new URL(current).origin) {
+				// As fetch's own redirect handling would, keep the DigitalNZ key off other origins.
+				const { "Authentication-Token": _apiKey, ...rest } = sendHeaders;
+				sendHeaders = rest;
+			}
+			current = next.href;
 		}
 	}
 }

@@ -2,7 +2,9 @@
 // `document.select("meta").first { $0.attr("property") == "og:image" }?.attr("content")`.
 // A DOM parser would not fit the Free plan's 10 ms CPU budget on large landing pages.
 
-const IGNORED_CONTENT = /<!--[\s\S]*?-->|<(script|style)\b[\s\S]*?<\/\1\s*>/gi;
+// An unclosed comment, script or style runs to the end of the page (as in a browser), so one
+// pass is linear even on malformed pages instead of rescanning the rest per opener.
+const IGNORED_CONTENT = /<!--[\s\S]*?(?:-->|$)|<script\b[\s\S]*?(?:<\/script\s*>|$)|<style\b[\s\S]*?(?:<\/style\s*>|$)/gi;
 const META_TAG = /<meta\b((?:[^>"']|"[^"]*"|'[^']*')*)>/gi;
 const ATTRIBUTE = /([^\s"'>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
 

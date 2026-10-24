@@ -27,9 +27,11 @@ npm run dev                      # http://127.0.0.1:8787
 curl -H "secret: super_secret_secret" "http://127.0.0.1:8787/image?collection=Hastings%20Recollect"
 ```
 
-`.dev.vars` only loads the names in `secrets.required`, so set the converter URL with
-`npx wrangler dev --var JP2_CONVERTER_URL:https://...`. Left empty, converter collections serve
-their harvested URL.
+`JP2_CONVERTER_URL` comes from `wrangler.jsonc`, so local dev points at the production
+converter. With `CONVERTER_SIGNING_KEY` empty (as in `.dev.vars.example`), converter collections
+serve their harvested URL instead. Only the real key makes signed URLs that converter accepts.
+To test against a local converter, run `converter/local_server.py` and override the URL with
+`npx wrangler dev --var JP2_CONVERTER_URL:http://127.0.0.1:8788`.
 
 Without `DIGITALNZ_API_KEY`, DigitalNZ still answers but caps `page` at 100, so collections with
 more than 10,000 images return 400 most of the time.
