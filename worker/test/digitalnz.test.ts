@@ -1,6 +1,6 @@
 // Ports DigitalNZAPIDataSourcePageMathTests, with DigitalNZ mocked at the HTTP layer.
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { newResult, pageCount } from "../src/digitalnz.ts";
 import type { NZImage } from "../src/models.ts";
 import { digitalNZ, testContext } from "./helpers.ts";
@@ -22,6 +22,10 @@ describe("pageCount", () => {
 });
 
 describe("newResult", () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
 	it("resolves a collection smaller than one page without going out of bounds", async () => {
 		const results: NZImage[] = Array.from({ length: 5 }, (_, i) => ({
 			id: i,
@@ -40,6 +44,15 @@ describe("newResult", () => {
 			expect(result.id).toBeGreaterThanOrEqual(0);
 			expect(result.id).toBeLessThan(5);
 		}
+	});
+
+	it("decodes only the record it picks, so a malformed neighbour can't fail the request", async () => {
+		const good = { id: 1, title: "good", large_thumbnail_url: "https://example.com/1-large.jpg", display_collection: "Test Collection XYZ" };
+		const malformed = { id: 2, title: "bad date", date: [["Cannot parse date: 19th century"]] };
+		network.use(digitalNZ(2, [good, malformed]));
+		vi.spyOn(Math, "random").mockReturnValue(0); // page 1, record 0
+
+		await expect(newResult(testContext(), "Test Collection XYZ")).resolves.toMatchObject({ id: 1 });
 	});
 
 	it("throws noResults when the count is zero", async () => {

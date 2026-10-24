@@ -21,13 +21,13 @@ export interface NZImage {
 	subject?: string[];
 }
 
-export interface RecordsSearch {
+export interface RecordsSearch<Result = NZImage> {
 	result_count?: number;
-	results?: NZImage[];
+	results?: Result[];
 }
 
-export interface RecordsResponse {
-	search?: RecordsSearch;
+export interface RecordsResponse<Result = NZImage> {
+	search?: RecordsSearch<Result>;
 }
 
 export interface OpacObjectField {
@@ -44,7 +44,8 @@ export interface AKLMuseumResponse {
 }
 
 // Decoding mirrors Swift's JSONDecoder with all-optional properties: a missing or null key is
-// absent, but a present value of the wrong type fails the whole document.
+// absent, but a present value of the wrong type fails the whole document (for a page of records,
+// see decodeRecordsPage).
 
 type JSONObject = Record<string, unknown>;
 type Decoder<T> = (value: unknown, path: string) => T;
@@ -122,6 +123,26 @@ export function decodeRecordsResponse(value: unknown): RecordsResponse {
 	return decodeFields(value, "$", [["search", decodeSearch]]);
 }
 
+const decodeUndecodedArray: Decoder<unknown[]> = (value, path) => {
+	if (!Array.isArray(value)) throw new DecodingError(`Expected an array at ${path}`);
+	return value;
+};
+
+const decodeUndecodedSearch: Decoder<RecordsSearch<unknown>> = (value, path) =>
+	decodeFields(value, path, [
+		["result_count", decodeInt],
+		["results", decodeUndecodedArray],
+	]);
+
+/**
+ * A page of records with the records left undecoded, so only the one picked is decoded with
+ * `decodeRecord`. Decoding all 100 (URL re-encoding included) was most of a request's CPU on the
+ * Free plan's 10 ms budget, and it let one malformed record elsewhere on the page fail the request.
+ */
+export function decodeRecordsPage(value: unknown): RecordsResponse<unknown> {
+	return decodeFields(value, "$", [["search", decodeUndecodedSearch]]);
+}
+
 const decodeOpacObjectField: Decoder<OpacObjectField> = (value, path) =>
 	decodeFields(value, path, [["value", decodeString]]);
 
@@ -136,13 +157,13 @@ export function decodeAKLMuseumResponse(value: unknown): AKLMuseumResponse {
 }
 
 /** Swift `NZRecordsResponse.checkNonNull()`. */
-export function checkResponseNonNull(response: RecordsResponse): RecordsSearch {
+export function checkResponseNonNull<Result>(response: RecordsResponse<Result>): RecordsSearch<Result> {
 	if (response.search === undefined) throw new ApiError("nullResponseContent");
 	return response.search;
 }
 
 /** Swift `NZRecordsSearch.checkNonNull()`. */
-export function checkSearchNonNull(search: RecordsSearch): { result_count: number; results: NZImage[] } {
+export function checkSearchNonNull<Result>(search: RecordsSearch<Result>): { result_count: number; results: Result[] } {
 	if (search.result_count === undefined || search.results === undefined) {
 		throw new ApiError("nullSearchContent", { result_count: String(search.result_count) });
 	}
