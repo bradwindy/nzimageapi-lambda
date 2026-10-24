@@ -28,18 +28,21 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
-          python-version: "3.14"         # matches converter Lambda runtime
+          python-version: "3.13"         # matches the converter and guard Lambda runtime
       - name: Install dev deps
-        run: pip install -r converter/requirements-dev.txt
-      - name: pytest
+        run: pip install -r converter/requirements-dev.txt -r guard/requirements-dev.txt
+      - name: pytest (converter)
         working-directory: converter
+        run: pytest
+      - name: pytest (guard)
+        working-directory: guard
         run: pytest
 
   deploy:
     name: Build & deploy (SAM)
     needs: [swift-test, python-test]     # deploy blocked until BOTH pass
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-24.04-arm            # native arm64 Docker: fast Swift cross-compile + converter image
+    runs-on: ubuntu-24.04-arm            # native arm64 Docker for the Swift cross-compile, arm64 Python for the converter codec check
     environment: production              # gives an optional approval gate; scopes OIDC sub (see setup)
     permissions:
       id-token: write                    # required for OIDC
@@ -56,13 +59,21 @@ jobs:
       - uses: aws-actions/setup-sam@89ddb14d60e682855e3fea4be85b3c56485de310 # v3
         with:
           use-installer: true            # arch-independent SAM CLI install
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.13"         # same as the Lambda runtime, so the codec check imports the built wheel
       - name: sam build
-        run: sam build                   # Swift via Makefile+Docker; converter via Docker image
-      # The artefact stores live in the separate `nzimageapi-bootstrap` stack (infra/bootstrap.yaml),
-      # which owns their retention lifecycle policies. Read them from that stack's outputs rather
-      # than from a hand-maintained repo variable: a stale variable silently sends deploys back to
-      # an unmanaged store, which is exactly what happened before this step existed.
-      - name: Resolve bootstrap artefact stores
+        run: sam build                   # Swift via Makefile+Docker, converter and guard via their Makefiles
+      # The converter .zip carries Pillow's manylinux aarch64 wheel. Prove the build has the two
+      # codecs it exists for, on the same architecture and Python as the Lambda, before deploying.
+      - name: Check converter codecs
+        run: |
+          PYTHONPATH=.aws-sam/build/Jp2ConverterFunction python -c "from PIL import features; assert features.check('jpg_2000'), 'OpenJPEG/JP2 NOT enabled in Pillow'; assert features.check('libtiff'), 'libtiff NOT enabled in Pillow'; print('JP2 and TIFF decoding available')"
+      # The artefact bucket lives in the separate `nzimageapi-bootstrap` stack (infra/bootstrap.yaml),
+      # which owns its retention lifecycle policy. Read it from that stack's outputs rather than
+      # from a hand-maintained repo variable: a stale variable silently sends deploys back to an
+      # unmanaged store, which is exactly what happened before this step existed.
+      - name: Resolve bootstrap artefact bucket
         id: bootstrap
         run: |
           set -euo pipefail
@@ -74,22 +85,18 @@ jobs:
             --stack-name nzimageapi-bootstrap \
             --query 'Stacks[0].Outputs' --output json) || outputs='[]'
           bucket=$(echo "$outputs" | jq -r '[.[]? | select(.OutputKey=="ArtifactBucketName") | .OutputValue] | first // ""')
-          repo=$(echo "$outputs" | jq -r '[.[]? | select(.OutputKey=="ConverterRepositoryUri") | .OutputValue] | first // ""')
-          if [ -z "$bucket" ] || [ "$bucket" = "null" ] || [ -z "$repo" ] || [ "$repo" = "null" ]; then
-            echo "::error::nzimageapi-bootstrap did not return both ArtifactBucketName and ConverterRepositoryUri. Deploy the bootstrap stack first: aws cloudformation deploy --region ap-southeast-2 --stack-name nzimageapi-bootstrap --template-file infra/bootstrap.yaml"
+          if [ -z "$bucket" ] || [ "$bucket" = "null" ]; then
+            echo "::error::nzimageapi-bootstrap did not return ArtifactBucketName. Deploy the bootstrap stack first: aws cloudformation deploy --region ap-southeast-2 --stack-name nzimageapi-bootstrap --template-file infra/bootstrap.yaml"
             exit 1
           fi
           echo "bucket=$bucket" >> "$GITHUB_OUTPUT"
-          echo "repo=$repo" >> "$GITHUB_OUTPUT"
           echo "Artefact bucket: $bucket"
-          echo "Converter repo:  $repo"
       - name: sam deploy
         run: |
           sam deploy \
             --stack-name nzimageapi \
             --region ap-southeast-2 \
             --s3-bucket ${{ steps.bootstrap.outputs.bucket }} \
-            --image-repositories Jp2ConverterFunction=${{ steps.bootstrap.outputs.repo }} \
             --capabilities CAPABILITY_IAM \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
