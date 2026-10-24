@@ -27,7 +27,7 @@ export const STATUS_EMOJI: Record<DecisionStatus, string> = {
   unsure: '⚠️',
 };
 
-export interface LambdaImageResponse {
+export interface ImageApiResponse {
   statusCode: number;
   id?: number;
   title?: string;

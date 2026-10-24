@@ -1,0 +1,17 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "nzimages-api",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-10-19",
+	"workers_dev": false,
+	"routes": [{ "pattern": "nzimages-api.iolab.nz", "custom_domain": true }],
+	"observability": { "enabled": true },
+	"vars": {
+		// Function URL of the AWS converter Lambda (the nzimageapi stack's Jp2ConverterUrl output). Empty
+		// disables converter routing, so the harvested URL is served.
+		"JP2_CONVERTER_URL": "https://tgd574nbx3wtigjr7dxzpddqlu0kqwul.lambda-url.ap-southeast-2.on.aws/"
+	},
+	"secrets": {
+		"required": ["DIGITALNZ_API_KEY", "API_CLIENT_SECRETS", "CONVERTER_SIGNING_KEY"]
+	}
+}

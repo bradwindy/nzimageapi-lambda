@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import type { LambdaImageResponse } from '@/lib/types';
+import type { ImageApiResponse } from '@/lib/types';
 
 // Plain <img> (not next/image) — image hosts are arbitrary external sources
 // and proxies; wildcard hostnames are disallowed in next/image remotePatterns.
-export default function ImageCard({ image }: { image: LambdaImageResponse }) {
+export default function ImageCard({ image }: { image: ImageApiResponse }) {
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
 

@@ -2,140 +2,141 @@
 
 ## Overview
 
-A multi-component monorepo, deployed as one AWS SAM stack, that serves random images
-from the [DigitalNZ](https://digitalnz.org/) API. The core is a Swift Lambda that acts
-as a **pure URL builder** — it never returns image bytes, only JSON metadata pointing at
-the highest-resolution image URL it can reach for a given collection. A companion Python
-Lambda converts awkward master formats (JP2/TIFF) to JPEG on demand.
+The NZ Image API serves random images from the [DigitalNZ](https://digitalnz.org/) API. It is a
+**pure URL builder**: it never returns image bytes, only JSON metadata pointing at the
+highest-resolution image URL it can reach for a given collection.
+
+It runs in two places, chosen so that nothing can bill:
+
+- **The API** is the TypeScript Cloudflare Worker `nzimages-api` in `worker/`, on the Workers
+  **Free** plan at `https://nzimages-api.iolab.nz`. The Free plan returns errors instead of
+  billing when a limit is hit.
+- **The JP2/TIFF converter** is a Python + Pillow AWS Lambda (`converter/`), the one job no
+  Cloudflare Free product can do, kept inside Lambda's always-free allowance by a kill switch
+  (`guard/`). It is deployed as the `nzimageapi` SAM stack (`template.yaml`).
+
+The website (`nzimage-web`, a separate repo) is the Worker `nzimages-web` at
+`https://nzimages.iolab.nz`. It calls the API over a service binding (RPC), not over HTTP.
+
+The repo name is historical: the API was a Swift Lambda behind API Gateway until October 2026
+(see git history before that).
 
 ## Repository layout
 
-- `Sources/NZImageApiLambda/` — the Swift HTTP API Lambda (the product).
-- `Sources/Testing/` — CLI tools: `CollectionTester`, `CollectionReviewer`, `CollectionLister`, `ImageResolutionChecker`, shared `LambdaTesting` lib.
-- `converter/` — Python Pillow Lambda (`app.py`, a .zip built by `converter/Makefile`) that decodes JP2/TIFF masters to JPEG behind a signed Function URL.
-- `guard/` — the converter's free-tier kill switch Lambda (`app.py`): sets the converter's concurrency to 0 on a usage spike or when month-to-date usage nears the free tier.
-- `collection-reviewer-web/` — Next.js 15 app for triaging DigitalNZ collections; its dev server also boots the Swift Lambda.
-- `Research/highres/` — durable record of the (complete, 52-collection) high-resolution sweep; `progress.json` is the authoritative machine record.
-- `docs/` — access-control design doc and ADRs.
-- `scripts/` — legacy pre-SAM build/deploy scripts (`sam` is now the real deploy path).
-- `template.yaml` — the SAM stack definition for the Lambdas, alarms, budget and kill switch.
+- `worker/` - the API Worker (the product). Its own `README.md` covers files, local dev, tests and deploy.
+- `converter/` - Python Pillow Lambda (`app.py`, a .zip built by `converter/Makefile`) that decodes JP2/TIFF masters to JPEG behind a signed Function URL.
+- `guard/` - the converter's free-tier kill switch Lambda (`app.py`): sets the converter's concurrency to 0 on a usage spike or when month-to-date usage nears the free tier.
+- `collection-reviewer-web/` - Next.js app for triaging DigitalNZ collections. Its dev server also boots the API Worker with `wrangler dev`.
+- `Research/highres/` - durable record of the (complete, 52-collection) high-resolution sweep. `progress.json` is the authoritative machine record. It refers to the old Swift files, which map one to one onto `worker/src`.
+- `docs/` - access-control and cost-control design doc, and ADRs.
+- `scripts/smoke-test-access-control.sh` - curl checks for the API's auth and rate limit.
+- `template.yaml` - the SAM stack: converter, kill switch, spike alarm, cost-alarm topic, $1 budget.
+- `infra/bootstrap.yaml` - the SAM artefact bucket and its retention policy (separate stack).
 
 ## Architecture essentials
 
-- Entry point `Sources/NZImageApiLambda/App.swift` uses swift-aws-lambda-runtime **v2**'s
-  closure API (`LambdaRuntime { event, context in ... }`) with `APIGatewayV2Request`/`Response`
-  — this is an **HTTP API (API Gateway v2)**, not a Function URL. Swift 6, `.macOS(.v15)`.
-- Every request must send a `secret` header matching one `name:secret` pair in
-  `API_CLIENT_SECRETS`. Checked in constant time across *all* entries (no early exit, no
-  timing leak). Missing/empty `API_CLIENT_SECRETS` → 500 (fail closed); bad/missing header → 401.
-- Per-collection image-URL upgrading lives in `Sources/NZImageApiLambda/Helpers/URLProcessor.swift`
-  (~1500 lines): a `static let strategies: [String: URLStrategy]` registry plus a legacy
-  `switch` fallback, covering Recollect, eHive IIIF, Vernon Browser, NDHA/Rosetta, Flickr,
-  CONTENTdm/V&A IIIF, and more.
-- Collections whose masters need decoding (JP2/TIFF) get routed through the separate,
-  HMAC-signed converter Lambda (`URLProcessor.signedConverterURL`) rather than doing that
-  work in the API Lambda itself.
-- The high-res sweep (collections 34–52) is done; treat `Research/highres/progress.json`
-  as ground truth over the prose summaries.
-- Random-collection selection weights (`NZImageApi.collectionWeights`, used by
-  `weightedRandomPick()`) are a **computed property derived from `NZImageApi.collectionImageCounts`**,
-  not hand-set fractions — each collection's odds of being picked are its share of the total
-  image count across all listed collections. This is a deliberate fix: the original hardcoded
-  weights only summed to 0.837, which silently gave the last dictionary entry an extra ~16%
-  pick chance via `weightedRandomPick`'s end-of-loop fallthrough. Keep it this way — never
-  replace `collectionImageCounts` with pre-divided fractions, since manually-maintained
-  fractions are exactly what caused the bug. To refresh counts as collections grow, rebuild
-  `CollectionLister` (`swift build --product CollectionLister`) and run it with
-  `DIGITALNZ_API_KEY` set — it fetches every collection's live `category=Images` result count
-  in one facet query — then paste the updated numbers into `collectionImageCounts`.
+- `worker/src/index.ts` handles `GET /image` and `GET /collections`, and exports the
+  `ImageApi` RPC entrypoint (`image({ collection, exclude })`, `collections()`) that the
+  website's service binding calls. RPC has no secret check: only Workers on the same account
+  can call it.
+- Every HTTP request must send a `secret` header matching one `name:secret` pair in the
+  `API_CLIENT_SECRETS` Worker secret. It is checked in constant time across *all* entries.
+  Missing/empty `API_CLIENT_SECRETS` -> 500 (fail closed), bad/missing header -> 401.
+- Per-collection image-URL upgrading lives in `worker/src/urlProcessor.ts`: a strategy
+  registry plus a legacy `switch` fallback, covering Recollect, eHive IIIF, Vernon Browser,
+  NDHA/Rosetta, Flickr, CONTENTdm/V&A IIIF, and more.
+- Collections whose masters need decoding (JP2/TIFF) get routed through the converter Lambda
+  with an HMAC-signed URL (`CONVERTER_SIGNING_KEY` secret, `JP2_CONVERTER_URL` var).
+- Random-collection selection weights are **derived from the counts table** in
+  `worker/src/collections.ts`, not hand-set fractions: each collection's odds of being picked are
+  its share of the total image count. This is a deliberate fix (hardcoded weights once summed to
+  0.837 and gave the last entry an extra ~16%). Never replace the counts with pre-divided
+  fractions. Refresh them with `DIGITALNZ_API_KEY=... npm run count-collections` in `worker/`
+  and paste the output over the table.
 
-Full request-flow/model details: [`.claude/rules/architecture.md`](.claude/rules/architecture.md).
+Full request-flow detail: [`.claude/rules/architecture.md`](.claude/rules/architecture.md).
 
 ## Commands
 
 ```bash
-swift build                                            # build all targets
-swift test                                             # run XCTest suite (Tests/NZImageApiLambdaTests)
+# API Worker (in worker/)
+npm ci
+npm test                         # Vitest inside workerd, outbound fetches mocked
+npm run typecheck
+npm run dev                      # http://127.0.0.1:8787, secrets from worker/.dev.vars
+NZIMAGE_API_SECRET=... npm run check-collections -- --base-url https://nzimages-api.iolab.nz
 
-# Run the Lambda locally (listens on 127.0.0.1:7000)
-DIGITALNZ_API_KEY=$DIGITALNZ_API_KEY API_CLIENT_SECRETS=dev:super_secret_secret \
-  LOCAL_LAMBDA_SERVER_ENABLED=true ./.build/debug/NZImageApiLambda
+# Converter and kill switch
+(cd converter && pytest)
+(cd guard && pytest)
+sam build && sam deploy          # converter stack, see build-test-deploy.md
 
-# End-to-end test a single collection (builds + boots + validates + shuts down)
-./Sources/Testing/CollectionTester/test-collection.sh "<Collection Name>"
-
-# Reviewer web app (also boots the Swift Lambda on :7000)
+# Reviewer web app (boots the API Worker on :8787 too)
 cd collection-reviewer-web && npm run dev
 ```
 
-Full command reference (SAM build/deploy, Docker/changeset gotchas, legacy scripts):
-[`.claude/rules/build-test-deploy.md`](.claude/rules/build-test-deploy.md).
+Full command reference and deploy detail: [`.claude/rules/build-test-deploy.md`](.claude/rules/build-test-deploy.md).
 
-## Environment variables
+## Environment variables and secrets
 
-- `DIGITALNZ_API_KEY` — sent as the `Authentication-Token` header to DigitalNZ.
-- `API_CLIENT_SECRETS` — comma-separated `name:secret` pairs for `/image` auth.
-- `CONVERTER_SIGNING_KEY`, `JP2_CONVERTER_URL` — shared HMAC key and converter Function URL (SAM injects the latter automatically).
-- `LOCAL_LAMBDA_SERVER_ENABLED`, `LOG_LEVEL` — local dev / logging.
+- Worker secrets (`wrangler secret put`): `DIGITALNZ_API_KEY` (sent as the
+  `Authentication-Token` header to DigitalNZ), `API_CLIENT_SECRETS` (comma-separated
+  `name:secret` pairs), `CONVERTER_SIGNING_KEY` (shared with the converter Lambda).
+- Worker var (`worker/wrangler.jsonc`): `JP2_CONVERTER_URL`, the stack's `Jp2ConverterUrl` output.
+- Local dev: `worker/.dev.vars` (copy `.dev.vars.example`), repo-root `.env` for the reviewer app.
+- SAM parameters: `ConverterSigningKey`, `AlarmEmail`, plus the kill-switch thresholds.
 
-Secrets live in gitignored `.env`, `samconfig.toml`, and `.consumer-secrets/` — never commit them.
+Secrets live in gitignored `.env`, `.dev.vars`, `samconfig.toml`, and `.consumer-secrets/`. Never commit them.
 
 ## Code style
 
-- Swift 6 throughout; use current Swift 6 best practices.
-- Prefer Swift Concurrency (`async`/`await`, actors, `Sendable`) over Dispatch or Combine.
-- Match existing patterns: `Sendable` reference types instead of explicit actors, and the
-  `URLProcessor` strategy-registry pattern for new per-collection URL logic (see
-  [`.claude/rules/architecture.md`](.claude/rules/architecture.md) for how to add one).
+- TypeScript (strict) for the Worker and the reviewer app, Python 3.13 for the Lambdas.
+- Match existing patterns: the `urlProcessor.ts` strategy registry for new per-collection URL
+  logic (see [`.claude/rules/architecture.md`](.claude/rules/architecture.md)), and every
+  outbound fetch through `worker/src/http.ts`.
 
 ## Gotchas
 
-- The local Lambda binds port 7000; a stale process there means you're testing an old
-  binary — free the port between runs.
-- `sam build`/`docker` need the Docker socket, which isn't sandbox-allowlisted here — run
-  with the sandbox disabled.
-- `sam deploy`'s changeset y/N prompt has no tty in this environment — review the
-  changeset, get explicit confirmation, then re-run with `--no-confirm-changeset`.
-- The reviewer web app and the `CollectionReviewer` CLI both write the same collections
-  file — never run both writers at once (see `collection-reviewer-web/lib/collectionsFile.ts`).
-- `template.yaml` deliberately sets **no** `ReservedConcurrentExecutions` on any
-  function (the account's Lambda concurrency quota is only 10 and must stay fully unreserved).
-  The one exception is runtime-only: `ConverterGuardFunction` sets the converter's reservation
-  to **0** to switch it off, and deletes it to switch it back on. A converter returning 429 /
-  throttling everything is usually the kill switch, not a bug: check the guard's logs and the
-  `nzimageapi-cost-alarms` emails.
-- **Never let a `URLSession` (or an Alamofire `Session`, which owns one) be deallocated in the
-  Lambda.** On Linux, `URLSession.deinit` tears down swift-corelibs-foundation's libcurl
-  `_MultiHandle`, whose own `deinit` re-enters curl's timer callback and takes a strong reference
-  to the object being deinitialized. The Swift runtime aborts the process, so a request that has
-  already done all its work returns a 500 (`Runtime.ExitError`). This caused an intermittent ~12-25%
-  failure rate on `/image` until 2026-08-24. `NetworkRequestManager` now holds process-lifetime
-  static `Session`s (`browserSession`, `shortTimeoutBrowserSession`, `rangeProbeSession`); add a new
-  static one there rather than constructing `Session(configuration:)` per call.
+- **Workers Free plan limits are the API's budget.** 100,000 requests a day shared by every
+  Worker on the account (resets 00:00 UTC), 10 ms CPU per request, 50 subrequests per request.
+  Over the daily limit every Worker on the account returns error 1027 until the reset. Measured
+  CPU is 3-8 ms a request, so avoid DOM libraries or anything that parses whole pages: use the
+  regex approach in `worker/src/html.ts`. `worker/src/http.ts` enforces the
+  subrequest budget, including redirects.
+- `secrets.required` in `worker/wrangler.jsonc` makes `wrangler deploy` fail until all three
+  secrets exist on the Worker. `wrangler dev` only warns.
 - Routing a new collection through the converter requires adding its host to
-  `ALLOWED_HOSTS` and redeploying the converter; pure `URLProcessor` strategy changes don't.
-- Compiled Swift binaries (e.g. running `CollectionLister` or `NZImageApiLambda` after
-  `swift build`) fail DNS resolution under the command sandbox even for allowlisted hosts —
-  same class of issue as the Docker gotcha above, but it also hits plain network calls made
-  by a built binary, not just Docker. Run with the sandbox disabled.
+  `ALLOWED_HOSTS` in `template.yaml` and redeploying the converter. A pure `urlProcessor.ts`
+  strategy change doesn't.
+- Replacing the converter function (for example a `PackageType` change) gives it a new Function
+  URL. Update `JP2_CONVERTER_URL` in `worker/wrangler.jsonc` from the stack output and redeploy
+  the Worker.
+- `template.yaml` deliberately sets **no** `ReservedConcurrentExecutions` (the account's Lambda
+  concurrency quota is only 10 and must stay fully unreserved). The one exception is
+  runtime-only: `ConverterGuardFunction` sets the converter's reservation to **0** to switch it
+  off, and deletes it to switch it back on. A converter returning 429 / throttling everything is
+  usually the kill switch, not a bug: check the guard's logs and the `nzimageapi-cost-alarms` emails.
+- `sam build` needs network access to PyPI for the converter's `pip install`. Run it with the
+  sandbox disabled.
+- The reviewer web app and `scripts/update-collections.ts` both write the same collections file.
+  Never run both writers at once (see `collection-reviewer-web/lib/collectionsFile.ts`).
 - The converter is a **.zip**, not a container image, so there is no ECR repo to pay for. Its
   `converter/Makefile` installs Pillow's `manylinux_2_28_aarch64` wheel with `pip --platform`, so
   `sam build` gives the same artefact on macOS and in CI. CI then imports the built package on
-  arm64 Python 3.13 to prove JP2 and TIFF decoding are present. Every `sam deploy` still uploads
-  zips to the SAM artefact bucket declared in [`infra/bootstrap.yaml`](infra/bootstrap.yaml)
+  arm64 Python 3.13 to prove JP2 and TIFF decoding are present. Every `sam deploy` uploads zips
+  to the SAM artefact bucket declared in [`infra/bootstrap.yaml`](infra/bootstrap.yaml)
   (separate `nzimageapi-bootstrap` stack, 60-day expiry). It is **deliberately not in
   `template.yaml`**: `sam deploy` uploads before CloudFormation runs, so a bucket in the
-  consuming stack would not exist yet. `samconfig.toml` points at it with `s3_bucket`, and CI reads
-  it from the bootstrap stack's outputs. Full detail:
+  consuming stack would not exist yet. `samconfig.toml` points at it with `s3_bucket`, and CI
+  reads it from the bootstrap stack's outputs. Full detail:
   [`.claude/rules/build-test-deploy.md`](.claude/rules/build-test-deploy.md#deploy-artefact-retention-cost-control).
 
 ## Where to read more
 
-- [`.claude/rules/architecture.md`](.claude/rules/architecture.md) — Swift Lambda request flow, models, strategy-registry pattern.
-- [`.claude/rules/build-test-deploy.md`](.claude/rules/build-test-deploy.md) — full build/test/deploy command reference and gotchas.
-- [`.claude/rules/converter.md`](.claude/rules/converter.md) — the Python converter Lambda: contract, allowlist, local dev.
-- `README.md` — end-user API reference and setup.
-- `infra/bootstrap.yaml` — the SAM artefact bucket and its retention policy.
-- `docs/ACCESS-CONTROL.md`, `docs/adr/0001-free-per-consumer-secrets.md` — auth model and cost-control design.
-- `Research/highres/README.md`, `recipes.md`, `progress.json` — per-collection high-res findings.
-- `Sources/Testing/CollectionTester/README-CollectionTester.md` — CollectionTester options.
+- [`worker/README.md`](worker/README.md) - the API Worker: files, local dev, tests, scripts, deploy, RPC contract.
+- [`.claude/rules/architecture.md`](.claude/rules/architecture.md) - request flow, parsing, strategy-registry pattern, HTTP rules.
+- [`.claude/rules/build-test-deploy.md`](.claude/rules/build-test-deploy.md) - build/test/deploy reference for every part.
+- [`.claude/rules/converter.md`](.claude/rules/converter.md) - the converter Lambda and its kill switch.
+- `README.md` - end-user API reference and setup.
+- `docs/ACCESS-CONTROL.md`, `docs/adr/0001-free-per-consumer-secrets.md` - auth model and cost-control design.
+- `Research/highres/README.md`, `recipes.md`, `progress.json` - per-collection high-res findings.

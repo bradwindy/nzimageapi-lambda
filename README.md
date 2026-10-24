@@ -1,377 +1,123 @@
-# nzimageapi-lambda
+# NZ Image API
 
-A Swift AWS Lambda wrapper around the [DigitalNZ API](https://digitalnz.org/) that returns random images from New Zealand archives, libraries, and cultural institutions.
+Returns random images from New Zealand archives, libraries and cultural institutions, through
+the [DigitalNZ API](https://digitalnz.org/). It is a pure URL builder: each response points at
+the highest-resolution copy of the image it can find.
 
-This project is WIP. I intend to publish this as a public API and website where people can easily view content from NZ archives.
+It powers the slideshow at [nzimages.iolab.nz](https://nzimages.iolab.nz)
+([nzimage-web](https://github.com/bradwindy/nzimage-web)).
 
-## Prerequisites
+## How it runs
 
-- **DigitalNZ API Key**: Sign up for a free API key at https://digitalnz.org/
-- **Docker**: Required for building the Lambda (install from https://www.docker.com/products/docker-desktop)
-- **UPX**: Compression tool for reducing binary size
-  ```bash
-  brew install upx
-  ```
-- **AWS CLI** (for deployment): Install and configure
-  ```bash
-  brew install awscli
-  aws configure
-  ```
+| Part | Where | Code |
+| --- | --- | --- |
+| API | Cloudflare Worker `nzimages-api` on the Workers Free plan, `https://nzimages-api.iolab.nz` | [`worker/`](worker/) |
+| JP2/TIFF converter | AWS Lambda (Python + Pillow) behind a signed Function URL | [`converter/`](converter/) |
+| Converter kill switch | AWS Lambda that keeps the converter inside the free tier | [`guard/`](guard/) |
+| Website | Cloudflare Worker `nzimages-web`, calls the API over a service binding | [nzimage-web](https://github.com/bradwindy/nzimage-web) |
 
-## Quick Start
+Everything is meant to cost $0. The Workers Free plan returns errors instead of billing when a
+limit is hit, and the converter's kill switch stops it before Lambda's always-free allowance
+runs out. See [`docs/ACCESS-CONTROL.md`](docs/ACCESS-CONTROL.md) for the cost controls.
 
-**Using the deployed API:**
+## API reference
+
+Every request needs a consumer secret in the `secret` header (see [Access control](#access-control)).
+
+### `GET /image`
+
+A random image from a collection picked at random, weighted by how many images each collection
+has.
+
 ```bash
-# Find your API endpoint
-aws apigatewayv2 get-apis --query 'Items[*].[Name,ApiEndpoint]' --output table
-
-# Get a random image (the secret header is required -- see "Access Control" below)
-curl -H "secret: YOUR_CONSUMER_SECRET" "https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/image"
+curl -H "secret: YOUR_CONSUMER_SECRET" "https://nzimages-api.iolab.nz/image"
 ```
 
-**For local development:**
-```bash
-# 1. Set your API key
-export DIGITALNZ_API_KEY=your_api_key
-
-# 2. Test a collection (builds and runs automatically)
-./Sources/Testing/CollectionTester/test-collection.sh "Wellington City Recollect"
-
-# Or test a random collection
-./Sources/Testing/CollectionTester/test-collection.sh
-```
-
-## API Reference
-
-### Finding Your Endpoint
-
-Get your API Gateway URL:
-```bash
-aws apigatewayv2 get-apis --query 'Items[*].[Name,ApiEndpoint]' --output table
-```
-
-### Endpoints
-
-#### `GET /image`
-
-Returns a random image from a randomly selected collection.
-
-**Example:**
-```bash
-curl -H "secret: YOUR_CONSUMER_SECRET" "https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/image"
-```
-
-**Response:**
 ```json
 {
   "id": 12345678,
   "title": "Historic photograph",
   "description": "Description of the image...",
-  "display_collection": "Auckland Libraries Heritage Images Collection",
+  "display_collection": "Te Papa Collections Online",
   "thumbnail_url": "https://...",
   "large_thumbnail_url": "https://...",
   "landing_url": "https://..."
 }
 ```
 
-#### `GET /image?collection=<collection_name>`
+`large_thumbnail_url` is the image to show. For collections whose originals are JPEG 2000 or
+TIFF (TAPUHI, War Art Online, Feilding Library, Manawatū Heritage) it is a signed converter URL
+that returns a JPEG up to 4000 px. The first load of one can take several seconds.
 
-Returns a random image from a specific collection.
+Query parameters:
 
-**Example:**
+- `collection=<name>` picks that collection (URL-encoded name).
+- `exclude=<name>,<name>` leaves those collections out of the random pick. Ignored when
+  `collection` is set. Names containing a comma can't be excluded this way.
+
+A `400` means no image could be found for the pick. Try again.
+
+### `GET /collections`
+
+The names of every collection the API picks from.
+
 ```bash
-curl -H "secret: YOUR_CONSUMER_SECRET" "https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/image?collection=Te%20Papa%20Collections%20Online"
+curl -H "secret: YOUR_CONSUMER_SECRET" "https://nzimages-api.iolab.nz/collections"
 ```
 
-**Note:** Collection names must be URL-encoded.
+## Access control
 
-### Available Collections
+There is no public path: each approved consumer gets its own secret, which can be revoked on its
+own. A browser page or app binary can't keep a secret, so a consumer needs a small backend of its
+own that holds it. The website doesn't use a secret at all: it is a Worker on the same Cloudflare
+account and calls the API's `ImageApi` RPC entrypoint directly.
 
-Images are randomly selected from these NZ archives (weighted by collection size):
+[`docs/ACCESS-CONTROL.md`](docs/ACCESS-CONTROL.md) covers the threat model, onboarding and
+revoking consumers, the cost controls and the runbook.
+[`docs/adr/0001-free-per-consumer-secrets.md`](docs/adr/0001-free-per-consumer-secrets.md)
+records why static secrets were chosen over Amazon Cognito.
 
-- Auckland Libraries Heritage Images Collection
-- Auckland Museum Collections
-- Te Papa Collections Online
-- Kura Heritage Collections Online
-- Canterbury Museum
-- Antarctica NZ Digital Asset Manager
-- National Publicity Studios black and white file prints
-- Tauranga City Libraries Other Collection
-- Hawke's Bay Knowledge Bank
-- And many more...
+## Development
 
-See `Sources/NZImageApiLambda/NZImageApi.swift:30-55` for the complete weighted list.
+The API Worker:
 
-## Local Development
-
-### Setup
-
-1. **Configure your API key** (choose one method):
-
-   Option A - Environment variable:
-   ```bash
-   export DIGITALNZ_API_KEY=your_api_key_here
-   ```
-
-   Option B - Using `.env` file (recommended):
-   ```bash
-   cp .env.example .env
-   # Edit .env and add your API key
-   source .env
-   ```
-
-   **Important:** Never commit your API key. The `.env` file is already in `.gitignore`.
-
-2. **Build the project:**
-   ```bash
-   swift build
-   ```
-
-3. **Run the Lambda locally:**
-   ```bash
-   DIGITALNZ_API_KEY=$DIGITALNZ_API_KEY \
-   API_CLIENT_SECRETS=dev:super_secret_secret \
-   LOCAL_LAMBDA_SERVER_ENABLED=true \
-   ./.build/debug/NZImageApiLambda
-   ```
-
-### Testing Locally
-
-**Using CollectionTester (recommended):**
 ```bash
-# Set your API key first
-export DIGITALNZ_API_KEY=your_api_key
-
-# Test random collection
-./Sources/Testing/CollectionTester/test-collection.sh
-
-# Test specific collection
-./Sources/Testing/CollectionTester/test-collection.sh "Wellington City Recollect"
-
-# Use custom port
-./Sources/Testing/CollectionTester/test-collection.sh --port 8000 "Canterbury Museum"
-
-# Show help
-./Sources/Testing/CollectionTester/test-collection.sh --help
+cd worker
+npm ci
+cp .dev.vars.example .dev.vars   # DIGITALNZ_API_KEY, API_CLIENT_SECRETS, CONVERTER_SIGNING_KEY
+npm run dev                      # http://127.0.0.1:8787
+npm test
 ```
 
-The `test-collection.sh` script automatically:
-- Builds the CollectionTester and Lambda
-- Starts a local Lambda server
-- Makes a test request
-- Validates the image URL
-- Shuts down the server
+[`worker/README.md`](worker/README.md) has the details, including the two maintenance scripts:
 
-**Using curl directly:**
+- `npm run check-collections` requests an image from every collection, checks each image URL
+  loads, and can compare against another deployment.
+- `npm run count-collections` fetches live image counts for the weighting table.
+
+The converter and kill switch:
+
 ```bash
-curl -X POST http://127.0.0.1:7000/invoke \
-  --header "Content-Type: application/json" \
-  --data '{
-    "routeKey":"GET /image",
-    "version":"2.0",
-    "rawPath":"/image",
-    "requestContext":{"http":{"path":"/image","method":"GET"}},
-    "headers":{"secret":"super_secret_secret"},
-    "rawQueryString":"",
-    "isBase64Encoded":false
-  }'
+cd converter && pip install -r requirements-dev.txt && pytest
+cd guard && pip install -r requirements-dev.txt && pytest
 ```
 
-## Testing & Development Tools
-
-This project includes several utility tools for testing and analyzing Digital NZ collections.
-
-### CollectionLister
-
-Lists all image collections available from the Digital NZ API with their current image counts.
-
-**Quick Start:**
-```bash
-export DIGITALNZ_API_KEY=your_api_key
-./Sources/Testing/CollectionLister/list-collections.sh
-```
-
-Outputs machine-parseable JSON with all collections sorted by size. Useful for maintaining `Research/details-of-collections.txt` and discovering new collections.
-
-📖 [Full documentation](Sources/Testing/CollectionLister/README-CollectionLister.md)
-
-### ImageResolutionChecker
-
-Checks actual pixel dimensions of images from a specified collection.
-
-**Quick Start:**
-```bash
-export DIGITALNZ_API_KEY=your_api_key
-./Sources/Testing/ImageResolutionChecker/test-image-resolution.sh "Te Papa Collections Online"
-```
-
-Outputs JSON with resolution data for `large_thumbnail_url` and `object_url` fields. Useful for evaluating collection image quality and comparing URL types.
-
-📖 [Full documentation](Sources/Testing/ImageResolutionChecker/README-ImageResolutionChecker.md)
-
-### CollectionTester
-
-Tests the full Lambda functionality locally with a specific collection.
-
-**Quick Start:**
-```bash
-export DIGITALNZ_API_KEY=your_api_key
-./Sources/Testing/CollectionTester/test-collection.sh "Wellington City Recollect"
-```
-
-Automatically builds, starts a local Lambda server, makes a test request, and validates the response.
-
-📖 [Full documentation](Sources/Testing/CollectionTester/README-CollectionTester.md)
-
-### CollectionReviewer
-
-Interactive tool for manually reviewing collections. Tests images through the actual Lambda to verify final image URLs.
-
-**Quick Start:**
-```bash
-./Sources/Testing/CollectionReviewer/review-collections.sh
-```
-
-Builds and starts the Lambda server, fetches 3 random images per collection through the Lambda, displays clickable links, and prompts for yes/no selection. Updates status to ✅ (approved) or ❌ (rejected) with optional notes.
-
-📖 [Full documentation](Sources/Testing/CollectionReviewer/README-CollectionReviewer.md)
+The collection reviewer (`collection-reviewer-web/`) is a local Next.js tool for triaging
+collections. `npm run dev` there starts the API Worker too, using `DIGITALNZ_API_KEY` from the
+repo-root `.env` (see `.env.example`).
 
 ## Deployment
 
-### Building for AWS Lambda
+- **API Worker**: Workers Builds deploys `worker/` on every push to `main`. By hand:
+  `cd worker && npx wrangler deploy`. Secrets are set with `npx wrangler secret put <NAME>`.
+- **Converter stack**: GitHub Actions runs `sam build` and `sam deploy` on every push to `main`
+  (`.github/workflows/ci-cd.yml`). [`.claude/rules/build-test-deploy.md`](.claude/rules/build-test-deploy.md)
+  covers the parameters, the artefact bucket and deploying by hand.
 
-The deployment script handles building with Docker and packaging with UPX:
+## Collections
 
-```bash
-# Build and package only
-./scripts/deploy.sh
-
-# Build, package, and deploy
-./scripts/deploy.sh YOUR_FUNCTION_NAME
-```
-
-**Manual build steps:**
-```bash
-# 1. Build using Docker (compiles for Amazon Linux 2023)
-./scripts/build.sh
-
-# 2. Package with UPX compression
-./scripts/package.sh
-
-# Result: .build/lambda/NZImageApiLambda/lambda.zip
-```
-
-### Deploying to AWS
-
-#### Option 1: AWS Console
-
-1. Go to [AWS Lambda Console](https://console.aws.amazon.com/lambda)
-2. Select your function (or create new)
-3. Upload `.build/lambda/NZImageApiLambda/lambda.zip`
-4. Configure:
-   - Runtime: `provided.al2023` (Amazon Linux 2023)
-   - Handler: `bootstrap`
-   - Architecture: `arm64`
-   - Timeout: 60 seconds
-5. Set environment variables (see Configuration section below)
-
-#### Option 2: AWS CLI
-
-**Update existing function:**
-```bash
-aws lambda update-function-code \
-  --function-name YOUR_FUNCTION_NAME \
-  --zip-file fileb://.build/lambda/NZImageApiLambda/lambda.zip
-
-aws lambda update-function-configuration \
-  --function-name YOUR_FUNCTION_NAME \
-  --environment "Variables={DIGITALNZ_API_KEY=your_api_key,API_CLIENT_SECRETS=site:your_secret,LOG_LEVEL=info}"
-```
-
-**Create new function:**
-```bash
-aws lambda create-function \
-  --function-name NZImageApiLambda \
-  --runtime provided.al2023 \
-  --role YOUR_LAMBDA_ROLE_ARN \
-  --handler bootstrap \
-  --zip-file fileb://.build/lambda/NZImageApiLambda/lambda.zip \
-  --timeout 60 \
-  --memory-size 256 \
-  --architectures arm64 \
-  --environment "Variables={DIGITALNZ_API_KEY=your_api_key,API_CLIENT_SECRETS=site:your_secret,LOG_LEVEL=info}"
-```
-
-### Verifying Deployment
-
-Test your deployed function:
-```bash
-# Test with a simple payload
-aws lambda invoke \
-  --function-name YOUR_FUNCTION_NAME \
-  --payload '{"routeKey":"GET /image","version":"2.0","rawPath":"/image","requestContext":{"http":{"path":"/image","method":"GET"}}}' \
-  --cli-binary-format raw-in-base64-out \
-  response.json
-
-cat response.json
-```
-
-## Configuration
-
-### Environment Variables
-
-| Variable | Required | Description | Example |
-|----------|----------|-------------|---------|
-| `DIGITALNZ_API_KEY` | Yes | Your DigitalNZ API key | `abc123xyz` |
-| `API_CLIENT_SECRETS` | Yes (AWS) | Comma-separated `name:secret` pairs, one per approved consumer of `/image` (see [Access Control](#access-control) below). The Swift Lambda requires the `secret` request header to match one entry. | `site:3f9a...,mobile:7bc1...` |
-| `CONVERTER_SIGNING_KEY` | Yes (if deploying via `template.yaml`) | HMAC key shared between the Swift Lambda and the JP2/TIFF converter Lambda; the Swift Lambda signs every converter URL it emits and the converter rejects any request without a valid signature, so its public Function URL can't be driven directly. Generate a random value and set it as the `ConverterSigningKey` SAM parameter (in the gitignored `samconfig.toml`) — it is injected as this env var into both Lambdas. | `openssl rand -hex 32` |
-| `LOCAL_LAMBDA_SERVER_ENABLED` | Yes (Local) | Enables local development server | `true` |
-| `LOG_LEVEL` | No | Logging verbosity | `info`, `debug`, or `trace` |
-
-The `AlarmEmail` SAM parameter (not a Lambda env var) is also required at deploy time — see
-[Access Control](#access-control).
-
-### Security Best Practices
-
-- **Never commit API keys or consumer secrets** - Use environment variables or AWS Secrets Manager
-- **Use strong secrets** - Generate each `API_CLIENT_SECRETS` entry with `openssl rand -hex 32`; the example `dev:super_secret_secret` is for local testing only
-- **Enable CloudWatch Logs** - Monitor your Lambda function
-- **Set minimal IAM permissions** - Lambda only needs basic execution permissions
-
-### API Gateway Configuration
-
-Your Lambda expects APIGatewayV2Request format. Ensure your API Gateway:
-- Uses HTTP API (API Gateway v2)
-- Routes `GET /image` to your Lambda function
-- Passes the `secret` header (required — every request is checked against `API_CLIENT_SECRETS`)
-- Has stage throttling configured (`ThrottlingRateLimit`/`ThrottlingBurstLimit` on the
-  `ServerlessHttpApi` resource in `template.yaml`) as a cost ceiling — see [Access Control](#access-control)
-
-## Access Control
-
-`/image` requires a per-consumer secret in the `secret` request header — there is no single
-shared password and no public/unauthenticated path. Each approved consumer (a website, a mobile
-app's backend, etc.) gets its own secret and can be revoked independently. Combined with API
-Gateway stage throttling, per-function reserved concurrency, and CloudWatch/budget alarms, this is
-designed to run entirely within AWS's perpetual free tiers — see
-[`docs/ACCESS-CONTROL.md`](docs/ACCESS-CONTROL.md) for:
-
-- The full architecture and threat model
-- How to onboard or revoke a consumer
-- Reference proxy implementations for a web front-end and a mobile app (neither a browser nor an
-  app binary can safely hold a secret directly — each needs a small backend/edge component that
-  holds it)
-- What each cost control caps and how to tune it
-- The operational runbook for alarm/budget emails
-
-The design rationale (why free static secrets instead of Amazon Cognito) is recorded in
-[`docs/adr/0001-free-per-consumer-secrets.md`](docs/adr/0001-free-per-consumer-secrets.md).
-
-## Build Details
-
-The build process:
-- Uses Docker with `swift:6.3-amazonlinux2023` image
-- Compiles for AWS Lambda's Amazon Linux 2023 runtime
-- Statically links the Swift standard library
-- Compresses the binary with UPX (~70% size reduction: 106MB → 32MB)
-- Creates a `bootstrap` executable (required by AWS custom runtime)
+Images come from about 48 collections, weighted by size. Auckland Museum, Te Papa, Kura
+Heritage, Canterbury Museum and TAPUHI are the largest. The full table is in
+[`worker/src/collections.ts`](worker/src/collections.ts), and
+[`Research/highres/`](Research/highres/) records how each collection's highest-resolution image
+is found.
