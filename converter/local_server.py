@@ -1,6 +1,6 @@
 """Local stand-in for the converter's Lambda Function URL (no AWS, dev-only).
 
-NOT part of the deployed image (the Dockerfile only copies app.py). This faithfully
+NOT part of the deployed .zip (converter/Makefile only copies app.py). This faithfully
 simulates a Lambda Function URL so the real app.py handler can be exercised end-to-end
 from the Swift Lambda without deploying:
 

@@ -54,9 +54,14 @@ MAX_IMAGE_PIXELS = 500_000_000
 # Browser UA: the NDHA FL `dps_func=stream` endpoint is stateless (no cookies needed); the
 # Feilding download endpoint also serves anonymously for public-rights records.
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-# Large masters (≈60 MB JP2, ≈75 MB TIFF) need headroom to download; stays well under the
-# 60 s Lambda timeout once the (fast, same-region) S3/NDHA fetch completes.
+# DOWNLOAD_TIMEOUT is per socket operation, so on its own it never stops a slow but steady
+# download. NDHA streams some masters to the Lambda at under 1 MB/s (FL73848659, 45.8 MB, ran
+# into the old 60 s function timeout with nothing logged), hence the whole-download deadline,
+# set below the 120 s function timeout so a slow source fails as a logged 502 with time to spare
+# for decoding the ones that make it.
 DOWNLOAD_TIMEOUT = int(os.environ.get("DOWNLOAD_TIMEOUT", "35"))  # seconds
+DOWNLOAD_DEADLINE = int(os.environ.get("DOWNLOAD_DEADLINE", "90"))  # seconds, whole download
+DOWNLOAD_CHUNK_BYTES = 1024 * 1024
 MAX_DOWNLOAD_BYTES = 110 * 1024 * 1024  # guard on the source download (masters ~60–80 MB)
 
 # Keep the *base64* response body under the Function URL 6 MB cap. base64 inflates by
@@ -105,17 +110,22 @@ class _SafeRedirectHandler(HTTPRedirectHandler):
 _OPENER = build_opener(_SafeRedirectHandler)
 
 
-def download_image(url, max_bytes=MAX_DOWNLOAD_BYTES, timeout=DOWNLOAD_TIMEOUT):
-    """Download the source image, enforcing a byte ceiling and timeout."""
+def download_image(url, max_bytes=MAX_DOWNLOAD_BYTES, timeout=DOWNLOAD_TIMEOUT, deadline=DOWNLOAD_DEADLINE):
+    """Download the source image, enforcing a byte ceiling, a socket timeout and a total deadline."""
     _reject_if_unsafe(url)
     request = Request(url, headers={"User-Agent": USER_AGENT})
+    give_up_at = time.monotonic() + deadline
+    data = bytearray()
     with _OPENER.open(request, timeout=timeout) as response:  # noqa: S310 (host allowlisted + SSRF-guarded)
-        data = response.read(max_bytes + 1)
-    if len(data) > max_bytes:
-        raise ValueError(f"source exceeds {max_bytes} byte limit")
+        while chunk := response.read(DOWNLOAD_CHUNK_BYTES):
+            data += chunk
+            if len(data) > max_bytes:
+                raise ValueError(f"source exceeds {max_bytes} byte limit")
+            if time.monotonic() > give_up_at:
+                raise ValueError(f"download still running after {deadline}s ({len(data)} bytes)")
     if not data:
         raise ValueError("empty response from source")
-    return data
+    return bytes(data)
 
 
 def _encode_jpeg(image, dim, quality):

@@ -245,7 +245,8 @@ Every control below is free at this project's scale. Each caps a different failu
 | Stage throttling | Request **rate** at the API Gateway edge | `ThrottlingRateLimit: 10`/s, `ThrottlingBurstLimit: 20` | `template.yaml` → `ServerlessHttpApi.Properties.DefaultRouteSettings` |
 | Account-wide Lambda concurrency | Parallel executions across **both** functions combined | `10` (this AWS account's total quota — see below) | AWS account-level Service Quota, not this template |
 | CloudWatch alarm (API) | Notifies on unexpected **volume** | >200 invocations/hour → email | `NZImageApiInvocationsAlarm` |
-| CloudWatch alarm (converter) | Notifies on unexpected **volume** | >100 invocations/hour → email | `Jp2ConverterInvocationsAlarm` |
+| CloudWatch alarm (converter) | Notifies on, and stops, a converter **spike** | >100 invocations in 5 minutes → email + kill switch | `Jp2ConverterInvocationsAlarm` |
+| Converter kill switch | Converter **spend**: sets its concurrency to 0 on a spike, or when month-to-date usage nears the free tier | 320,000 GB-s, 800,000 requests or 20,000 converter calls a month | `ConverterGuardFunction` (`guard/app.py`), see `.claude/rules/converter.md` |
 | Monthly budget | Notifies on any **real spend** | >$1 actual or forecasted → email | `MonthlyCostBudget` |
 
 **Reserved concurrency was planned but isn't set.** This AWS account's total Lambda concurrent-

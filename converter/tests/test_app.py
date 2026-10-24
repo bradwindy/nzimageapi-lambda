@@ -255,10 +255,10 @@ def test_encode_jpeg_never_upscales_small_image():
 
 class _FakeURLResponse:
     def __init__(self, data):
-        self._data = data
+        self._stream = BytesIO(data)
 
     def read(self, n):
-        return self._data[:n]
+        return self._stream.read(n)
 
     def __enter__(self):
         return self
@@ -293,6 +293,24 @@ def test_download_image_returns_bytes_for_normal_response(monkeypatch):
     result = app.download_image("https://example.com/x", max_bytes=100, timeout=5)
 
     assert result == b"hello"
+
+
+def test_download_image_reassembles_a_multi_chunk_body(monkeypatch):
+    monkeypatch.setattr(app, "DOWNLOAD_CHUNK_BYTES", 4)
+    _stub_download(monkeypatch, b"0123456789")
+
+    assert app.download_image("https://example.com/x", max_bytes=100, timeout=5) == b"0123456789"
+
+
+def test_download_image_gives_up_after_the_deadline(monkeypatch):
+    # A slow source that keeps sending: each chunk read takes 40 "seconds" of a 90 s deadline.
+    clock = iter(range(0, 1000, 40))
+    monkeypatch.setattr(app.time, "monotonic", lambda: next(clock))
+    monkeypatch.setattr(app, "DOWNLOAD_CHUNK_BYTES", 1)
+    _stub_download(monkeypatch, b"x" * 10)
+
+    with pytest.raises(ValueError, match="after 90s"):
+        app.download_image("https://example.com/x", max_bytes=100, timeout=5, deadline=90)
 
 
 def test_text_response_shape():

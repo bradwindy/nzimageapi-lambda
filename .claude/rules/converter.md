@@ -11,6 +11,38 @@ CORS open) that downloads a master image (JP2 via OpenJPEG, TIFF via libtiff) an
 displayable JPEG capped at `MAX_DIM` (default 4000px). It exists because the Swift Lambda is a
 pure URL builder and never decodes image bytes itself.
 
+It is a python3.13 arm64 **.zip** built by `converter/Makefile`, which installs Pillow's
+`manylinux_2_28_aarch64` wheel (it bundles OpenJPEG and libtiff) on any build host. CI's deploy job
+imports the built package on arm64 Python 3.13 and fails if either codec is missing.
+
+## Timeouts
+
+NDHA streams some masters to the Lambda at under 1 MB/s. The function timeout is 120 s and
+`download_image` gives up after `DOWNLOAD_DEADLINE` (90 s) for the whole download, on top of the
+per-socket `DOWNLOAD_TIMEOUT`, so a slow source ends as a logged `502 download failed` instead of
+a silent function timeout. FL73848659 (45.8 MB, 7356×5010) is the known slow master.
+
+## Kill switch (`guard/`)
+
+The Function URL is public, so `ConverterGuardFunction` (`guard/app.py`) keeps the converter
+inside Lambda's always-free allowance. It switches the converter off by setting its reserved
+concurrency to 0 (every call is throttled, nothing is billed), and back on by deleting the
+reservation:
+
+- **Spike:** `nzimageapi-converter-invocations-high` (over `ConverterSpikeThreshold`, default 100,
+  invocations in 5 minutes) emails `nzimageapi-cost-alarms` and, through the same topic, switches
+  the converter off.
+- **Hourly:** month-to-date usage from CloudWatch is checked against `GuardMaxGbSeconds` (320,000
+  of the 400,000 free), `GuardMaxRequests` (800,000 of 1,000,000) and
+  `GuardMaxConverterInvocations` (20,000, which keeps data transfer out under the free 100 GB at
+  up to ~4 MB a response). Over any limit, it switches off. Under all of them with the spike alarm
+  OK, it switches back on, which is how it recovers after a spike or at the start of a month.
+
+Every switch is emailed to the cost-alarm topic. While the converter is off, converter URLs fail
+and the slideshow skips those images. To switch it back on by hand:
+`aws lambda delete-function-concurrency --region ap-southeast-2 --function-name <converter>`
+(the next hourly run turns it off again if a limit is still reached).
+
 ## HMAC signer/verifier contract
 
 - Swift side: `URLProcessor.signedConverterURL(for:)` (`Sources/NZImageApiLambda/Helpers/URLProcessor.swift`)

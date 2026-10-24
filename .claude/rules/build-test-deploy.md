@@ -51,9 +51,11 @@ same collections file and only one writer can hold the mutex
 
 ## SAM deploy (the real deploy path)
 
-Stack name `nzimageapi`, region `ap-southeast-2`. Needs Docker (the Swift Lambda's Makefile
-target and the converter's container image both build via Docker) — Docker commands need
-the sandbox disabled here, since the Docker socket isn't sandbox-allowlisted.
+Stack name `nzimageapi`, region `ap-southeast-2`. Needs Docker for the Swift Lambda's Makefile
+target — Docker commands need the sandbox disabled here, since the Docker socket isn't
+sandbox-allowlisted. The converter and guard are .zips built by their own Makefiles
+(`converter/Makefile`, `guard/Makefile`) with no Docker; the converter's `pip install` needs
+network access to PyPI.
 
 ```bash
 sam build
@@ -75,117 +77,49 @@ Function URL wiring) — prefer `sam build && sam deploy` for anything touching 
 
 ## Deploy artefact retention (cost control)
 
-Every `sam deploy` leaves permanent artefacts behind. Left unmanaged these are the account's
-only real recurring cost, and they grow with every deploy while the running stack itself
-(Lambda, API Gateway, CloudWatch, SNS, SQS) sits at $0.00.
+Every `sam deploy` uploads the packaged code (the Swift Lambda zip ~44 MB, the converter zip
+~22 MB, the guard) and templates to S3, and versioning is on. Left unmanaged, deploy artefacts
+were the account's only real recurring cost while the running stack sat at $0.00: by 2026-08-24
+there were 29 converter images in ECR (~5.5 GB) and 1.45 GB in S3.
 
-Two things accumulate:
+The converter was a container image until October 2026. ECR's free storage is a 12-month
+offer this account no longer has, so even three retained images cost about $0.06 a month. It is
+now a .zip, whose code storage Lambda includes for free, and the ECR repository is gone.
 
-- **The converter's ECR repo.** Each deploy pushes a fresh ~195 MB image under a unique tag
-  (`jp2converterfunction-<hash>-latest`), so nothing is ever overwritten. Only the one tag
-  referenced by the deployed `Jp2ConverterFunction` is live.
-- **The SAM artefact bucket.** Each deploy uploads the Swift Lambda zip (~44 MB) plus
-  packaged templates, and versioning is on.
+### `infra/bootstrap.yaml` owns the artefact bucket
 
-By 2026-08-24 that had reached 29 ECR images (~5.5 GB of manifests) and 75 S3 objects
-(1.45 GB) from roughly 20 deploys since June 2026 - about $0.17/month and climbing, all of
-it waste.
-
-### `infra/bootstrap.yaml` owns both
-
-Both resources, and both retention policies, are declared in **`infra/bootstrap.yaml`** and
-deployed as the separate `nzimageapi-bootstrap` stack:
+The bucket and its retention policy are declared in **`infra/bootstrap.yaml`** and deployed as
+the separate `nzimageapi-bootstrap` stack:
 
 ```bash
 aws cloudformation deploy --region ap-southeast-2 --stack-name nzimageapi-bootstrap --template-file infra/bootstrap.yaml
 ```
 
-**Why a separate stack and not `template.yaml`:** `sam deploy` pushes the container image to
-ECR and uploads the packaged template to S3 *before* CloudFormation runs. A repo or bucket
-declared in the stack that consumes them would not exist yet at push time. They have to be
-created by something that runs first, hence a tiny bootstrap stack deployed on its own.
+**Why a separate stack and not `template.yaml`:** `sam deploy` uploads the packaged code and
+template to S3 *before* CloudFormation runs, so a bucket declared in the stack that consumes it
+would not exist yet at upload time.
 
-Retention is tunable via stack parameters rather than by editing policy JSON:
+`ArtifactRetentionDays` (default `60`) sets when artefacts expire; non-current versions go at 7
+days, stalled multipart uploads at 7. A stack update failing more than 60 days after the deploy
+that produced an artefact cannot roll back to it, which is well outside any realistic rollback
+window here. The bucket carries `DeletionPolicy: Retain` / `UpdateReplacePolicy: Retain`.
 
-| Parameter | Default | Effect |
-| --- | --- | --- |
-| `ImageRetentionCount` | `3` | ECR keeps this many images. Newest is live, the rest are rollback targets. |
-| `ArtifactRetentionDays` | `60` | S3 artefacts expire after this many days. Non-current versions go at 7 days, stalled multipart uploads at 7. |
+### The wiring
 
-The 60-day S3 window is deliberately generous. It does mean a stack update failing more than
-60 days after the deploy that produced an artefact cannot roll back to it, which is well
-outside any realistic rollback window here.
+The gitignored `samconfig.toml` points the main stack at the bucket with
+`s3_bucket = "nzimageapi-sam-artifacts-686865771242-ap-southeast-2"` (which **replaces**
+`resolve_s3 = true`; the two are mutually exclusive, and `resolve_s3` is what made SAM
+auto-create its own unmanaged bucket). It no longer needs an `image_repositories` entry.
 
-Both resources carry `DeletionPolicy: Retain` / `UpdateReplacePolicy: Retain`, so deleting or
-replacing the bootstrap stack will not take the artefacts (or a bucket full of objects,
-which would fail the delete anyway) with it.
+`.github/workflows/ci-cd.yml` cannot read `samconfig.toml`, so its deploy job reads the bucket
+from the bootstrap stack's `ArtifactBucketName` output and passes it as `--s3-bucket`, failing
+with a pointer to the bootstrap-deploy command if the stack or output is missing. It reads the
+stack rather than a GitHub variable on purpose: a stale `CONVERTER_ECR_REPO` variable once kept CI
+deploying into superseded, unmanaged stores. Never reintroduce `--resolve-s3` there.
 
-### The wiring in `samconfig.toml`
+### Prefer .zip over container images
 
-The gitignored `samconfig.toml` points the main stack at the bootstrap stack's outputs:
-
-```toml
-s3_bucket = "nzimageapi-sam-artifacts-686865771242-ap-southeast-2"
-image_repositories = ["Jp2ConverterFunction=686865771242.dkr.ecr.ap-southeast-2.amazonaws.com/nzimageapi/jp2converter"]
-```
-
-`s3_bucket` **replaces** `resolve_s3 = true` - the two are mutually exclusive, and
-`resolve_s3` is what made SAM auto-create its own unmanaged bucket. Because `samconfig.toml`
-is gitignored, this wiring is the one part that is not in version control; re-read the two
-outputs after any bootstrap-stack change:
-
-```bash
-aws cloudformation describe-stacks --region ap-southeast-2 --stack-name nzimageapi-bootstrap --query 'Stacks[0].Outputs'
-```
-
-### The wiring in CI
-
-`.github/workflows/ci-cd.yml` cannot read the gitignored `samconfig.toml`, so its deploy job
-resolves the same two values itself, in a `Resolve bootstrap artefact stores` step that queries
-the bootstrap stack's outputs and feeds them to `sam deploy` as `--s3-bucket` and
-`--image-repositories`. The step fails the job with a pointer to the bootstrap-deploy command if
-the stack is missing or either output is absent, so a misconfigured deploy never reaches the
-push.
-
-They are read from the stack rather than from GitHub repo/environment variables on purpose. The
-job previously used `--resolve-s3` plus a `CONVERTER_ECR_REPO` environment variable, and that
-variable still held the *pre-migration* companion-stack repo, so every CI deploy kept pushing a
-~195 MB image into the unmanaged repo and a zip into a SAM-auto-created bucket while local deploys
-correctly used the bootstrap stores. Reading the stack removes the copy that can go stale. If you
-add another artefact store, add its output to `infra/bootstrap.yaml` and read it in the same step.
-
-`CONVERTER_ECR_REPO` is no longer referenced by anything and can be deleted from the repository's
-`production` environment.
-
-### Superseded resources (retired 2026-08-25)
-
-The pre-migration artefact stores are **gone**. Both were deleted on 2026-08-25, once a CI
-deploy against the bootstrap stores was confirmed:
-
-- ECR `nzimageapi40221342/jp2converterfunctione92cbfdcrepo` and its owning SAM-generated
-  `nzimageapi-40221342-CompanionStack` (3 remaining images deleted first, since the stack's
-  `AWS::ECR::Repository` sets neither `EmptyOnDelete` nor a retain policy and would otherwise
-  fail to delete).
-- S3 `aws-sam-cli-managed-default-samclisourcebucket-tfqwkahyri86` and its owning
-  `aws-sam-cli-managed-default` stack (158 object versions and delete markers purged first;
-  `aws s3 rm --recursive` alone is not enough on a versioned bucket, it only writes delete
-  markers).
-
-The account now holds exactly one ECR repository and one S3 bucket, both from
-`infra/bootstrap.yaml`.
-
-The practical consequence: CloudFormation cannot roll the `nzimageapi` stack back to any
-version deployed before 2026-08-25, because those templates and images no longer exist. Every
-artefact from that date on lives in the bootstrap stores under their retention policies.
-
-They lasted as long as they did because CI kept writing to both of them until the deploy job was
-pointed at the bootstrap stack (see "The wiring in CI" above), which is why their final contents
-were newer than the migration date suggested.
-
-### When adding a new container-image Lambda
-
-A new `PackageType: Image` function does **not** automatically get a managed repo any more,
-because `image_repositories` is now explicit. Add an `AWS::ECR::Repository` for it in
-`infra/bootstrap.yaml` (copy `ConverterRepository`, including its `LifecyclePolicy`), deploy
-the bootstrap stack, then add the new `<FunctionLogicalId>=<repoUri>` entry to
-`image_repositories`. Skipping the lifecycle policy is how this problem started.
+Keep Lambdas as .zips (250 MB unzipped limit) so there is nothing in ECR to pay for. If a function
+ever has to be a container image, it needs an `AWS::ECR::Repository` with a lifecycle policy in
+`infra/bootstrap.yaml` (see git history before October 2026 for the old `ConverterRepository`),
+plus an explicit `image_repositories` entry in `samconfig.toml` and `--image-repositories` in CI.

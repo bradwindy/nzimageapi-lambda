@@ -12,12 +12,13 @@ Lambda converts awkward master formats (JP2/TIFF) to JPEG on demand.
 
 - `Sources/NZImageApiLambda/` — the Swift HTTP API Lambda (the product).
 - `Sources/Testing/` — CLI tools: `CollectionTester`, `CollectionReviewer`, `CollectionLister`, `ImageResolutionChecker`, shared `LambdaTesting` lib.
-- `converter/` — Python Pillow Lambda (`app.py`) that decodes JP2/TIFF masters to JPEG behind a signed Function URL.
+- `converter/` — Python Pillow Lambda (`app.py`, a .zip built by `converter/Makefile`) that decodes JP2/TIFF masters to JPEG behind a signed Function URL.
+- `guard/` — the converter's free-tier kill switch Lambda (`app.py`): sets the converter's concurrency to 0 on a usage spike or when month-to-date usage nears the free tier.
 - `collection-reviewer-web/` — Next.js 15 app for triaging DigitalNZ collections; its dev server also boots the Swift Lambda.
 - `Research/highres/` — durable record of the (complete, 52-collection) high-resolution sweep; `progress.json` is the authoritative machine record.
 - `docs/` — access-control design doc and ADRs.
 - `scripts/` — legacy pre-SAM build/deploy scripts (`sam` is now the real deploy path).
-- `template.yaml` — the SAM stack definition for both Lambdas.
+- `template.yaml` — the SAM stack definition for the Lambdas, alarms, budget and kill switch.
 
 ## Architecture essentials
 
@@ -97,9 +98,12 @@ Secrets live in gitignored `.env`, `samconfig.toml`, and `.consumer-secrets/` �
   changeset, get explicit confirmation, then re-run with `--no-confirm-changeset`.
 - The reviewer web app and the `CollectionReviewer` CLI both write the same collections
   file — never run both writers at once (see `collection-reviewer-web/lib/collectionsFile.ts`).
-- `template.yaml` deliberately sets **no** `ReservedConcurrentExecutions` on either
-  function (the account's Lambda concurrency quota is already only 10, fully unreserved) —
-  don't describe concurrency as reserved/limited per-function.
+- `template.yaml` deliberately sets **no** `ReservedConcurrentExecutions` on any
+  function (the account's Lambda concurrency quota is only 10 and must stay fully unreserved).
+  The one exception is runtime-only: `ConverterGuardFunction` sets the converter's reservation
+  to **0** to switch it off, and deletes it to switch it back on. A converter returning 429 /
+  throttling everything is usually the kill switch, not a bug: check the guard's logs and the
+  `nzimageapi-cost-alarms` emails.
 - **Never let a `URLSession` (or an Alamofire `Session`, which owns one) be deallocated in the
   Lambda.** On Linux, `URLSession.deinit` tears down swift-corelibs-foundation's libcurl
   `_MultiHandle`, whose own `deinit` re-enters curl's timer callback and takes a strong reference
@@ -114,22 +118,15 @@ Secrets live in gitignored `.env`, `samconfig.toml`, and `.consumer-secrets/` �
   `swift build`) fail DNS resolution under the command sandbox even for allowlisted hosts —
   same class of issue as the Docker gotcha above, but it also hits plain network calls made
   by a built binary, not just Docker. Run with the sandbox disabled.
-- Every `sam deploy` leaves a new ~195 MB image in the converter's ECR repo and a ~44 MB
-  zip in the SAM artefact bucket, forever. Both stores, and their retention lifecycle
-  policies (ECR: keep last 3 images; S3: expire at 60 days), are declared in
-  [`infra/bootstrap.yaml`](infra/bootstrap.yaml) and deployed as the separate
-  `nzimageapi-bootstrap` stack. They are **deliberately not in `template.yaml`**: `sam deploy`
-  pushes the image and uploads the packaged template *before* CloudFormation runs, so a repo
-  or bucket in the consuming stack would not exist yet at push time. `samconfig.toml` wires
-  the main stack to that stack's outputs via `s3_bucket` and `image_repositories` (`s3_bucket`
-  replaces `resolve_s3`; they are mutually exclusive). `samconfig.toml` is gitignored, so CI
-  cannot read it: the deploy job in `.github/workflows/ci-cd.yml` resolves the same two values
-  from the bootstrap stack's outputs at deploy time and passes them as `--s3-bucket` and
-  `--image-repositories`. Never reintroduce `--resolve-s3` or a hand-maintained repo variable
-  there; a stale variable is what kept CI deploying into the superseded stores. Adding a new
-  container-image Lambda
-  means adding its repo to `infra/bootstrap.yaml` too - skipping the lifecycle policy is how
-  this problem started. Full detail:
+- The converter is a **.zip**, not a container image, so there is no ECR repo to pay for. Its
+  `converter/Makefile` installs Pillow's `manylinux_2_28_aarch64` wheel with `pip --platform`, so
+  `sam build` gives the same artefact on macOS and in CI; CI then imports the built package on
+  arm64 Python 3.13 to prove JP2 and TIFF decoding are present. Every `sam deploy` still uploads
+  zips to the SAM artefact bucket declared in [`infra/bootstrap.yaml`](infra/bootstrap.yaml)
+  (separate `nzimageapi-bootstrap` stack, 60-day expiry). It is **deliberately not in
+  `template.yaml`**: `sam deploy` uploads before CloudFormation runs, so a bucket in the
+  consuming stack would not exist yet. `samconfig.toml` points at it with `s3_bucket`; CI reads
+  it from the bootstrap stack's outputs. Full detail:
   [`.claude/rules/build-test-deploy.md`](.claude/rules/build-test-deploy.md#deploy-artefact-retention-cost-control).
 
 ## Where to read more
@@ -138,7 +135,7 @@ Secrets live in gitignored `.env`, `samconfig.toml`, and `.consumer-secrets/` �
 - [`.claude/rules/build-test-deploy.md`](.claude/rules/build-test-deploy.md) — full build/test/deploy command reference and gotchas.
 - [`.claude/rules/converter.md`](.claude/rules/converter.md) — the Python converter Lambda: contract, allowlist, local dev.
 - `README.md` — end-user API reference and setup.
-- `infra/bootstrap.yaml` — deploy-artefact stores (converter ECR repo, SAM artefact bucket) and their retention policies.
+- `infra/bootstrap.yaml` — the SAM artefact bucket and its retention policy.
 - `docs/ACCESS-CONTROL.md`, `docs/adr/0001-free-per-consumer-secrets.md` — auth model and cost-control design.
 - `Research/highres/README.md`, `recipes.md`, `progress.json` — per-collection high-res findings.
 - `Sources/Testing/CollectionTester/README-CollectionTester.md` — CollectionTester options.

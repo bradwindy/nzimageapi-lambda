@@ -40,6 +40,32 @@ Parameters:
       Lambda (verifies them), so the public converter Function URL only accepts requests
       the Swift Lambda minted. Pass at deploy time via --parameter-overrides or the
       gitignored samconfig.toml. NEVER commit it.
+  ConverterSpikeThreshold:
+    Type: Number
+    Default: 100
+    Description: >
+      Converter invocations in 5 minutes above which the spike alarm fires and
+      ConverterGuardFunction switches the converter off.
+  GuardMaxGbSeconds:
+    Type: Number
+    Default: 320000
+    Description: >
+      Month-to-date Lambda compute (GB-seconds, all functions) at which the converter is
+      switched off. The always-free allowance is 400,000; the gap absorbs the guard's hourly
+      lag and the Duration metric not counting init time.
+  GuardMaxRequests:
+    Type: Number
+    Default: 800000
+    Description: >
+      Month-to-date Lambda requests (all functions) at which the converter is switched off.
+      The always-free allowance is 1,000,000.
+  GuardMaxConverterInvocations:
+    Type: Number
+    Default: 20000
+    Description: >
+      Month-to-date converter invocations at which it is switched off. This bounds data
+      transfer out, which has no CloudWatch metric: each response is at most ~4 MB, so 20,000
+      stays under the 100 GB a month AWS includes for free.
 
 Resources:
   # --- Cost/abuse notifications: one SNS topic, emailed on any alarm or budget breach ---
@@ -86,21 +112,26 @@ Resources:
             - SubscriptionType: EMAIL
               Address: !Ref AlarmEmail
 
-  # --- JP2 -> JPEG converter (container image + public Function URL) ------------------
+  # --- JP2 -> JPEG converter (.zip + public Function URL) ------------------------------
+  # A .zip (not a container image) so there is no ECR repo to pay for: ECR's free storage is a
+  # 12-month offer this account no longer has, while Lambda's .zip code storage is included.
   Jp2ConverterFunction:
     Type: AWS::Serverless::Function
     Properties:
-      PackageType: Image
+      CodeUri: converter/
+      Handler: app.lambda_handler
+      Runtime: python3.13
       Architectures:
         - arm64
       MemorySize: 2048          # Lambda CPU scales with memory; headroom for large JP2 masters
-      Timeout: 60               # large masters: download + reduced-level decode
-      # No ReservedConcurrentExecutions: this account's total Lambda concurrency quota is only
-      # 10 (not the usual 1000 default), shared with NZImageApiFunction, and is already fully
-      # unreserved -- setting any reservation here would violate that floor. The account-wide
-      # limit itself is currently a tighter concurrency ceiling than a per-function reservation
-      # would be. If the quota is ever increased (see docs/ACCESS-CONTROL.md, "Cost controls"),
-      # reintroduce a reservation here to subdivide the larger pool between both functions.
+      # NDHA streams some masters to the Lambda at under 1 MB/s, so a 45 MB master can need
+      # ~60 s just to download. app.py stops the download at DOWNLOAD_DEADLINE (90 s), which
+      # leaves this much again for decode/encode.
+      Timeout: 120
+      # No ReservedConcurrentExecutions in the template: this account's total Lambda concurrency
+      # quota is only 10 (not the usual 1000 default) and must stay fully unreserved. The only
+      # reservation ever made is 0, set at runtime by ConverterGuardFunction as a kill switch,
+      # which CloudFormation does not track.
       Environment:
         Variables:
           # Host allowlist for the master->JPEG proxy (comma-separated). NDHA for TAPUHI's
@@ -118,31 +149,82 @@ Resources:
           AllowMethods:
             - GET
     Metadata:
-      Dockerfile: Dockerfile
-      DockerContext: ./converter
-      DockerTag: latest
+      BuildMethod: makefile     # converter/Makefile: installs Pillow's aarch64 wheel on any host
 
-  # Fires if the converter -- the expensive function -- is invoked more than 100 times in
-  # any 1-hour window. Tune the threshold to expected legitimate traffic; the point is to
-  # notice a leaked/abused converter URL as a notification, not a surprise bill.
+  # Fires when the converter -- the expensive function -- is hammered. It emails AlarmTopic and,
+  # through the same topic, wakes ConverterGuardFunction, which switches the converter off. A
+  # 5-minute period means a flood is cut off within minutes rather than at the end of an hour.
+  # Normal use is about 16 conversions an hour per open slideshow tab.
   Jp2ConverterInvocationsAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: nzimageapi-converter-invocations-high
-      AlarmDescription: Jp2ConverterFunction invoked more than 100 times in 1 hour.
+      AlarmDescription: !Sub Jp2ConverterFunction invoked more than ${ConverterSpikeThreshold} times in 5 minutes. ConverterGuardFunction switches it off.
       Namespace: AWS/Lambda
       MetricName: Invocations
       Dimensions:
         - Name: FunctionName
           Value: !Ref Jp2ConverterFunction
       Statistic: Sum
-      Period: 3600
+      Period: 300
       EvaluationPeriods: 1
-      Threshold: 100
+      Threshold: !Ref ConverterSpikeThreshold
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
       AlarmActions:
         - !Ref AlarmTopic
+
+  # --- Free-tier kill switch for the converter ----------------------------------------
+  # The converter's Function URL is public, so nothing else caps what it can cost. This function
+  # sets the converter's reserved concurrency to 0 (every call is throttled, nothing is billed)
+  # when the spike alarm fires, and checks month-to-date usage every hour against limits set
+  # below Lambda's always-free allowance. The hourly run switches the converter back on once
+  # usage is under the limits again (a new month) and the alarm is back to OK. See guard/app.py.
+  ConverterGuardFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: guard/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+        - arm64
+      MemorySize: 128
+      Timeout: 30
+      Environment:
+        Variables:
+          CONVERTER_FUNCTION_NAME: !Ref Jp2ConverterFunction
+          SPIKE_ALARM_NAME: nzimageapi-converter-invocations-high
+          ALERT_TOPIC_ARN: !Ref AlarmTopic
+          MAX_GB_SECONDS: !Ref GuardMaxGbSeconds
+          MAX_REQUESTS: !Ref GuardMaxRequests
+          MAX_CONVERTER_INVOCATIONS: !Ref GuardMaxConverterInvocations
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - lambda:GetFunctionConcurrency
+                - lambda:PutFunctionConcurrency
+                - lambda:DeleteFunctionConcurrency
+              Resource: !GetAtt Jp2ConverterFunction.Arn
+            - Effect: Allow
+              Action:
+                - lambda:ListFunctions
+                - cloudwatch:GetMetricStatistics
+                - cloudwatch:DescribeAlarms
+              Resource: "*"
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt AlarmTopic.TopicName
+      Events:
+        Hourly:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 hour)
+        SpikeAlarm:
+          Type: SNS
+          Properties:
+            Topic: !Ref AlarmTopic
+    Metadata:
+      BuildMethod: makefile
 
   # --- Swift NZ Image API (provided.al2023 custom runtime, built via the Makefile) -------
   NZImageApiFunction:
