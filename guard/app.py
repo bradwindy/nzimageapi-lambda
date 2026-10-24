@@ -10,12 +10,19 @@ Two triggers (template.yaml, ConverterGuardFunction):
     off straight away. Other messages on the topic (the API alarm, this function's own notices)
     are ignored.
   - An hourly schedule. It sums month-to-date usage from CloudWatch and switches the converter off
-    when any limit is reached, or back on when every limit is clear and the spike alarm is OK.
-    That is also how the converter comes back after a spike, or at the start of a new month.
+    when any limit is reached, or back on when every limit is clear and the spike alarm has not
+    been in ALARM for SPIKE_COOLDOWN_HOURS. That is also how the converter comes back after a
+    spike, or at the start of a new month.
 
-During a sustained flood the converter cycles: off on the alarm, back on at the next hourly run
-once the alarm clears, off again. The month-to-date limits bound the total, and once one is hit the
+Throttled calls are not counted as invocations, so the spike alarm clears within minutes of the
+switch-off. The cooldown (read from the alarm's history) is what stops the next hourly run from
+handing a still-running flood the converter back. A flood that outlasts it costs one alarm period
+of compute per cooldown, and the month-to-date limits bound the total: once one is hit the
 converter stays off until the month rolls over.
+
+Limits (by design, see .claude/rules/converter.md): usage is read for this region only, the guard
+shares the account's 10-slot concurrency pool with the converter it stops (async SNS retries get it
+a slot as soon as one frees), and the hourly run re-enables a converter switched off by hand.
 """
 
 import datetime
@@ -31,6 +38,7 @@ ALERT_TOPIC_ARN = os.environ.get("ALERT_TOPIC_ARN", "")
 MAX_GB_SECONDS = float(os.environ.get("MAX_GB_SECONDS", "320000"))
 MAX_REQUESTS = float(os.environ.get("MAX_REQUESTS", "800000"))
 MAX_CONVERTER_INVOCATIONS = float(os.environ.get("MAX_CONVERTER_INVOCATIONS", "20000"))
+SPIKE_COOLDOWN_HOURS = float(os.environ.get("SPIKE_COOLDOWN_HOURS", "6"))
 
 _lambda = boto3.client("lambda")
 _cloudwatch = boto3.client("cloudwatch")
@@ -107,9 +115,21 @@ def month_to_date_usage(now):
     return usage
 
 
-def spike_alarm_ok():
+def spike_alarm_quiet(now):
+    """True when the spike alarm is not in ALARM and has not entered it within the cooldown."""
     alarms = _cloudwatch.describe_alarms(AlarmNames=[SPIKE_ALARM_NAME])["MetricAlarms"]
-    return not alarms or alarms[0]["StateValue"] != "ALARM"
+    if alarms and alarms[0]["StateValue"] == "ALARM":
+        return False
+    history = _cloudwatch.describe_alarm_history(
+        AlarmName=SPIKE_ALARM_NAME,
+        HistoryItemType="StateUpdate",
+        StartDate=now - datetime.timedelta(hours=SPIKE_COOLDOWN_HOURS),
+        EndDate=now,
+    )
+    for item in history["AlarmHistoryItems"]:
+        if json.loads(item["HistoryData"]).get("newState", {}).get("stateValue") == "ALARM":
+            return False
+    return True
 
 
 def converter_enabled():
@@ -142,11 +162,14 @@ def lambda_handler(event, _context):
             set_converter_enabled(False, f"{SPIKE_ALARM_NAME} fired")
         return {"action": "alarm"}
 
-    usage = month_to_date_usage(datetime.datetime.now(datetime.timezone.utc))
+    now = datetime.datetime.now(datetime.timezone.utc)
+    usage = month_to_date_usage(now)
     reached = limits_reached(usage)
     print(f"month-to-date usage: {usage}")
     if reached:
         set_converter_enabled(False, "month-to-date free-tier limit reached: " + ", ".join(reached))
-    elif spike_alarm_ok():
-        set_converter_enabled(True, "usage under every limit and the spike alarm is OK")
+    elif spike_alarm_quiet(now):
+        set_converter_enabled(
+            True, f"usage under every limit and no spike alarm in the last {SPIKE_COOLDOWN_HOURS:g} hours"
+        )
     return {"usage": usage.__dict__, "limits_reached": reached}

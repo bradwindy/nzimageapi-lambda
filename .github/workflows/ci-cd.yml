@@ -42,7 +42,7 @@ jobs:
     name: Build & deploy (SAM)
     needs: [swift-test, python-test]     # deploy blocked until BOTH pass
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-24.04-arm            # native arm64 Docker for the Swift cross-compile; arm64 Python for the converter codec check
+    runs-on: ubuntu-24.04-arm            # native arm64 Docker for the Swift cross-compile, arm64 Python for the converter codec check
     environment: production              # gives an optional approval gate; scopes OIDC sub (see setup)
     permissions:
       id-token: write                    # required for OIDC
@@ -63,7 +63,7 @@ jobs:
         with:
           python-version: "3.13"         # same as the Lambda runtime, so the codec check imports the built wheel
       - name: sam build
-        run: sam build                   # Swift via Makefile+Docker; converter and guard via their Makefiles
+        run: sam build                   # Swift via Makefile+Docker, converter and guard via their Makefiles
       # The converter .zip carries Pillow's manylinux aarch64 wheel. Prove the build has the two
       # codecs it exists for, on the same architecture and Python as the Lambda, before deploying.
       - name: Check converter codecs

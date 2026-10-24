@@ -117,7 +117,10 @@ def download_image(url, max_bytes=MAX_DOWNLOAD_BYTES, timeout=DOWNLOAD_TIMEOUT, 
     give_up_at = time.monotonic() + deadline
     data = bytearray()
     with _OPENER.open(request, timeout=timeout) as response:  # noqa: S310 (host allowlisted + SSRF-guarded)
-        while chunk := response.read(DOWNLOAD_CHUNK_BYTES):
+        # read1, not read: read(n) keeps reading until it has n bytes, so a source that trickles
+        # just inside DOWNLOAD_TIMEOUT could hold one call past the deadline. read1 returns after
+        # a single socket read.
+        while chunk := response.read1(DOWNLOAD_CHUNK_BYTES):
             data += chunk
             if len(data) > max_bytes:
                 raise ValueError(f"source exceeds {max_bytes} byte limit")

@@ -257,7 +257,7 @@ class _FakeURLResponse:
     def __init__(self, data):
         self._stream = BytesIO(data)
 
-    def read(self, n):
+    def read1(self, n):
         return self._stream.read(n)
 
     def __enter__(self):

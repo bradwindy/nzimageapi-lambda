@@ -52,9 +52,9 @@ same collections file and only one writer can hold the mutex
 ## SAM deploy (the real deploy path)
 
 Stack name `nzimageapi`, region `ap-southeast-2`. Needs Docker for the Swift Lambda's Makefile
-target — Docker commands need the sandbox disabled here, since the Docker socket isn't
+target. Docker commands need the sandbox disabled here, since the Docker socket isn't
 sandbox-allowlisted. The converter and guard are .zips built by their own Makefiles
-(`converter/Makefile`, `guard/Makefile`) with no Docker; the converter's `pip install` needs
+(`converter/Makefile`, `guard/Makefile`) with no Docker. The converter's `pip install` needs
 network access to PyPI.
 
 ```bash
@@ -84,7 +84,11 @@ there were 29 converter images in ECR (~5.5 GB) and 1.45 GB in S3.
 
 The converter was a container image until October 2026. ECR's free storage is a 12-month
 offer this account no longer has, so even three retained images cost about $0.06 a month. It is
-now a .zip, whose code storage Lambda includes for free, and the ECR repository is gone.
+now a .zip, whose code storage Lambda includes for free. Removing `ConverterRepository` from
+`infra/bootstrap.yaml` does not delete the repository (it was `DeletionPolicy: Retain`), so after
+the first .zip deploy replaced the image function, the bootstrap stack was redeployed and
+`nzimageapi/jp2converter` was deleted by hand with
+`aws ecr delete-repository --region ap-southeast-2 --repository-name nzimageapi/jp2converter --force`.
 
 ### `infra/bootstrap.yaml` owns the artefact bucket
 
@@ -99,7 +103,7 @@ aws cloudformation deploy --region ap-southeast-2 --stack-name nzimageapi-bootst
 template to S3 *before* CloudFormation runs, so a bucket declared in the stack that consumes it
 would not exist yet at upload time.
 
-`ArtifactRetentionDays` (default `60`) sets when artefacts expire; non-current versions go at 7
+`ArtifactRetentionDays` (default `60`) sets when artefacts expire. Non-current versions go at 7
 days, stalled multipart uploads at 7. A stack update failing more than 60 days after the deploy
 that produced an artefact cannot roll back to it, which is well outside any realistic rollback
 window here. The bucket carries `DeletionPolicy: Retain` / `UpdateReplacePolicy: Retain`.
@@ -108,7 +112,7 @@ window here. The bucket carries `DeletionPolicy: Retain` / `UpdateReplacePolicy:
 
 The gitignored `samconfig.toml` points the main stack at the bucket with
 `s3_bucket = "nzimageapi-sam-artifacts-686865771242-ap-southeast-2"` (which **replaces**
-`resolve_s3 = true`; the two are mutually exclusive, and `resolve_s3` is what made SAM
+`resolve_s3 = true`. The two are mutually exclusive, and `resolve_s3` is what made SAM
 auto-create its own unmanaged bucket). It no longer needs an `image_repositories` entry.
 
 `.github/workflows/ci-cd.yml` cannot read `samconfig.toml`, so its deploy job reads the bucket

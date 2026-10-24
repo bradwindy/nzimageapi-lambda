@@ -249,7 +249,12 @@ Every control below is free at this project's scale. Each caps a different failu
 | Converter kill switch | Converter **spend**: sets its concurrency to 0 on a spike, or when month-to-date usage nears the free tier | 320,000 GB-s, 800,000 requests or 20,000 converter calls a month | `ConverterGuardFunction` (`guard/app.py`), see `.claude/rules/converter.md` |
 | Monthly budget | Notifies on any **real spend** | >$1 actual or forecasted → email | `MonthlyCostBudget` |
 
-**Reserved concurrency was planned but isn't set.** This AWS account's total Lambda concurrent-
+**The kill switch is the only reserved concurrency, and it is set at runtime.** `ConverterGuardFunction`
+sets the converter's reserved concurrency to **0** to switch it off (a reservation of 0 doesn't
+lower the unreserved pool) and deletes it to switch it back on. Nothing in `template.yaml` reserves
+concurrency, for the reason below.
+
+**Positive reserved concurrency was planned but isn't set.** This AWS account's total Lambda concurrent-
 executions quota is **10** (not the usual 1,000 default), and is already fully unreserved. Setting
 `ReservedConcurrentExecutions` on either function — even a small value — would push the account's
 unreserved pool below its own floor and the deploy is rejected (`InvalidRequest`:

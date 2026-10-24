@@ -120,12 +120,12 @@ Secrets live in gitignored `.env`, `samconfig.toml`, and `.consumer-secrets/` â€
   by a built binary, not just Docker. Run with the sandbox disabled.
 - The converter is a **.zip**, not a container image, so there is no ECR repo to pay for. Its
   `converter/Makefile` installs Pillow's `manylinux_2_28_aarch64` wheel with `pip --platform`, so
-  `sam build` gives the same artefact on macOS and in CI; CI then imports the built package on
+  `sam build` gives the same artefact on macOS and in CI. CI then imports the built package on
   arm64 Python 3.13 to prove JP2 and TIFF decoding are present. Every `sam deploy` still uploads
   zips to the SAM artefact bucket declared in [`infra/bootstrap.yaml`](infra/bootstrap.yaml)
   (separate `nzimageapi-bootstrap` stack, 60-day expiry). It is **deliberately not in
   `template.yaml`**: `sam deploy` uploads before CloudFormation runs, so a bucket in the
-  consuming stack would not exist yet. `samconfig.toml` points at it with `s3_bucket`; CI reads
+  consuming stack would not exist yet. `samconfig.toml` points at it with `s3_bucket`, and CI reads
   it from the bootstrap stack's outputs. Full detail:
   [`.claude/rules/build-test-deploy.md`](.claude/rules/build-test-deploy.md#deploy-artefact-retention-cost-control).
 

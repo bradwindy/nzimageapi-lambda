@@ -47,9 +47,10 @@ class FakeLambda:
 
 
 class FakeCloudWatch:
-    def __init__(self, sums=None, alarm_state="OK"):
+    def __init__(self, sums=None, alarm_state="OK", history=()):
         self.sums = sums or {}
         self.alarm_state = alarm_state
+        self.history = list(history)
 
     def get_metric_statistics(self, MetricName, Dimensions, **_kwargs):
         name = Dimensions[0]["Value"]
@@ -58,6 +59,15 @@ class FakeCloudWatch:
 
     def describe_alarms(self, AlarmNames):
         return {"MetricAlarms": [{"AlarmName": AlarmNames[0], "StateValue": self.alarm_state}]}
+
+    def describe_alarm_history(self, StartDate, EndDate, **_kwargs):
+        return {
+            "AlarmHistoryItems": [
+                {"HistoryData": json.dumps({"newState": {"stateValue": state}})}
+                for at, state in self.history
+                if StartDate <= at <= EndDate
+            ]
+        }
 
 
 class FakeSNS:
@@ -171,9 +181,15 @@ def test_spike_alarm_does_nothing_when_already_off(aws):
     assert sns.messages == []
 
 
-def _hourly(aws, *, reserved, converter_calls, alarm_state="OK"):
+def _hourly(aws, *, reserved, converter_calls, alarm_state="OK", alarm_fired_hours_ago=None):
     lam = FakeLambda(reserved=reserved, functions=[{"FunctionName": "converter", "MemorySize": 2048}])
-    cloudwatch = FakeCloudWatch(sums={("converter", "Invocations"): converter_calls}, alarm_state=alarm_state)
+    history = []
+    if alarm_fired_hours_ago is not None:
+        fired_at = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=alarm_fired_hours_ago)
+        history = [(fired_at, "ALARM"), (fired_at + datetime.timedelta(minutes=6), "OK")]
+    cloudwatch = FakeCloudWatch(
+        sums={("converter", "Invocations"): converter_calls}, alarm_state=alarm_state, history=history
+    )
     aws(lam, cloudwatch)
     app.lambda_handler({"source": "aws.events"}, None)
     return lam
@@ -189,3 +205,15 @@ def test_hourly_check_switches_back_on_under_the_limits_with_the_alarm_ok(aws):
 
 def test_hourly_check_leaves_it_off_while_the_spike_alarm_is_still_firing(aws):
     assert _hourly(aws, reserved=0, converter_calls=10, alarm_state="ALARM").calls == []
+
+
+def test_hourly_check_waits_out_the_cooldown_after_a_spike(aws):
+    # The alarm cleared minutes after the switch-off (throttled calls aren't invocations), but it
+    # fired 1 hour ago, inside the 6-hour cooldown, so a flood may still be running.
+    assert _hourly(aws, reserved=0, converter_calls=10, alarm_fired_hours_ago=1).calls == []
+
+
+def test_hourly_check_switches_back_on_once_the_cooldown_has_passed(aws):
+    assert _hourly(aws, reserved=0, converter_calls=10, alarm_fired_hours_ago=7).calls == [
+        ("delete", "converter")
+    ]
