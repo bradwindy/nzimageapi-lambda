@@ -48,6 +48,74 @@ jobs:
         working-directory: guard
         run: pytest
 
+  # Secret-free packaging proof. Runs on pull requests and on main. The deploy job below stays
+  # main-only and is the only job that assumes an AWS role. This job builds the same artifact and
+  # imports that packaged Pillow on the Lambda's architecture.
+  package-converter:
+    name: Package converter (ARM64)
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: aws-actions/setup-sam@89ddb14d60e682855e3fea4be85b3c56485de310 # v3
+        with:
+          use-installer: true            # arch-independent SAM CLI install
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.13"         # same interpreter the codec import uses; the wheel is still the Makefile's aarch64 one
+      - name: sam build
+        run: sam build                   # converter and guard via their Makefiles; no deploy, no AWS credentials
+      - name: Check packaged converter codecs
+        run: |
+          python - <<'PY'
+          import os
+          import sys
+          from io import BytesIO
+
+          artifact = os.path.realpath(".aws-sam/build/Jp2ConverterFunction")
+          if not os.path.isdir(artifact):
+              raise SystemExit(f"packaged artifact not found: {artifact}")
+          # Import the Pillow inside the artifact, not a Pillow pip-installed into the runner.
+          sys.path.insert(0, artifact)
+          from PIL import Image, features
+
+          loaded = os.path.realpath(Image.__file__)
+          if os.path.commonpath([artifact, loaded]) != artifact:
+              raise SystemExit(f"Pillow loaded from {loaded}, not the packaged artifact {artifact}")
+          if not features.check("jpg_2000"):
+              raise SystemExit("OpenJPEG/JP2 NOT enabled in Pillow")
+          if not features.check("libtiff"):
+              raise SystemExit("libtiff NOT enabled in Pillow")
+          for fmt, size in (("JPEG2000", (64, 48)), ("TIFF", (64, 48))):
+              buf = BytesIO()
+              Image.new("L", size, 40).save(buf, format=fmt)
+              buf.seek(0)
+              image = Image.open(buf)
+              image.load()
+              if image.format != fmt or image.size != size:
+                  raise SystemExit(f"{fmt} decoded as {image.format} {image.size}, expected {size}")
+          print("JP2 and TIFF decoding available")
+          PY
+
+  reviewer-test:
+    name: Reviewer tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: collection-reviewer-web
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: collection-reviewer-web/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - name: Typecheck
+        run: npx tsc --noEmit --pretty false
+
   deploy:
     name: Build & deploy (SAM)
     needs: [python-test]                 # the Worker deploys separately, through Workers Builds
