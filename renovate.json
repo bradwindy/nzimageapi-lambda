@@ -8,6 +8,9 @@
   "rebaseWhen": "conflicted",
   "prConcurrentLimit": 10,
   "abandonmentThreshold": null,
+  "vulnerabilityAlerts": {
+    "prBodyTemplate": "{{{header}}}{{{table}}}{{{configDescription}}}{{{controls}}}{{{warnings}}}{{{notes}}}{{{changelogs}}}{{{footer}}}"
+  },
   "lockFileMaintenance": {
     "enabled": true,
     "automerge": true,
@@ -27,10 +30,22 @@
       "automerge": false
     },
     {
-      "description": "TypeScript 7 breaks collection-reviewer-web's Next.js build (Next fails to detect TypeScript, build worker crashes with \"The id argument must be of type string\") - CI doesn't cover this subproject so this won't show as a failing check, hold off until Next.js/TS7 compatibility is confirmed manually",
+      "description": "TypeScript 7 breaks collection-reviewer-web's Next.js build (Next fails to detect TypeScript, build worker crashes with \"The id argument must be of type string\"). Reviewer unit tests and tsc do not run that production build, so keep major TypeScript updates disabled until Next.js/TS7 compatibility is confirmed manually",
       "matchPackageNames": ["typescript"],
       "matchUpdateTypes": ["major"],
       "enabled": false
+    },
+    {
+      "description": "Auto-merge pin and digest updates once CI passes. Minor and patch updates keep their own 7-day wait above.",
+      "matchUpdateTypes": ["pin", "pinDigest", "digest"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "configure-aws-credentials is invoked only by the credentialed main-branch deploy job, so pull-request CI cannot show that a new pin or digest works. This rule is after the pin/digest automerge rule so it overrides that automerge. It matches depName, which the github-actions manager always sets to owner/repo.",
+      "matchManagers": ["github-actions"],
+      "matchDepNames": ["aws-actions/configure-aws-credentials"],
+      "automerge": false
     },
     {
       "description": "React (collection-reviewer-web)",
