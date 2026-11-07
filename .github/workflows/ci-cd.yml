@@ -25,6 +25,13 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: worker/package-lock.json
+      # Workers Builds installs this package with npm 10.9.2 on Node 24.22.1.
+      # Node 24's own npm 11.19.1 accepts a lockfile that omits @vitest/mocker's
+      # optional msw@2 peer, so a green npm ci here would not mean the deploy can install.
+      - name: Use the Workers Builds npm
+        run: |
+          npm install --global npm@10.9.2
+          test "$(npm -v)" = "10.9.2"
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
