@@ -48,7 +48,7 @@ export async function newResult(
 			},
 		});
 
-	context.log(`Making initial request for collection: ${chosenCollection}`);
+	context.log(`Making initial request for collection: ${JSON.stringify(chosenCollection)}`);
 	const initial = checkSearchNonNull(checkResponseNonNull(decodeRecordsResponse(await request(1, 0))));
 	context.log(`Got initial response, result count ${initial.result_count}`);
 
@@ -56,7 +56,7 @@ export async function newResult(
 	if (pages <= 0) throw new ApiError("noResults", { collection: chosenCollection, result_count: String(initial.result_count) });
 
 	const page = randomInt(1, pages);
-	context.log(`Making second request. pageNumber: ${page}, resultsPerPage: ${RESULTS_PER_PAGE}, collection: ${chosenCollection}`);
+	context.log(`Making second request. pageNumber: ${page}, resultsPerPage: ${RESULTS_PER_PAGE}, collection: ${JSON.stringify(chosenCollection)}`);
 	const secondary = decodeRecordsPage(await request(page, RESULTS_PER_PAGE));
 	context.log(`Got second response, result count ${secondary.search?.result_count}`);
 

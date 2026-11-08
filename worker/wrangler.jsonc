@@ -4,6 +4,7 @@
 	"main": "src/index.ts",
 	"compatibility_date": "2026-10-19",
 	"workers_dev": false,
+	"preview_urls": false,
 	"routes": [{ "pattern": "nzimages-api.iolab.nz", "custom_domain": true }],
 	"observability": { "enabled": true },
 	"vars": {

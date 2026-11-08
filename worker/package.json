@@ -12,12 +12,12 @@
 		"count-collections": "node scripts/count-collections.ts"
 	},
 	"devDependencies": {
-		"@cloudflare/vitest-plugin": "1.4.7",
+		"@cloudflare/vitest-plugin": "1.6.0",
 		"@msw/cloudflare": "0.2.0",
 		"@types/node": "26.6.5",
 		"msw": "3.0.3",
 		"typescript": "7.0.2",
 		"vitest": "5.1.0",
-		"wrangler": "4.152.0"
+		"wrangler": "4.158.0"
 	}
 }

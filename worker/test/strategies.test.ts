@@ -98,6 +98,20 @@ describe("Manawatū Heritage", () => {
 	});
 });
 
+describe("Feilding Library", () => {
+	it("only signs downloads from feildingheritage.nz itself, not a lookalike domain", async () => {
+		const landing = "https://notfeildingheritage.nz/item/abc";
+		network.use(
+			http.get(landing, () => HttpResponse.html(`<a href="/item/0a1b-2c/files/3d4e-5f/download?variant=original">Download</a>`)),
+		);
+		const harvested = "https://cache.example/feilding.jpg";
+		expect(
+			await finalURL({ display_collection: "Feilding Library", landing_url: landing, large_thumbnail_url: harvested }),
+		).toBe(harvested);
+	});
+
+});
+
 describe("Auckland Museum", () => {
 	it("builds the cloudimg master URL from object_av_link", async () => {
 		network.use(

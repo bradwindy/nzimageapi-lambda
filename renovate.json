@@ -13,12 +13,12 @@
   },
   "lockFileMaintenance": {
     "enabled": true,
-    "automerge": true,
+    "automerge": false,
     "schedule": ["before 6am on monday"]
   },
   "packageRules": [
     {
-      "description": "Auto-merge minor/patch PRs when CI passes (7-day wait, stricter than the 3-day default)",
+      "description": "Auto-merge minor/patch PRs when CI passes (7-day wait, stricter than the 3-day default). Lock file maintenance has no such wait for the versions it moves, so it is not automerged.",
       "matchUpdateTypes": ["minor", "patch"],
       "automerge": true,
       "automergeType": "pr",
@@ -45,6 +45,12 @@
       "description": "configure-aws-credentials is invoked only by the credentialed main-branch deploy job, so pull-request CI cannot show that a new pin or digest works. This rule is after the pin/digest automerge rule so it overrides that automerge. It matches depName, which the github-actions manager always sets to owner/repo.",
       "matchManagers": ["github-actions"],
       "matchDepNames": ["aws-actions/configure-aws-credentials"],
+      "automerge": false
+    },
+    {
+      "description": "The other actions the deploy job runs share its OIDC token and, in post steps, the AWS deploy credentials. Passing pull-request CI can't show that new action code is safe to run there, so their updates also wait for a review.",
+      "matchManagers": ["github-actions"],
+      "matchDepNames": ["actions/checkout", "actions/setup-python", "aws-actions/setup-sam"],
       "automerge": false
     },
     {

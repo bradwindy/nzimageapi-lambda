@@ -1,4 +1,4 @@
-import { filteredCollectionWeights } from "./collections.ts";
+import { collectionNames, filteredCollectionWeights } from "./collections.ts";
 import { type ApiEnv, createContext, type Logger, type RequestContext } from "./context.ts";
 import { newResult } from "./digitalnz.ts";
 import { ApiError, NoEligibleCollectionsError } from "./errors.ts";
@@ -6,6 +6,7 @@ import type { NZImage } from "./models.ts";
 import { splitNonEmpty } from "./swiftUrl.ts";
 
 const encoder = new TextEncoder();
+const knownCollections = new Set(collectionNames().map((name) => name.normalize("NFC")));
 
 async function sha256(value: string): Promise<ArrayBuffer> {
 	return crypto.subtle.digest("SHA-256", encoder.encode(value));
@@ -21,7 +22,7 @@ export async function authorizedConsumer(presented: string, allowed: string): Pr
 	let matched: string | null = null;
 	for (const entry of splitNonEmpty(allowed, ",")) {
 		const separator = entry.indexOf(":");
-		if (separator < 0) continue;
+		if (separator < 0 || separator === entry.length - 1) continue;
 		const secretDigest = await sha256(entry.slice(separator + 1));
 		if (crypto.subtle.timingSafeEqual(presentedDigest, secretDigest)) matched = entry.slice(0, separator);
 	}
@@ -60,10 +61,12 @@ export async function requestImage(
 	log: Logger = console.log,
 ): Promise<NZImage | null> {
 	const excluded = collection === undefined ? new Set(exclude) : new Set<string>();
-	const requested = collection ?? "random";
+	const requested = collection === undefined ? "random" : JSON.stringify(collection);
 
 	log(`Requested collection: ${requested}`);
-	log(`Excluded collections: ${excluded.size === 0 ? "none" : [...excluded].sort().join(", ")}`);
+	// Only table names change the pick, and the rest is free text from website visitors.
+	const logged = [...excluded].filter((name) => knownCollections.has(name.normalize("NFC"))).sort();
+	log(`Excluded collections: ${logged.length === 0 ? "none" : logged.join(", ")}`);
 
 	const result = await image(createContext(env, log), collection, excluded);
 	if (result === null) log(`Failed to get image for collection: ${requested}`);

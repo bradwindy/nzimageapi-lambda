@@ -393,6 +393,9 @@ live with `npx wrangler tail` from `worker/`. Every authorized HTTP request logs
 - **Host allowlist.** `ALLOWED_HOSTS` restricts which origin the converter will fetch a master
   image from (NDHA, Feilding Library, Manawatū Heritage), bounding SSRF exposure even if the
   signature check were ever bypassed.
+- **Decoder allowlist.** `Image.open` only accepts `DECODABLE_FORMATS` (JPEG 2000, TIFF, JPEG,
+  PNG), so a hostile body can't reach Pillow's other native decoders. The signature is compared
+  as bytes, so a malformed `sig` gets a `403` instead of crashing the function.
 - **Resource ceilings.** `MAX_IMAGE_PIXELS = 500_000_000` (decompression-bomb guard), a download
   size cap, and a download timeout bound worst-case memory and time per invocation. Combined with
   the account-wide Lambda concurrency limit (§8), this bounds worst-case concurrent cost.

@@ -5,6 +5,17 @@ import type { ImageApiResponse } from './types';
 const API_URL = 'http://127.0.0.1:8977/image';
 const DEV_SECRET = 'super_secret_secret';
 
+// Record URLs come from third-party institutions and are rendered as links.
+function httpURL(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  try {
+    const { protocol } = new URL(value);
+    return protocol === 'https:' || protocol === 'http:' ? value : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 // Returns null only when the API can't be reached. A non-200 answer comes back with its status
 // and no image fields, so callers can tell "no image" from "API down".
 export async function fetchImageForCollection(
@@ -30,12 +41,12 @@ export async function fetchImageForCollection(
       id: body.id as number | undefined,
       title: body.title as string | undefined,
       description: body.description as string | undefined,
-      thumbnail_url: body.thumbnail_url as string | undefined,
-      large_thumbnail_url: body.large_thumbnail_url as string | undefined,
-      object_url: body.object_url as string | undefined,
+      thumbnail_url: httpURL(body.thumbnail_url),
+      large_thumbnail_url: httpURL(body.large_thumbnail_url),
+      object_url: httpURL(body.object_url),
       display_collection: body.display_collection as string | undefined,
-      landing_url: body.landing_url as string | undefined,
-      source_url: body.source_url as string | undefined,
+      landing_url: httpURL(body.landing_url),
+      source_url: httpURL(body.source_url),
     };
   } catch {
     return null;

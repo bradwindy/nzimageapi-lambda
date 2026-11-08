@@ -23,7 +23,8 @@ export function decodeEntities(value: string): string {
 			const codePoint = name[1] === "x" || name[1] === "X" ? parseInt(name.slice(2), 16) : parseInt(name.slice(1), 10);
 			return codePoint > 0 && codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : entity;
 		}
-		return NAMED_ENTITIES[name.toLowerCase()] ?? entity;
+		const named = name.toLowerCase();
+		return Object.hasOwn(NAMED_ENTITIES, named) ? NAMED_ENTITIES[named]! : entity;
 	});
 }
 

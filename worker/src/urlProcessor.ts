@@ -18,7 +18,6 @@ import {
 	splitNonEmpty,
 	swiftURLString,
 	urlHost,
-	urlScheme,
 } from "./swiftUrl.ts";
 
 /** Returns the URL to serve for `record`, given its current `large_thumbnail_url` (`url`). */
@@ -294,11 +293,12 @@ async function nationalArmyMuseum(record: NZImage, url: string, { http }: Reques
 	return ripId(contentURL, (id) => `https://${host}/assets/downloadwiz/${id}`, "display/", "-max");
 }
 
-/** The landing page's `/item/<uuid>/files/<fileId>/download?variant=original` link. */
-async function recollectOriginalDownloadURL(record: NZImage, hostSuffix: string, http: Http): Promise<string | undefined> {
+/** The landing page's `/item/<uuid>/files/<fileId>/download?variant=original` link, on `domain` or a subdomain of it. */
+async function recollectOriginalDownloadURL(record: NZImage, domain: string, http: Http): Promise<string | undefined> {
 	const landing = record.landing_url;
-	const host = landing === undefined ? undefined : urlHost(landing);
-	if (landing === undefined || host === undefined || !host.endsWith(hostSuffix)) return undefined;
+	// Parsed as fetch() parses it: the host it connects to is the host the signed URL may use.
+	const host = landing === undefined ? undefined : URL.parse(landing)?.hostname;
+	if (landing === undefined || host === undefined || (host !== domain && !host.endsWith(`.${domain}`))) return undefined;
 
 	let html: string;
 	try {
@@ -308,7 +308,7 @@ async function recollectOriginalDownloadURL(record: NZImage, hostSuffix: string,
 	}
 
 	const path = RECOLLECT_ORIGINAL_DOWNLOAD.exec(html)?.[0];
-	return path === undefined ? undefined : `${urlScheme(landing) ?? "https"}://${host}${path}`;
+	return path === undefined ? undefined : `https://${host}${path}`;
 }
 
 /** Feilding Library: the ~25 MP TIFF original, through the converter. */

@@ -63,7 +63,8 @@ export class ImageApi extends WorkerEntrypoint<Env> {
 	/** Exactly the object `GET /image` would serialise, or null where `/image` would return 400. */
 	async image(options?: { collection?: string; exclude?: string[] } | null): Promise<NZImage | null> {
 		console.log("Authorized consumer: service binding");
-		return requestImage(this.env, options?.collection, excludeList(options?.exclude));
+		const collection = typeof options?.collection === "string" ? options.collection : undefined;
+		return requestImage(this.env, collection, excludeList(options?.exclude));
 	}
 
 	async collections(): Promise<string[]> {
