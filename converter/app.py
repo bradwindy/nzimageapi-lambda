@@ -50,6 +50,8 @@ SIGNING_KEY = os.environ.get("CONVERTER_SIGNING_KEY", "")
 # this is high enough not to reject legitimate preservation masters (multi-hundred-MP TIFFs/JP2s
 # are expected here) while still stopping a pathological multi-gigapixel bomb.
 MAX_IMAGE_PIXELS = 500_000_000
+# NDHA serves JP2 and TIFF masters, the Recollect originals are TIFF, and a few are JPEG or PNG.
+DECODABLE_FORMATS = ("JPEG2000", "TIFF", "JPEG", "PNG")
 
 # Browser UA: the NDHA FL `dps_func=stream` endpoint is stateless (no cookies needed); the
 # Feilding download endpoint also serves anonymously for public-rights records.
@@ -89,12 +91,14 @@ def _reject_if_unsafe(url):
     for info in socket.getaddrinfo(host, None):
         ip = ipaddress.ip_address(info[4][0])
         if (
-            ip.is_private
+            not ip.is_global  # also carrier-grade NAT (100.64.0.0/10), which is_private misses
+            or ip.is_private
             or ip.is_loopback
             or ip.is_link_local
-            or ip.is_reserved
+            or ip.is_reserved  # NAT64 (64:ff9b::/96) is "global" but can wrap 127.0.0.1
             or ip.is_multicast
             or ip.is_unspecified
+            or getattr(ip, "is_site_local", False)
         ):
             raise ValueError("target resolves to a non-public address")
 
@@ -109,7 +113,11 @@ class _SafeRedirectHandler(HTTPRedirectHandler):
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         _reject_if_unsafe(newurl)
-        return super().redirect_request(req, fp, code, msg, headers, newurl)
+        new_request = super().redirect_request(req, fp, code, msg, headers, newurl)
+        # urllib reads the whole 3xx body after this returns, outside MAX_DOWNLOAD_BYTES and
+        # DOWNLOAD_DEADLINE. Closing it first makes that read return nothing.
+        fp.close()
+        return new_request
 
 
 _OPENER = build_opener(_SafeRedirectHandler)
@@ -161,7 +169,8 @@ def convert_to_jpeg(data, max_dim=MAX_DIM):
     # preservation masters, low enough to still reject a pathological decompression bomb.
     Image.MAX_IMAGE_PIXELS = MAX_IMAGE_PIXELS
 
-    image = Image.open(BytesIO(data))
+    # Only the formats the sources serve, so a hostile body can't reach Pillow's other decoders.
+    image = Image.open(BytesIO(data), formats=DECODABLE_FORMATS)
 
     # JPEG 2000 is wavelet-coded: OpenJPEG can discard high-resolution levels at decode time
     # (each discarded level halves the dimensions). Since the output is downscaled to max_dim
@@ -209,8 +218,11 @@ def lambda_handler(event, context):
     # Verify before any host check / network access: only the Swift Lambda (which holds
     # SIGNING_KEY) can mint a valid signature, so an invalid one is rejected fast, before
     # spending a download/decode on a request nobody with the key actually asked for.
-    supplied_sig = params.get("sig") or ""
-    expected_sig = hmac.new(SIGNING_KEY.encode(), source_url.encode(), hashlib.sha256).hexdigest()
+    # Compared as bytes: compare_digest raises TypeError on a str with non-ASCII characters, and
+    # "surrogatepass" keeps a lone surrogate from raising too. Neither can match a real signature.
+    supplied_sig = (params.get("sig") or "").encode("utf-8", "surrogatepass")
+    signed = source_url.encode("utf-8", "surrogatepass")
+    expected_sig = hmac.new(SIGNING_KEY.encode(), signed, hashlib.sha256).hexdigest().encode()
     if not hmac.compare_digest(expected_sig, supplied_sig):
         return _text_response(403, "invalid signature")
 

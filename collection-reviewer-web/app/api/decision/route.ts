@@ -27,7 +27,11 @@ export async function POST(request: NextRequest) {
     notes?: string;
   };
 
-  if (typeof index !== 'number' || !['yes', 'no', 'unsure'].includes(status)) {
+  if (
+    typeof index !== 'number' ||
+    !['yes', 'no', 'unsure'].includes(status) ||
+    (notes != null && typeof notes !== 'string')
+  ) {
     return NextResponse.json({ error: 'invalid body' }, { status: 400 });
   }
 

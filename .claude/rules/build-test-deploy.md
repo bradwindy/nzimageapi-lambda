@@ -61,6 +61,11 @@ converter-routed collections show their harvested URL. **Do not run `npm run upd
 while the app is running**: both write the same collections file and only one writer can hold
 the mutex (`collection-reviewer-web/lib/collectionsFile.ts`).
 
+The API routes write repo files and spend the DigitalNZ key, so the app stays local: Next listens
+on `127.0.0.1` only, and `proxy.ts` returns `403` for any `/api/*` request whose `Host` isn't
+`localhost`/`127.0.0.1`/`[::1]` (DNS rebinding) or whose `Sec-Fetch-Site`/`Origin` shows another
+site (CSRF from a page the developer has open). Open it at `http://127.0.0.1:3000`.
+
 ## Converter and kill switch (SAM)
 
 ```bash

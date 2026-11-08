@@ -35,3 +35,10 @@ test('POST /api/progress with a valid-JSON null body returns 400, not a throw', 
   const res = await progressPOST(jsonRequest('http://localhost/api/progress', 'null'));
   expect(res.status).toBe(400);
 });
+
+test('POST /api/decision with non-string notes returns 400', async () => {
+  const res = await decisionPOST(
+    jsonRequest('http://localhost/api/decision', JSON.stringify({ index: 0, status: 'yes', notes: { x: 1 } })),
+  );
+  expect(res.status).toBe(400);
+});

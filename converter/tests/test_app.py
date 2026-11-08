@@ -78,6 +78,16 @@ def test_bad_signature_returns_403(monkeypatch):
     assert "invalid signature" in result["body"]
 
 
+def test_non_ascii_signature_returns_403(monkeypatch):
+    monkeypatch.setattr(app, "SIGNING_KEY", "test-signing-key")
+    event = {"queryStringParameters": {"url": "https://ndhadeliver.natlib.govt.nz/x", "sig": "é"}}
+
+    result = app.lambda_handler(event, None)
+
+    assert result["statusCode"] == 403
+    assert "invalid signature" in result["body"]
+
+
 def test_valid_signature_but_disallowed_host_returns_403(monkeypatch):
     monkeypatch.setattr(app, "SIGNING_KEY", "test-signing-key")
     monkeypatch.setattr(app, "ALLOWED_HOSTS", frozenset({"ndhadeliver.natlib.govt.nz"}))
@@ -127,6 +137,18 @@ def test_successful_request_returns_200_base64_jpeg(monkeypatch):
 
 
 # --- B2: convert_to_jpeg / _encode_jpeg -----------------------------------------------
+
+
+def test_format_outside_the_masters_is_not_decoded():
+    from PIL import UnidentifiedImageError
+
+    with pytest.raises(UnidentifiedImageError):
+        app.convert_to_jpeg(_image_bytes(fmt="GIF", mode="P", color=1))
+
+
+def test_jpeg2000_and_tiff_masters_decode():
+    for fmt in ("JPEG2000", "TIFF"):
+        assert app.convert_to_jpeg(_image_bytes(fmt=fmt))[:2] == b"\xff\xd8"
 
 
 def test_rgb_image_stays_rgb():
@@ -273,6 +295,51 @@ def _stub_download(monkeypatch, data):
     monkeypatch.setattr(app._OPENER, "open", lambda _request, timeout=None: _FakeURLResponse(data))
 
 
+def test_redirect_body_is_not_read(monkeypatch):
+    """A source that redirects with an endless body must not hold the download past its caps."""
+    import threading
+    import time as real_time
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    class Source(BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == "/master":
+                self.send_response(200)
+                self.send_header("Content-Length", "6")
+                self.end_headers()
+                self.wfile.write(b"master")
+                return
+            self.send_response(302)
+            self.send_header("Location", "/master")
+            self.send_header("Content-Length", str(10**9))
+            self.end_headers()
+            try:
+                while True:
+                    self.wfile.write(b"x")
+                    self.wfile.flush()
+                    real_time.sleep(0.05)
+            except OSError:
+                pass
+
+        def log_message(self, *_args):
+            pass
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Source)
+    server.daemon_threads = True
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    monkeypatch.setattr(app, "_reject_if_unsafe", lambda _url: None)
+    result = {}
+    worker = threading.Thread(
+        target=lambda: result.setdefault("data", app.download_image(f"http://127.0.0.1:{server.server_port}/start", timeout=1, deadline=2)),
+        daemon=True,
+    )
+    worker.start()
+    worker.join(timeout=5)
+    server.shutdown()
+
+    assert result.get("data") == b"master"
+
+
 def test_download_image_raises_when_over_max_bytes(monkeypatch):
     _stub_download(monkeypatch, b"x" * 20)
 
@@ -364,6 +431,13 @@ def test_reject_if_unsafe_blocks_link_local_imds(monkeypatch):
     monkeypatch.setattr(app.socket, "getaddrinfo", lambda *_a, **_kw: _addrinfo("169.254.169.254"))
     with pytest.raises(ValueError):
         app._reject_if_unsafe("http://metadata.evil/latest/meta-data/")
+
+
+@pytest.mark.parametrize("ip", ["100.64.0.1", "fec0::1", "64:ff9b::7f00:1"])
+def test_reject_if_unsafe_blocks_carrier_nat_site_local_and_nat64_loopback(monkeypatch, ip):
+    monkeypatch.setattr(app.socket, "getaddrinfo", lambda *_a, **_kw: _addrinfo(ip))
+    with pytest.raises(ValueError):
+        app._reject_if_unsafe("https://internal.evil/x")
 
 
 def test_reject_if_unsafe_blocks_private_rfc1918(monkeypatch):

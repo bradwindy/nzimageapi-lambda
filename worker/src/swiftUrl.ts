@@ -73,11 +73,6 @@ function decodeComponent(component: string): string {
 	}
 }
 
-/** `URL.scheme`. */
-export function urlScheme(url: string): string | undefined {
-	return URL_PATTERN.exec(url)?.[1];
-}
-
 /** `URL.host`: the authority without userinfo or port, percent-decoded. Empty counts as absent. */
 export function urlHost(url: string): string | undefined {
 	const authority = URL_PATTERN.exec(url)?.[2];

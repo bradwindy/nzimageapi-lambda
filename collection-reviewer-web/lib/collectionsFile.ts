@@ -159,7 +159,8 @@ export async function updateCollectionInFile(
   // Step 5: insert timestamped note if provided
   if (notes && notes.trim() !== '') {
     const ts = formatLocalTimestamp(new Date());
-    lines.splice(insertIndex, 0, `- Review [${ts}]: ${notes}`);
+    // One line per note: a newline would start new fields or collection headers.
+    lines.splice(insertIndex, 0, `- Review [${ts}]: ${notes.replace(/\s*[\r\n]+\s*/g, ' ')}`);
   }
 
   // Step 6: atomic write
@@ -207,10 +208,15 @@ export function remapProgress(
 //   7. Remap progress to same-name collection; clamp if removed.
 //   8. Atomic write both files.
 // ---------------------------------------------------------------------------
-export async function mergeCollections(facets: FacetEntry[]): Promise<MergeResult> {
-  if (facets.length < 50) {
+export async function mergeCollections(allFacets: FacetEntry[]): Promise<MergeResult> {
+  // DigitalNZ facet names come from third parties. A quote or newline would break the
+  // line-oriented file, and the parser ends a name at its first quote.
+  const facets = allFacets.filter(
+    ({ name, count }) => !/["\r\n]/.test(name) && Number.isSafeInteger(count) && count >= 0,
+  );
+  if (allFacets.length < 50) {
     throw new Error(
-      `API returned only ${facets.length} collections — aborting to prevent data loss`,
+      `API returned only ${allFacets.length} collections — aborting to prevent data loss`,
     );
   }
 
@@ -231,7 +237,10 @@ export async function mergeCollections(facets: FacetEntry[]): Promise<MergeResul
 
   const progressCollectionName = collections[progressIndex]?.name ?? null;
 
-  const toRemove = new Set(collections.filter(c => !facetMap.has(c.name)).map(c => c.name));
+  // Removal checks every name the API returned, so a facet skipped above never deletes a
+  // tracked collection and its notes.
+  const live = new Set(allFacets.map(f => f.name));
+  const toRemove = new Set(collections.filter(c => !live.has(c.name)).map(c => c.name));
   const existingNames = new Set(collections.map(c => c.name));
   const toAdd = facets.filter(f => !existingNames.has(f.name));
 
