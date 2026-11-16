@@ -54,6 +54,18 @@
       "automerge": false
     },
     {
+      "description": "Workers Builds deploys the Worker on its default Node (24 as of November 2026), and CI pins node-version 24 to match it (see the worker-test job). Hold Node, and the reviewer's @types/node, on 24 until the Workers Builds default moves past 24. The worker's @types/node is not capped: it is already on 26 and only types worker/scripts. The github-actions manager reports setup-node's node-version as depName node (packageName actions/node-versions).",
+      "matchManagers": ["github-actions"],
+      "matchDepNames": ["node"],
+      "allowedVersions": "<25"
+    },
+    {
+      "description": "See the Node rule above: the reviewer's Node types follow the Node 24 that CI runs it on.",
+      "matchFileNames": ["collection-reviewer-web/package.json"],
+      "matchPackageNames": ["@types/node"],
+      "allowedVersions": "<25"
+    },
+    {
       "description": "React (collection-reviewer-web)",
       "groupName": "React",
       "matchPackageNames": ["/^react/", "/^@types/react/"]
