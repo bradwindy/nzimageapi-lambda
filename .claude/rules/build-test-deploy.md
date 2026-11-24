@@ -75,7 +75,8 @@ site (CSRF from a page the developer has open). Open it at `http://127.0.0.1:300
 
 Stack name `nzimageapi`, region `ap-southeast-2`. GitHub Actions deploys it on every push to
 `main` (`.github/workflows/ci-cd.yml`: tests, `sam build`, a codec check on the built converter,
-`sam deploy`). By hand:
+`sam deploy`). By hand (needs SAM CLI 1.173.0 or later, the first release that knows the
+`python3.15` runtime, CI installs the latest):
 
 ```bash
 sam build                      # needs network access to PyPI (run unsandboxed here)

@@ -90,7 +90,7 @@ Secrets live in gitignored `.env`, `.dev.vars`, `samconfig.toml`, and `.consumer
 
 ## Code style
 
-- TypeScript (strict) for the Worker and the reviewer app, Python 3.13 for the Lambdas.
+- TypeScript (strict) for the Worker and the reviewer app, Python 3.15 for the Lambdas.
 - Match existing patterns: the `urlProcessor.ts` strategy registry for new per-collection URL
   logic (see [`.claude/rules/architecture.md`](.claude/rules/architecture.md)), and every
   outbound fetch through `worker/src/http.ts`.
@@ -123,7 +123,7 @@ Secrets live in gitignored `.env`, `.dev.vars`, `samconfig.toml`, and `.consumer
 - The converter is a **.zip**, not a container image, so there is no ECR repo to pay for. Its
   `converter/Makefile` installs Pillow's `manylinux_2_28_aarch64` wheel with `pip --platform`, so
   `sam build` gives the same artefact on macOS and in CI. CI then imports the built package on
-  arm64 Python 3.13 to prove JP2 and TIFF decoding are present. Every `sam deploy` uploads zips
+  arm64 Python 3.15 to prove JP2 and TIFF decoding are present. Every `sam deploy` uploads zips
   to the SAM artefact bucket declared in [`infra/bootstrap.yaml`](infra/bootstrap.yaml)
   (separate `nzimageapi-bootstrap` stack, 60-day expiry). It is **deliberately not in
   `template.yaml`**: `sam deploy` uploads before CloudFormation runs, so a bucket in the

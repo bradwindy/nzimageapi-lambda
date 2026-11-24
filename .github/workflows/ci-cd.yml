@@ -52,7 +52,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
-          python-version: "3.13"         # matches the converter and guard Lambda runtime
+          python-version: "3.15"         # matches the converter and guard Lambda runtime
       - name: Install dev deps
         run: pip install -r converter/requirements-dev.txt -r guard/requirements-dev.txt
       - name: pytest (converter)
@@ -79,7 +79,7 @@ jobs:
           use-installer: true            # arch-independent SAM CLI install
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
-          python-version: "3.13"         # same interpreter the codec import uses; the wheel is still the Makefile's aarch64 one
+          python-version: "3.15"         # same interpreter the codec import uses; the wheel is still the Makefile's aarch64 one
       - name: sam build
         run: sam build                   # converter and guard via their Makefiles; no deploy, no AWS credentials
       - name: Check packaged converter codecs
@@ -155,7 +155,7 @@ jobs:
           use-installer: true            # arch-independent SAM CLI install
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
-          python-version: "3.13"         # same as the Lambda runtime, so the codec check imports the built wheel
+          python-version: "3.15"         # same as the Lambda runtime, so the codec check imports the built wheel
       - name: sam build
         run: sam build                   # converter and guard via their Makefiles
       # The converter .zip carries Pillow's manylinux aarch64 wheel. Prove the build has the two
