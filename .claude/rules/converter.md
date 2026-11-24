@@ -11,9 +11,9 @@ CORS open) that downloads a master image (JP2 via OpenJPEG, TIFF via libtiff) an
 displayable JPEG capped at `MAX_DIM` (default 4000px). It exists because the API Worker
 (`nzimages-api`, in `worker/`) is a pure URL builder and never decodes image bytes itself.
 
-It is a python3.13 arm64 **.zip** built by `converter/Makefile`, which installs Pillow's
+It is a python3.15 arm64 **.zip** built by `converter/Makefile`, which installs Pillow's
 `manylinux_2_28_aarch64` wheel (it bundles OpenJPEG and libtiff) on any build host. CI's deploy job
-imports the built package on arm64 Python 3.13 and fails if either codec is missing.
+imports the built package on arm64 Python 3.15 and fails if either codec is missing.
 
 ## Timeouts
 
