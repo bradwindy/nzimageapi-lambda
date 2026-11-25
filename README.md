@@ -4,14 +4,14 @@ Returns random images from New Zealand archives, libraries and cultural institut
 the [DigitalNZ API](https://digitalnz.org/). It is a pure URL builder: each response points at
 the highest-resolution copy of the image it can find.
 
-It powers the slideshow at [nzimages.iolab.nz](https://nzimages.iolab.nz)
+It powers the slideshow at [nzimages.windybank.net](https://nzimages.windybank.net)
 ([nzimage-web](https://github.com/bradwindy/nzimage-web)).
 
 ## How it runs
 
 | Part | Where | Code |
 | --- | --- | --- |
-| API | Cloudflare Worker `nzimages-api` on the Workers Free plan, `https://nzimages-api.iolab.nz` | [`worker/`](worker/) |
+| API | Cloudflare Worker `nzimages-api` on the Workers Free plan, `https://nzimages-api.windybank.net` (also the old `nzimages-api.iolab.nz` until 2027-01-22) | [`worker/`](worker/) |
 | JP2/TIFF converter | AWS Lambda (Python + Pillow) behind a signed Function URL | [`converter/`](converter/) |
 | Converter kill switch | AWS Lambda that keeps the converter inside the free tier | [`guard/`](guard/) |
 | Website | Cloudflare Worker `nzimages-web`, calls the API over a service binding | [nzimage-web](https://github.com/bradwindy/nzimage-web) |
@@ -30,7 +30,7 @@ A random image from a collection picked at random, weighted by how many images e
 has.
 
 ```bash
-curl -H "secret: YOUR_CONSUMER_SECRET" "https://nzimages-api.iolab.nz/image"
+curl -H "secret: YOUR_CONSUMER_SECRET" "https://nzimages-api.windybank.net/image"
 ```
 
 ```json
@@ -62,7 +62,7 @@ A `400` means no image could be found for the pick. Try again.
 The names of every collection the API picks from.
 
 ```bash
-curl -H "secret: YOUR_CONSUMER_SECRET" "https://nzimages-api.iolab.nz/collections"
+curl -H "secret: YOUR_CONSUMER_SECRET" "https://nzimages-api.windybank.net/collections"
 ```
 
 ## Access control

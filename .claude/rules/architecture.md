@@ -4,7 +4,7 @@ Read this when touching request handling, adding or adjusting a collection's ima
 strategy, or working with the DigitalNZ data models.
 
 The API is the TypeScript Cloudflare Worker `nzimages-api` in `worker/`, served at
-`https://nzimages-api.iolab.nz`. It is a pure URL builder: it returns JSON metadata pointing at
+`https://nzimages-api.windybank.net`. It is a pure URL builder: it returns JSON metadata pointing at
 the highest-resolution image URL it can reach, never image bytes. It is a 1:1 port of the Swift
 Lambda, which lives in git history up to commit `c599d75`.
 
@@ -109,7 +109,7 @@ To add or change a collection's strategy:
    `worker/test/strategies.test.ts` for strategies that fetch (mocked with MSW).
 6. Validate end to end from `worker/` with `NZIMAGE_API_SECRET` set:
    `npm run check-collections -- --collection "<name>"`. The default base URL is `wrangler dev`
-   (`npm run dev`, `http://127.0.0.1:8787`). Add `--base-url https://nzimages-api.iolab.nz` to
+   (`npm run dev`, `http://127.0.0.1:8787`). Add `--base-url https://nzimages-api.windybank.net` to
    check the deployed Worker, which is subject to the WAF rate limit below.
 
 ## HTTP client rules
@@ -144,9 +144,9 @@ The Worker runs on the Cloudflare Workers Free plan, which never bills.
   11 ms outlier that still succeeded. Time spent waiting on fetches does not count.
 - **50 subrequests per request**, enforced by `Http` (above).
 
-A WAF rate-limiting rule on the `iolab.nz` zone blocks an IP that sends more than 30 requests in
-10 s to `/image`, `/collections`, `/api/image` or `/api/collections`, for 10 s. See
-`docs/ACCESS-CONTROL.md` §8.
+A WAF rate-limiting rule on the `windybank.net` zone, limited to the `nzimages` and `nzimages-api`
+hostnames, blocks an IP that sends more than 30 requests in 10 s to `/image`, `/collections`,
+`/api/image` or `/api/collections`, for 10 s. See `docs/ACCESS-CONTROL.md` §8.
 
 ## Known bugs carried over from Swift
 

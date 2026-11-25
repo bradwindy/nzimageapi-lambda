@@ -9,14 +9,14 @@ highest-resolution image URL it can reach for a given collection.
 It runs in two places, chosen so that nothing can bill:
 
 - **The API** is the TypeScript Cloudflare Worker `nzimages-api` in `worker/`, on the Workers
-  **Free** plan at `https://nzimages-api.iolab.nz`. The Free plan returns errors instead of
+  **Free** plan at `https://nzimages-api.windybank.net`. The Free plan returns errors instead of
   billing when a limit is hit.
 - **The JP2/TIFF converter** is a Python + Pillow AWS Lambda (`converter/`), the one job no
   Cloudflare Free product can do, kept inside Lambda's always-free allowance by a kill switch
   (`guard/`). It is deployed as the `nzimageapi` SAM stack (`template.yaml`).
 
 The website (`nzimage-web`, a separate repo) is the Worker `nzimages-web` at
-`https://nzimages.iolab.nz`. It calls the API over a service binding (RPC), not over HTTP.
+`https://nzimages.windybank.net`. It calls the API over a service binding (RPC), not over HTTP.
 
 The repo name is historical: the API was a Swift Lambda behind API Gateway until October 2026
 (see git history before that).
@@ -64,7 +64,7 @@ npm ci
 npm test                         # Vitest inside workerd, outbound fetches mocked
 npm run typecheck
 npm run dev                      # http://127.0.0.1:8787, secrets from worker/.dev.vars
-NZIMAGE_API_SECRET=... npm run check-collections -- --base-url https://nzimages-api.iolab.nz
+NZIMAGE_API_SECRET=... npm run check-collections -- --base-url https://nzimages-api.windybank.net
 
 # Converter and kill switch
 (cd converter && pytest)
@@ -97,6 +97,10 @@ Secrets live in gitignored `.env`, `.dev.vars`, `samconfig.toml`, and `.consumer
 
 ## Gotchas
 
+- **Domain move in progress.** The API and website moved to `windybank.net`. Until `iolab.nz`
+  lapses on 2027-01-22, both Workers also answer on their old `iolab.nz` hostnames (a second route
+  in each `wrangler.jsonc`), and the `iolab.nz` zone keeps its copy of the rate-limit rule. Remove
+  those routes and that rule before the domain lapses.
 - **Workers Free plan limits are the API's budget.** 100,000 requests a day shared by every
   Worker on the account (resets 00:00 UTC), 10 ms CPU per request, 50 subrequests per request.
   Over the daily limit every Worker on the account returns error 1027 until the reset. Measured

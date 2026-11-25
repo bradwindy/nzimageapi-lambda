@@ -2,10 +2,10 @@
 #
 # Smoke-tests the /image access-control model described in docs/ACCESS-CONTROL.md.
 # Asserts: 200 with a valid secret, 401 with a missing/wrong secret, and (optionally,
-# opt-in) 429 once the iolab.nz WAF rate-limiting rule (30 requests per 10 s per IP) trips.
+# opt-in) 429 once the windybank.net WAF rate-limiting rule (30 requests per 10 s per IP) trips.
 #
 # Usage:
-#   API_URL="https://nzimages-api.iolab.nz" \
+#   API_URL="https://nzimages-api.windybank.net" \
 #   API_SECRET="your-consumer-secret" \
 #   ./scripts/smoke-test-access-control.sh
 #
@@ -15,7 +15,7 @@
 
 set -e
 
-API_URL="${API_URL:?Set API_URL to the deployed API base URL, e.g. https://nzimages-api.iolab.nz}"
+API_URL="${API_URL:?Set API_URL to the deployed API base URL, e.g. https://nzimages-api.windybank.net}"
 API_SECRET="${API_SECRET:?Set API_SECRET to a secret value from API_CLIENT_SECRETS}"
 RUN_THROTTLE_TEST=false
 
@@ -62,7 +62,7 @@ if [ "$RUN_THROTTLE_TEST" = true ]; then
     echo "  PASS: rate limit engaged (saw a 429 within 40 parallel requests)"
     pass_count=$((pass_count + 1))
   else
-    echo "  FAIL: never saw a 429 within 40 parallel requests -- check the iolab.nz rate limiting rule"
+    echo "  FAIL: never saw a 429 within 40 parallel requests -- check the windybank.net rate limiting rule"
     fail_count=$((fail_count + 1))
   fi
 else

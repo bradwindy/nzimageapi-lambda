@@ -11,7 +11,7 @@ import { network } from "./network.ts";
 const IncomingRequest = Request<unknown, IncomingRequestCfProperties>;
 
 function call(path: string, init: { method?: string; headers?: Record<string, string> } = {}, bindings: Env = env) {
-	return worker.fetch(new IncomingRequest(`https://nzimages-api.iolab.nz${path}`, init), bindings);
+	return worker.fetch(new IncomingRequest(`https://nzimages-api.windybank.net${path}`, init), bindings);
 }
 
 const authorized = { headers: { secret: "AbC123" } };

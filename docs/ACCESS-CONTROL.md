@@ -34,13 +34,13 @@ ADR.
 ## 2. Architecture
 
 ```
-Website (https://nzimages.iolab.nz, Worker nzimages-web)
+Website (https://nzimages.windybank.net, Worker nzimages-web)
 
   Browser  ──same-origin /api/*──▶  nzimages-web Worker  ──service binding (RPC)──▶  nzimages-api
   (no secret)                       (no secret)                                      ImageApi entrypoint,
                                                                                      same account only
 
-Any other consumer (public HTTP API, https://nzimages-api.iolab.nz)
+Any other consumer (public HTTP API, https://nzimages-api.windybank.net)
 
   Browser / app  ──HTTPS──▶  Consumer's OWN backend  ──secret header──▶  GET /image, GET /collections
   (no secret)                (holds THIS consumer's                      checked against
@@ -54,7 +54,7 @@ see §10).
 There are **three separate request paths**, and they're gated differently:
 
 - **Image metadata over HTTP** (`GET /image`, `GET /collections` on
-  `https://nzimages-api.iolab.nz`). Returns JSON describing a randomly chosen image (title,
+  `https://nzimages-api.windybank.net`). Returns JSON describing a randomly chosen image (title,
   description, thumbnail and large-image URLs). Gated by the per-consumer secret (§4). This is the
   path any consumer other than the website uses, from its own backend.
 - **Image metadata over RPC** (`ImageApi.image()`, `ImageApi.collections()`). The website's path.
@@ -66,8 +66,9 @@ There are **three separate request paths**, and they're gated differently:
   by the API Worker (unrelated to `API_CLIENT_SECRETS`) and is loaded directly by the end user's
   browser, not proxied. See §10.
 
-The API has no `workers.dev` hostname (`workers_dev: false`). Its only public address is the
-custom domain.
+The API has no `workers.dev` hostname (`workers_dev: false`). Its public addresses are its
+custom domains: `nzimages-api.windybank.net`, plus the old `nzimages-api.iolab.nz` until `iolab.nz`
+lapses on 2027-01-22.
 
 **Why the browser or app never holds a secret:** anything shipped to a browser page
 (view-source) or a mobile app binary (decompilation) is effectively public. A static secret
@@ -103,7 +104,7 @@ configuration is needed on the API** (and none exists).
   the limit is spent, every Worker on the account, the website included, returns error 1027 until
   00:00 UTC. The WAF rule stops a single IP, not a distributed flood. This costs availability,
   never money.
-- **The website's own endpoints.** `https://nzimages.iolab.nz/api/image` and `/api/collections`
+- **The website's own endpoints.** `https://nzimages.windybank.net/api/image` and `/api/collections`
   are public, like the backend of any login-free site. Anyone can call them and get an image. They
   are bounded by the WAF rule and the daily limit, not by a secret.
 - **A fully-public, direct-from-browser path with real access control.** Impossible by
@@ -179,7 +180,7 @@ holds a dev value. Never commit a real one.
    Workers Logs for `Authorized consumer: <name>` to confirm it's attributed correctly (§9), or
    run:
    ```bash
-   API_URL="https://nzimages-api.iolab.nz" \
+   API_URL="https://nzimages-api.windybank.net" \
    API_SECRET="<the new secret>" \
    ./scripts/smoke-test-access-control.sh
    ```
@@ -226,7 +227,7 @@ thing that ever calls the API directly. The browser or app talks only to that co
 
 ### The website (service binding, no secret)
 
-The website `nzimages-web` (separate repo, `https://nzimages.iolab.nz`) is Static Assets plus a
+The website `nzimages-web` (separate repo, `https://nzimages.windybank.net`) is Static Assets plus a
 small Worker for `/api/*`. That Worker calls `nzimages-api` through a service binding to the
 `ImageApi` entrypoint, so it holds no secret:
 
@@ -257,7 +258,7 @@ export async function GET() {
 }
 ```
 
-`IMAGE_API_URL` (`https://nzimages-api.iolab.nz`) and `NZIMAGE_API_SECRET` are server-side
+`IMAGE_API_URL` (`https://nzimages-api.windybank.net`) and `NZIMAGE_API_SECRET` are server-side
 environment variables in the consumer's own deployment (for example its hosting project's
 settings), never sent to the client.
 
@@ -289,7 +290,7 @@ the AWS side, where the converter runs. Each caps a different failure mode.
 | Control | What it caps | Current value | Where |
 |---|---|---|---|
 | Workers Free plan | API **spend** (never bills) and daily **volume** | 100,000 requests/day for the whole account, reset 00:00 UTC. 10 ms CPU and 50 subrequests per request | Cloudflare account plan |
-| WAF rate-limiting rule | Request **rate** per IP | More than 30 requests in 10 s to `/image`, `/collections`, `/api/image` or `/api/collections` blocks that IP for 10 s | `iolab.nz` zone, not in this repo |
+| WAF rate-limiting rule | Request **rate** per IP | More than 30 requests in 10 s to `/image`, `/collections`, `/api/image` or `/api/collections` blocks that IP for 10 s | `windybank.net` zone, limited to the `nzimages` and `nzimages-api` hostnames, not in this repo. Until `iolab.nz` lapses, a copy on the `iolab.nz` zone covers the old hostnames |
 | Subrequest budget | Outbound fetches per API request | 50, each redirect hop counted | `worker/src/http.ts` |
 | CloudWatch alarm (converter) | Notifies on, and stops, a converter **spike** | >100 invocations in 5 minutes → email + kill switch | `Jp2ConverterInvocationsAlarm` |
 | Converter kill switch | Converter **spend**: sets its concurrency to 0 on a spike, or when month-to-date usage nears the free tier | 250,000 GB-s, 800,000 requests or 20,000 converter calls a month | `ConverterGuardFunction` (`guard/app.py`), see `.claude/rules/converter.md` |
@@ -317,7 +318,8 @@ request-service-quota-increase --service-code lambda --quota-code L-B99A9384 --d
 the converter would give it its own ceiling.
 
 **Tuning:** raise `ConverterSpikeThreshold` or the `Guard*` limits (stack parameters) if they fire
-on normal traffic. Raise the WAF rule's threshold on the `iolab.nz` zone if legitimate users get
+on normal traffic. Raise the WAF rule's threshold on the `windybank.net` zone (and its `iolab.nz` copy while that
+exists) if legitimate users get
 blocked (see §9).
 
 **Verified free-tier facts this design relies on** (re-verify on the vendors' pricing pages if
@@ -372,7 +374,7 @@ live with `npx wrangler tail` from `worker/`. Every authorized HTTP request logs
      it keeps happening.
 2. **`429`s** mean the WAF rule blocked an IP that sent more than 30 requests in 10 s. If
    legitimate traffic trips it (for example many users behind one shared IP), raise the rule's
-   threshold on the `iolab.nz` zone.
+   threshold on the `windybank.net` zone, and on its `iolab.nz` copy while that exists.
 3. **`401`s for an approved consumer** mean its entry isn't in the current `API_CLIENT_SECRETS`.
    A `wrangler secret put` replaces the whole value, so check the last put didn't drop it, then
    put the full value again.
