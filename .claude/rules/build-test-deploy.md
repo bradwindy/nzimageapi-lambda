@@ -20,7 +20,7 @@ npm run cf-typegen       # regenerate worker-configuration.d.ts after editing wr
 (or each `--collection`), checks the JSON and that the image URL loads, and exits 1 on any failure:
 
 ```bash
-NZIMAGE_API_SECRET=... npm run check-collections -- --base-url https://nzimages-api.iolab.nz
+NZIMAGE_API_SECRET=... npm run check-collections -- --base-url https://nzimages-api.windybank.net
 NZIMAGE_API_SECRET=... npm run check-collections -- --collection "Feilding Library"   # against wrangler dev
 ```
 

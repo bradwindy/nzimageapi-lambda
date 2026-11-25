@@ -5,7 +5,11 @@
 	"compatibility_date": "2026-10-19",
 	"workers_dev": false,
 	"preview_urls": false,
-	"routes": [{ "pattern": "nzimages-api.iolab.nz", "custom_domain": true }],
+	// iolab.nz lapses on 2027-01-22. Remove the iolab.nz route before then.
+	"routes": [
+		{ "pattern": "nzimages-api.windybank.net", "custom_domain": true },
+		{ "pattern": "nzimages-api.iolab.nz", "custom_domain": true }
+	],
 	"observability": { "enabled": true },
 	"vars": {
 		// Function URL of the AWS converter Lambda (the nzimageapi stack's Jp2ConverterUrl output). Empty

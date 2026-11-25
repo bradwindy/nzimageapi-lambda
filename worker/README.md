@@ -77,8 +77,10 @@ npx wrangler deploy
 and `CONVERTER_SIGNING_KEY` exist on the Worker, which is why the first deploy uploads them
 with `--secrets-file`. Set `JP2_CONVERTER_URL` in `wrangler.jsonc` to the converter's Function
 URL, and keep `CONVERTER_SIGNING_KEY` identical to the converter's. The custom domain
-`nzimages-api.iolab.nz` needs the `iolab.nz` zone on the same Cloudflare account. `workers.dev`
-is off.
+`nzimages-api.windybank.net` needs the `windybank.net` zone on the same Cloudflare account. `workers.dev`
+is off. Until `iolab.nz` lapses on 2027-01-22 the Worker also answers on the old
+`nzimages-api.iolab.nz`, which keeps its own copy of the rate-limit rule on the `iolab.nz` zone.
+Remove that route and rule before then.
 
 ## RPC for the website
 
